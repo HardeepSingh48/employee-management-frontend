@@ -1,10 +1,11 @@
 'use client';
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar } from '../../components/layout/Sidebar';
 import { Users, Clock, TrendingUp, DollarSign } from 'lucide-react';
 
 export default function DashboardPage() {
   const [sidebarActive, setSidebarActive] = useState('Home');
+  const [loading, setLoading] = useState(true);
 
   const stats = [
     { title: 'Total Employees', value: '156', icon: Users, color: 'blue' },
@@ -12,7 +13,6 @@ export default function DashboardPage() {
     { title: 'On Leave', value: '8', icon: TrendingUp, color: 'yellow' },
     { title: 'Monthly Payroll', value: '$85,420', icon: DollarSign, color: 'purple' }
   ];
-  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,14 +38,6 @@ export default function DashboardPage() {
               </div>
             );
           })}
-        </div>
-        <div className="ml-16 p-6">
-        <button
-          onClick={() => setModalOpen(true)}
-          className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-        >
-          Register New Employee
-        </button>
         </div>
 
         {/* Add more dashboard components */}
