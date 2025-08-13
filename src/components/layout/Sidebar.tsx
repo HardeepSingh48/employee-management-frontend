@@ -1,7 +1,8 @@
 import React from 'react';
-import { 
-  Home, Users, Calendar, Clock, TrendingUp, 
-  MoreHorizontal, Briefcase, User 
+import { useRouter } from 'next/navigation';
+import {
+  Home, Users, Calendar, Clock, TrendingUp,
+  MoreHorizontal, Briefcase, User, DollarSign
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -10,16 +11,24 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
+  const router = useRouter();
+
   const sidebarItems = [
     { name: 'Home', icon: Home, path: '/dashboard' },
     { name: 'Attendance', icon: Users, path: '/attendance' },
     { name: 'Employees', icon: User, path: '/employees' },
+    { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
     { name: 'Leave', icon: Calendar, path: '/leave' },
     { name: 'Timesheet', icon: Clock, path: '/timesheet' },
     { name: 'Performance', icon: TrendingUp, path: '/performance' },
     { name: 'Reports', icon: Briefcase, path: '/reports' },
     { name: 'More', icon: MoreHorizontal, path: '/more' }
   ];
+
+  const handleItemClick = (item: { name: string; path: string }) => {
+    onItemClick(item.name);
+    router.push(item.path);
+  };
 
   return (
     <div className="group fixed left-0 top-0 h-full w-16 hover:w-48 bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-50 transition-all duration-300 ease-in-out">
@@ -34,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => 
                   ? 'bg-white bg-opacity-20'
                   : 'hover:bg-white hover:bg-opacity-10'
               }`}
-              onClick={() => onItemClick(item.name)}
+              onClick={() => handleItemClick(item)}
             >
               <Icon className="w-5 h-5 text-white flex-shrink-0" />
               <span className="text-white text-sm opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">

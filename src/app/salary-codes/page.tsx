@@ -1,49 +1,53 @@
 'use client';
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import EmployeeRegistrationForm from '@/components/employee/employee-form';
-import { ExcelImport } from '@/components/employee/excel-import';
+import SalaryCodeForm from '@/components/salary-code/salary-code-form';
+import SalaryCodeList from '@/components/salary-code/salary-code-list';
 
-export default function EmployeesPage() {
-  const [sidebarActive, setSidebarActive] = useState('Employees');
-  const [mode, setMode] = useState<'manual' | 'excel'>('manual');
+export default function SalaryCodesPage() {
+  const [sidebarActive, setSidebarActive] = useState('Salary Codes');
+  const [mode, setMode] = useState<'create' | 'list'>('create');
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
-
+      
       <div className="ml-16">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-800">Employee Management</h1>
-
+            <h1 className="text-xl font-semibold text-gray-800">Salary Code Management</h1>
+            
             <div className="flex space-x-4">
               <button
-                onClick={() => setMode('manual')}
+                onClick={() => setMode('create')}
                 className={`px-4 py-2 rounded-lg font-medium ${
-                  mode === 'manual'
+                  mode === 'create'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                Manual Entry
+                Create Salary Code
               </button>
               <button
-                onClick={() => setMode('excel')}
+                onClick={() => setMode('list')}
                 className={`px-4 py-2 rounded-lg font-medium ${
-                  mode === 'excel'
+                  mode === 'list'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
-                Excel Import
+                View Salary Codes
               </button>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          {mode === 'manual' ? <EmployeeRegistrationForm /> : <ExcelImport />}
+          {mode === 'create' ? (
+            <SalaryCodeForm />
+          ) : (
+            <SalaryCodeList />
+          )}
         </div>
       </div>
     </div>

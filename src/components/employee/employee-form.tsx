@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeSchema, EmployeeFormSchema } from '@/lib/validations/employee';
 import { BLOOD_GROUPS, DEPARTMENTS, EMPLOYMENT_TYPES, QUALIFICATIONS, SKILL_CATEGORIES } from '@/types/employee';
+import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 
 const EmployeeRegistrationForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chequeFile, setChequeFile] = useState<File | null>(null);
+  const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
+  const [loadingSalaryCodes, setLoadingSalaryCodes] = useState(true);
+
+  // Fetch salary codes on component mount
+  useEffect(() => {
+    const fetchSalaryCodes = async () => {
+      try {
+        setLoadingSalaryCodes(true);
+        const codes = await salaryCodesService.getSalaryCodes();
+        setSalaryCodes(codes);
+      } catch (error) {
+        console.error('Error fetching salary codes:', error);
+      } finally {
+        setLoadingSalaryCodes(false);
+      }
+    };
+
+    fetchSalaryCodes();
+  }, []);
 
   // Single useForm initialization with correct type
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormSchema>({
@@ -25,12 +45,99 @@ const EmployeeRegistrationForm: React.FC = () => {
     try {
       const formData = new FormData();
 
-      // Append normal fields
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
+      // Map frontend field names to backend field names
+      const fieldMapping: Record<string, string> = {
+        dateOfBirth: 'date_of_birth',
+        maritalStatus: 'marital_status',
+        bloodGroup: 'blood_group',
+        permanentAddress: 'address',
+        mobileNumber: 'phone_number',
+        alternateContactNumber: 'alternate_contact_number',
+        aadhaarNumber: 'adhar_number',
+        panCardNumber: 'pan_card_number',
+        voterIdOrLicense: 'voter_id_driving_license',
+        uanNumber: 'uan',
+        esicNumber: 'esic_number',
+        dateOfJoining: 'hire_date',
+        employmentType: 'employment_type',
+        department: 'department_id',
+        workLocation: 'work_location',
+        reportingManager: 'reporting_manager',
+        salaryCode: 'salary_code',
+        skillCategory: 'skill_category',
+        pfApplicability: 'pf_applicability',
+        esicApplicability: 'esic_applicability',
+        professionalTaxApplicability: 'professional_tax_applicability',
+        salaryAdvanceOrLoan: 'salary_advance_loan',
+        bankAccountNumber: 'bank_account_number',
+        bankName: 'bank_name',
+        ifscCode: 'ifsc_code',
+        highestQualification: 'highest_qualification',
+        yearOfPassing: 'year_of_passing',
+        additionalCertifications: 'additional_certifications',
+        experienceDuration: 'experience_duration',
+        emergencyContactName: 'emergency_contact_name',
+        emergencyRelationship: 'emergency_contact_relationship',
+        emergencyPhoneNumber: 'emergency_contact_phone'
+      };
+
+      // Map department names to department IDs
+      const departmentMapping: Record<string, string> = {
+        'HR': 'HR',
+        'IT': 'IT',
+        'Finance': 'FIN',
+        'Marketing': 'MKT',
+        'Operations': 'OPS',
+        'Sales': 'SAL',
+        'Engineering': 'ENG',
+        'Customer Support': 'CS',
+        'Legal': 'LEG',
+        'Administration': 'ADM'
+      };
+
+      // Split fullName into first_name and last_name
+      const nameParts = data.fullName.trim().split(' ').filter(part => part.length > 0);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+      formData.append('first_name', firstName);
+      if (lastName) {
+        formData.append('last_name', lastName);
+      } else {
+        // If no last name, use a placeholder or leave empty
+        formData.append('last_name', '');
+      }
+
+      // Append mapped fields
+      Object.entries(data).forEach(([frontendKey, value]) => {
+        if (frontendKey === 'fullName') return; // Already handled above
+
+        const backendKey = fieldMapping[frontendKey] || frontendKey;
+
+        // Skip empty strings and null/undefined values for optional fields
+        if (value === undefined || value === null || value === '') {
+          return;
+        }
+
+        // Handle special mappings
+        let finalValue = value;
+        if (frontendKey === 'department' && typeof value === 'string') {
+          finalValue = departmentMapping[value] || value;
+        }
+
+        // Handle boolean fields
+        if (typeof finalValue === 'boolean') {
+          formData.append(backendKey, finalValue.toString());
+        } else {
+          formData.append(backendKey, finalValue.toString());
         }
       });
+
+      // Log the form data for debugging
+      console.log('Form data being sent:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+      }
 
       // Append file if present
       if (chequeFile) {
@@ -40,12 +147,22 @@ const EmployeeRegistrationForm: React.FC = () => {
       console.log('Submitting employee data:', data);
       console.log('Cheque file:', chequeFile);
 
-      // Example API call
-      // await fetch('/api/employees', { method: 'POST', body: formData });
+      // Submit to backend API
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${apiUrl}/employees/register`, {
+        method: 'POST',
+        body: formData
+      });
 
-      alert('Employee registered successfully!');
-      reset();
-      setChequeFile(null);
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Employee registered successfully!');
+        reset();
+        setChequeFile(null);
+      } else {
+        alert(`Error: ${result.message}`);
+      }
     } catch (error) {
       console.error('Error submitting employee:', error);
       alert('Error registering employee. Please try again.');
@@ -241,15 +358,6 @@ const EmployeeRegistrationForm: React.FC = () => {
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Employment Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID *</label>
-                <input
-                  {...register('employeeId')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="EMP001"
-                />
-                {errors.employeeId && <p className="text-red-500 text-xs mt-1">{errors.employeeId.message}</p>}
-              </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Joining *</label>
@@ -325,16 +433,24 @@ const EmployeeRegistrationForm: React.FC = () => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Salary & Benefits</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Base Salary *</label>
-                <input
-                  type="number"
-                  {...register('baseSalary', { valueAsNumber: true })}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Salary Code *</label>
+                <select
+                  {...register('salaryCode')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter base salary"
-                />
-                {errors.baseSalary && <p className="text-red-500 text-xs mt-1">{errors.baseSalary.message}</p>}
+                  disabled={loadingSalaryCodes}
+                >
+                  <option value="">
+                    {loadingSalaryCodes ? 'Loading salary codes...' : 'Select Salary Code'}
+                  </option>
+                  {salaryCodes.map(code => (
+                    <option key={code.id} value={code.salary_code}>
+                      {code.display_name}
+                    </option>
+                  ))}
+                </select>
+                {errors.salaryCode && <p className="text-red-500 text-xs mt-1">{errors.salaryCode.message}</p>}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Skill Category</label>
                 <select
@@ -346,16 +462,6 @@ const EmployeeRegistrationForm: React.FC = () => {
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Wage Rate (per hour)</label>
-                <input
-                  type="number"
-                  {...register('wageRate', { valueAsNumber: true })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Hourly wage rate"
-                />
               </div>
               
               <div>
@@ -546,7 +652,10 @@ const EmployeeRegistrationForm: React.FC = () => {
           <div className="flex justify-end gap-4">
             <button
               type="button"
-              onClick={() => { reset(); setChequeFile(null); }}
+              onClick={() => {
+                reset();
+                setChequeFile(null);
+              }}
               className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
               disabled={isSubmitting}
             >

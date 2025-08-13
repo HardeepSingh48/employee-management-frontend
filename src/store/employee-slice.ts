@@ -5,7 +5,6 @@ import { employeeService } from '@/lib/employee-service';
 // Types
 export interface Employee {
   id: string;
-  employeeId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -19,7 +18,7 @@ export interface Employee {
   designation: string;
   department: string;
   reportingManager?: string;
-  basicSalary: number;
+  salaryCode: string;
   allowances?: number;
   bloodGroup?: string;
   emergencyContact?: string;
@@ -65,7 +64,6 @@ export interface EmployeeState {
   designations: string[];
   recentActivities: {
     id: string;
-    employeeId: string;
     employeeName: string;
     action: string;
     timestamp: string;

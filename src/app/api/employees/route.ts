@@ -84,16 +84,18 @@ async function saveFile(file: File, employeeId: string): Promise<string> {
   return `/uploads/employees/${employeeId}/${filename}`;
 }
 
-// Helper function to check if employee ID already exists
-async function isEmployeeIdUnique(employeeId: string): Promise<boolean> {
-  // Replace with actual database query
-  // For now, we'll simulate checking against existing employees
-  const existingEmployees = [
-    { employeeId: 'EMP001' },
-    { employeeId: 'EMP002' }
-  ];
-  
-  return !existingEmployees.some(emp => emp.employeeId === employeeId);
+// Helper function to validate salary code exists
+async function isSalaryCodeValid(salaryCode: string): Promise<boolean> {
+  // Replace with actual database query to check if salary code exists
+  // For now, we'll simulate checking against existing salary codes
+  try {
+    // This would be replaced with actual API call to backend
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/salary-codes/${salaryCode}`);
+    return response.ok;
+  } catch (error) {
+    console.error('Error validating salary code:', error);
+    return false;
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -185,10 +187,9 @@ export async function POST(request: NextRequest) {
     for (const [key, value] of formData.entries()) {
       if (key !== 'cheque') {
         // Convert string values to appropriate types
-        if (key === 'baseSalary' || key === 'wageRate' || key === 'salaryAdvanceOrLoan' || 
-            key === 'experienceDuration' || key === 'yearOfPassing') {
+        if (key === 'salaryAdvanceOrLoan' || key === 'experienceDuration' || key === 'yearOfPassing') {
           employeeData[key] = value ? parseFloat(value as string) : 0;
-        } else if (key === 'pfApplicability' || key === 'esicApplicability' || 
+        } else if (key === 'pfApplicability' || key === 'esicApplicability' ||
                    key === 'professionalTaxApplicability') {
           employeeData[key] = value === 'true';
         } else {
@@ -207,15 +208,15 @@ export async function POST(request: NextRequest) {
         details: validationResult.error.issues
       }, { status: 400 });
     }
-    
+
     const validatedData: EmployeeInput = validationResult.data;
-    
-    // Check if employee ID is unique
-    const isUnique = await isEmployeeIdUnique(validatedData.employeeId);
-    if (!isUnique) {
+
+    // Check if salary code is valid
+    const isValidSalaryCode = await isSalaryCodeValid(validatedData.salaryCode);
+    if (!isValidSalaryCode) {
       return NextResponse.json({
         success: false,
-        error: 'Employee ID already exists'
+        error: 'Invalid salary code'
       }, { status: 400 });
     }
     
@@ -303,10 +304,9 @@ export async function PUT(request: NextRequest) {
     // Parse form data similar to POST
     for (const [key, value] of formData.entries()) {
       if (key !== 'cheque') {
-        if (key === 'baseSalary' || key === 'wageRate' || key === 'salaryAdvanceOrLoan' || 
-            key === 'experienceDuration' || key === 'yearOfPassing') {
+        if (key === 'salaryAdvanceOrLoan' || key === 'experienceDuration' || key === 'yearOfPassing') {
           employeeData[key] = value ? parseFloat(value as string) : 0;
-        } else if (key === 'pfApplicability' || key === 'esicApplicability' || 
+        } else if (key === 'pfApplicability' || key === 'esicApplicability' ||
                    key === 'professionalTaxApplicability') {
           employeeData[key] = value === 'true';
         } else {

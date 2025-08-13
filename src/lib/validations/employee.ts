@@ -23,18 +23,16 @@ maritalStatus: z.enum(['Single', 'Married', 'Divorced', 'Widowed'], 'Marital sta
   voterIdOrLicense: z.string().optional(),
   
   // Employment Details
-  employeeId: z.string().min(1, 'Employee ID is required'),
   dateOfJoining: z.string().min(1, 'Date of joining is required'),
   employmentType: z.enum(['Full-time', 'Part-time', 'Contract', 'Intern'], 'Employment type is required' ),
   department: z.string().min(1, 'Department is required'),
   designation: z.string().min(1, 'Designation is required'),
   workLocation: z.string().min(1, 'Work location is required'),
   reportingManager: z.string().optional(),
-  
+
   // Salary & Benefits
-  baseSalary: z.number().min(0, 'Base salary must be positive'),
+  salaryCode: z.string().min(1, 'Salary code is required'),
   skillCategory: z.string().optional(),
-  wageRate: z.number().optional(),
   pfApplicability: z.boolean(),
   esicApplicability: z.boolean(),
   professionalTaxApplicability: z.boolean(),

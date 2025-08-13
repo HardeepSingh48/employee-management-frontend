@@ -26,18 +26,16 @@ export interface Employee {
   esicNumber?: string;
   
   // Employment Details
-  employeeId: string;
   dateOfJoining: string;
   employmentType: 'Full-time' | 'Part-time' | 'Contract' | 'Intern';
   department: string;
   designation: string;
   workLocation: string;
   reportingManager?: string;
-  
+
   // Salary & Benefits
-  baseSalary: number;
+  salaryCode: string;
   skillCategory?: string;
-  wageRate?: number;
   pfApplicability: boolean;
   esicApplicability: boolean;
   professionalTaxApplicability: boolean;
@@ -78,13 +76,13 @@ export interface EmployeeCreateRequest extends EmployeeFormData {
 // For display/table purposes
 export interface EmployeeSummary {
   id: string;
-  employeeId: string;
   fullName: string;
   department: string;
   designation: string;
   mobileNumber: string;
   status: 'active' | 'inactive';
   dateOfJoining: string;
+  salaryCode?: string;
 }
 
 // For search and filtering
