@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, Download, FileSpreadsheet, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 
 interface ImportResult {
   success: boolean;

@@ -1,18 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
 import EmployeeRegistrationForm from '@/components/employee/employee-form';
 import { ExcelImport } from '@/components/employee/excel-import';
 
 export default function EmployeesPage() {
-  const [sidebarActive, setSidebarActive] = useState('Employees');
   const [mode, setMode] = useState<'manual' | 'excel'>('manual');
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
-
-      <div className="ml-16">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-800">Employee Management</h1>
@@ -45,7 +40,6 @@ export default function EmployeesPage() {
         <div className="p-6">
           {mode === 'manual' ? <EmployeeRegistrationForm /> : <ExcelImport />}
         </div>
-      </div>
     </div>
   );
 }

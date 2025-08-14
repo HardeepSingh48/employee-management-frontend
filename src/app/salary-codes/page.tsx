@@ -1,18 +1,13 @@
 'use client';
 import React, { useState } from 'react';
-import { Sidebar } from '@/components/layout/Sidebar';
 import SalaryCodeForm from '@/components/salary-code/salary-code-form';
 import SalaryCodeList from '@/components/salary-code/salary-code-list';
 
 export default function SalaryCodesPage() {
-  const [sidebarActive, setSidebarActive] = useState('Salary Codes');
   const [mode, setMode] = useState<'create' | 'list'>('create');
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
-      
-      <div className="ml-16">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-800">Salary Code Management</h1>
@@ -49,7 +44,6 @@ export default function SalaryCodesPage() {
             <SalaryCodeList />
           )}
         </div>
-      </div>
     </div>
   );
 }

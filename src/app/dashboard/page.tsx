@@ -1,10 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { Sidebar } from '../../components/layout/Sidebar';
 import { Users, Clock, TrendingUp, DollarSign } from 'lucide-react';
 
 export default function DashboardPage() {
-  const [sidebarActive, setSidebarActive] = useState('Home');
   const [loading, setLoading] = useState(true);
 
   const stats = [
@@ -15,10 +13,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
-      
-      <div className="ml-16 p-6">
+    <div className="p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
         
         <div className="grid grid-cols-4 gap-6 mb-8">
@@ -41,7 +36,6 @@ export default function DashboardPage() {
         </div>
 
         {/* Add more dashboard components */}
-      </div>
     </div>
   );
 }
