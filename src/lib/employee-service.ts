@@ -4,8 +4,8 @@ import { Employee, EmployeeFormData } from '@/types/employee';
 export const employeeService = {
   // Get all employees
   getEmployees: async (): Promise<Employee[]> => {
-    const response = await api.get('/employees');
-    return response.data.data;
+    const response = await api.get('/employees/all');
+    return response.data.data || response.data;
   },
 
   // Get employee by ID

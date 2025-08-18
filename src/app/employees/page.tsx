@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import EmployeeRegistrationForm from '@/components/employee/employee-form';
 import { ExcelImport } from '@/components/employee/excel-import';
+import EmployeeSkillFix from '@/components/employee/EmployeeSkillFix';
 
 export default function EmployeesPage() {
-  const [mode, setMode] = useState<'manual' | 'excel'>('manual');
+  const [mode, setMode] = useState<'manual' | 'excel' | 'fix'>('manual');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,12 +34,24 @@ export default function EmployeesPage() {
               >
                 Excel Import
               </button>
+              <button
+                onClick={() => setMode('fix')}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  mode === 'fix'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Fix Skill Categories
+              </button>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          {mode === 'manual' ? <EmployeeRegistrationForm /> : <ExcelImport />}
+          {mode === 'manual' && <EmployeeRegistrationForm />}
+          {mode === 'excel' && <ExcelImport />}
+          {mode === 'fix' && <EmployeeSkillFix />}
         </div>
     </div>
   );

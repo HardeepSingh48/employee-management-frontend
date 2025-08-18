@@ -9,12 +9,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
 
-interface SidebarProps {
+interface AdminSidebarProps {
   activeItem: string;
   onItemClick: (item: string) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
+export default function AdminSidebar({ activeItem, onItemClick }: AdminSidebarProps) {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector(selectUser);
@@ -104,4 +104,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => 
       </div>
     </div>
   );
-};
+}
