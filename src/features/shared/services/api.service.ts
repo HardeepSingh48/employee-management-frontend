@@ -3,7 +3,9 @@
  * Handles authentication, error handling, and request/response formatting
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Normalize base URL to include '/api' exactly once
+const RAW_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = RAW_BASE_URL.endsWith('/api') ? RAW_BASE_URL : `${RAW_BASE_URL}/api`;
 
 interface ApiResponse<T = any> {
   success: boolean;

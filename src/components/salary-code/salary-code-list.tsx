@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
+import { EditModal } from '@/components/ui/CustomModal';
 
 const SalaryCodeList: React.FC = () => {
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState<SalaryCode | null>(null);
+  const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '' });
 
   useEffect(() => {
     const fetchSalaryCodes = async () => {
@@ -22,6 +25,28 @@ const SalaryCodeList: React.FC = () => {
 
     fetchSalaryCodes();
   }, []);
+
+  const openEdit = (code: SalaryCode) => {
+    setEditing(code);
+    setEditValues({
+      site_name: code.site_name,
+      rank: code.rank,
+      state: code.state,
+      base_wage: code.base_wage,
+      skill_level: code.skill_level || ''
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    try {
+      const updated = await salaryCodesService.updateSalaryCode(editing.salary_code, editValues);
+      setSalaryCodes(prev => prev.map(c => (c.id === updated.id ? { ...c, ...updated } : c)));
+      setEditing(null);
+    } catch (e) {
+      console.error('Failed to update salary code', e);
+    }
+  };
 
   if (loading) {
     return (
@@ -80,6 +105,7 @@ const SalaryCodeList: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
+                  <th className="px-6 py-3"></th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -109,6 +135,9 @@ const SalaryCodeList: React.FC = () => {
                         {code.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button onClick={() => openEdit(code)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm">Edit</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -116,6 +145,22 @@ const SalaryCodeList: React.FC = () => {
           </div>
         )}
       </div>
+
+      <EditModal
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
+        title={editing ? `Edit Salary Code: ${editing.salary_code}` : 'Edit Salary Code'}
+        values={editValues}
+        fields={[
+          { name: 'site_name', label: 'Site Name', type: 'text' },
+          { name: 'rank', label: 'Rank', type: 'text' },
+          { name: 'state', label: 'State', type: 'text' },
+          { name: 'base_wage', label: 'Base Wage', type: 'number' },
+        ]}
+        onChange={setEditValues}
+        onSave={saveEdit}
+        saveLabel="Save Changes"
+      />
     </div>
   );
 };

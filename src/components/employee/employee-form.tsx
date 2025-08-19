@@ -8,6 +8,13 @@ import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 const EmployeeRegistrationForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [chequeFile, setChequeFile] = useState<File | null>(null);
+  const [aadhaarFront, setAadhaarFront] = useState<File | null>(null);
+  const [aadhaarBack, setAadhaarBack] = useState<File | null>(null);
+  const [panFront, setPanFront] = useState<File | null>(null);
+  const [panBack, setPanBack] = useState<File | null>(null);
+  const [voterFront, setVoterFront] = useState<File | null>(null);
+  const [voterBack, setVoterBack] = useState<File | null>(null);
+  const [passbookFront, setPassbookFront] = useState<File | null>(null);
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
   const [loadingSalaryCodes, setLoadingSalaryCodes] = useState(true);
 
@@ -140,9 +147,14 @@ const EmployeeRegistrationForm: React.FC = () => {
       }
 
       // Append file if present
-      if (chequeFile) {
-        formData.append('cheque', chequeFile);
-      }
+      if (chequeFile) formData.append('cheque', chequeFile);
+      if (aadhaarFront) formData.append('aadhaar_front', aadhaarFront);
+      if (aadhaarBack) formData.append('aadhaar_back', aadhaarBack);
+      if (panFront) formData.append('pan_front', panFront);
+      if (panBack) formData.append('pan_back', panBack);
+      if (voterFront) formData.append('voter_front', voterFront);
+      if (voterBack) formData.append('voter_back', voterBack);
+      if (passbookFront) formData.append('passbook_front', passbookFront);
 
       console.log('Submitting employee data:', data);
       console.log('Cheque file:', chequeFile);
@@ -160,6 +172,13 @@ const EmployeeRegistrationForm: React.FC = () => {
         alert('Employee registered successfully!');
         reset();
         setChequeFile(null);
+        setAadhaarFront(null);
+        setAadhaarBack(null);
+        setPanFront(null);
+        setPanBack(null);
+        setVoterFront(null);
+        setVoterBack(null);
+        setPassbookFront(null);
       } else {
         alert(`Error: ${result.message}`);
       }
@@ -176,6 +195,11 @@ const EmployeeRegistrationForm: React.FC = () => {
     if (file) {
       setChequeFile(file);
     }
+  };
+
+  const handleDocChange = (setter: React.Dispatch<React.SetStateAction<File | null>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setter(file);
   };
 
   return (
@@ -636,15 +660,47 @@ const EmployeeRegistrationForm: React.FC = () => {
           {/* File Upload */}
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Supporting Documents</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Cancelled Cheque (optional)</label>
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
-                onChange={handleFileChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-              />
-              {chequeFile && <p className="text-sm text-green-600 mt-1">Selected file: {chequeFile.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Front</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setAadhaarFront)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {aadhaarFront && <p className="text-xs text-green-600 mt-1">{aadhaarFront.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Back</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setAadhaarBack)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {aadhaarBack && <p className="text-xs text-green-600 mt-1">{aadhaarBack.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PAN Front</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setPanFront)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {panFront && <p className="text-xs text-green-600 mt-1">{panFront.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PAN Back</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setPanBack)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {panBack && <p className="text-xs text-green-600 mt-1">{panBack.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Voter ID Front</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setVoterFront)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {voterFront && <p className="text-xs text-green-600 mt-1">{voterFront.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Voter ID Back</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setVoterBack)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {voterBack && <p className="text-xs text-green-600 mt-1">{voterBack.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Passbook Front Page</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleDocChange(setPassbookFront)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {passbookFront && <p className="text-xs text-green-600 mt-1">{passbookFront.name}</p>}
+              </div>
+              <div className="md:col-span-2 lg:col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cancelled Cheque (optional)</label>
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                {chequeFile && <p className="text-xs text-green-600 mt-1">{chequeFile.name}</p>}
+              </div>
             </div>
           </div>
 
@@ -655,6 +711,13 @@ const EmployeeRegistrationForm: React.FC = () => {
               onClick={() => {
                 reset();
                 setChequeFile(null);
+                setAadhaarFront(null);
+                setAadhaarBack(null);
+                setPanFront(null);
+                setPanBack(null);
+                setVoterFront(null);
+                setVoterBack(null);
+                setPassbookFront(null);
               }}
               className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
               disabled={isSubmitting}

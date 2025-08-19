@@ -13,6 +13,19 @@ export interface SalaryCode {
   display_name: string;
 }
 
+export interface BulkCreateSalaryCodesResponse {
+  created_count: number;
+  created_codes: Array<{
+    salary_code: string;
+    site_name: string;
+    rank: string;
+    state: string;
+    base_wage: number;
+  }>;
+  error_count: number;
+  errors: string[];
+}
+
 export const salaryCodesService = {
   // Get all active salary codes
   getSalaryCodes: async (): Promise<SalaryCode[]> => {
@@ -52,8 +65,23 @@ export const salaryCodesService = {
     state: string;
     base_wage: number;
     created_by?: string;
-  }>): Promise<SalaryCode[]> => {
+  }>): Promise<BulkCreateSalaryCodesResponse> => {
     const response = await api.post('/salary-codes/bulk', { salary_codes: salaryCodesData });
-    return response.data.data;
+    return response.data.data as BulkCreateSalaryCodesResponse;
+  },
+
+  // Update a salary code by code
+  updateSalaryCode: async (
+    salaryCode: string,
+    data: {
+      site_name: string;
+      rank: string;
+      state: string;
+      base_wage: number;
+      skill_level?: string;
+    }
+  ): Promise<SalaryCode> => {
+    const response = await api.put(`/salary-codes/${encodeURIComponent(salaryCode)}`, data);
+    return response.data.data as SalaryCode;
   }
 };

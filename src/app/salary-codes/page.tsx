@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import SalaryCodeForm from '@/components/salary-code/salary-code-form';
 import SalaryCodeList from '@/components/salary-code/salary-code-list';
+import SalaryCodeBulkImport from '@/components/salary-code/salary-code-bulk-import';
 
 export default function SalaryCodesPage() {
-  const [mode, setMode] = useState<'create' | 'list'>('create');
+  const [mode, setMode] = useState<'create' | 'list' | 'bulk'>('create');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -33,16 +34,24 @@ export default function SalaryCodesPage() {
               >
                 View Salary Codes
               </button>
+              <button
+                onClick={() => setMode('bulk')}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  mode === 'bulk'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Bulk Import
+              </button>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          {mode === 'create' ? (
-            <SalaryCodeForm />
-          ) : (
-            <SalaryCodeList />
-          )}
+          {mode === 'create' && <SalaryCodeForm />}
+          {mode === 'list' && <SalaryCodeList />}
+          {mode === 'bulk' && <SalaryCodeBulkImport />}
         </div>
     </div>
   );

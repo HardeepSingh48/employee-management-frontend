@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Normalize base URL to include '/api' exactly once
+const rawBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const baseURL = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -48,6 +52,17 @@ api.interceptors.response.use(
     //   config: error.config,
     //   response: error.response
     // });
+    const status = error?.response?.status;
+    if (status === 401) {
+      try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('lastLoginTime');
+      } catch {}
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );

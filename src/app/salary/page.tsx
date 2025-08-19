@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Upload, FileSpreadsheet, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { Calculator, Upload, FileSpreadsheet, Users, DollarSign, TrendingUp, ShieldCheck } from 'lucide-react';
 
-// Import salary components (we'll create these next)
+// Import salary components
 import ExcelSalaryCalculation from '@/components/salary/ExcelSalaryCalculation';
 import MonthlySalaryCalculation from '@/components/salary/MonthlySalaryCalculation';
 import IndividualSalaryCalculation from '@/components/salary/IndividualSalaryCalculation';
 import SalaryReports from '@/components/salary/SalaryReports';
+import ComplianceReports from '@/components/salary/ComplianceReports'; // ✅ new component
 
 export default function SalaryPage() {
   const [activeTab, setActiveTab] = useState('excel');
@@ -86,7 +87,7 @@ export default function SalaryPage() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="excel" className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
             Excel Upload
@@ -102,6 +103,10 @@ export default function SalaryPage() {
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             Reports
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            Compliance
           </TabsTrigger>
         </TabsList>
 
@@ -157,6 +162,20 @@ export default function SalaryPage() {
             </CardHeader>
             <CardContent>
               <SalaryReports />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="compliance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Compliance Reports</CardTitle>
+              <CardDescription>
+                Generate and review statutory compliance reports (PF, ESI, TDS, etc.)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ComplianceReports /> {/* ✅ new component instead of SalaryReports */}
             </CardContent>
           </Card>
         </TabsContent>

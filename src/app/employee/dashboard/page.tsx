@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectUser, selectIsAuthenticated } from '@/store/auth-slice';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -165,7 +165,7 @@ export default function EmployeeDashboard() {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Today's Status</CardTitle>
-                    {getStatusIcon(stats?.today_status.status)}
+                    {getStatusIcon(stats?.today_status.status ?? null)}
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
