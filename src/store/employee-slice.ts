@@ -1,35 +1,7 @@
 // src/store/employeeSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { employeeService } from '@/lib/employee-service';
-
-// Types
-export interface Employee {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  dateOfBirth: string;
-  joiningDate: string;
-  designation: string;
-  department: string;
-  reportingManager?: string;
-  salaryCode: string;
-  allowances?: number;
-  bloodGroup?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
-  status: 'active' | 'inactive' | 'terminated';
-  profileImage?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface EmployeeFormData extends Omit<Employee, 'id' | 'createdAt' | 'updatedAt'> {}
+import { Employee, EmployeeFormData } from '@/types/employee';
 
 export interface EmployeeFilters {
   search: string;
@@ -86,7 +58,7 @@ const initialState: EmployeeState = {
     joiningDateFrom: '',
     joiningDateTo: '',
   },
-  sortBy: 'firstName',
+  sortBy: 'fullName',
   sortOrder: 'asc',
   isLoading: false,
   isCreating: false,
@@ -253,18 +225,18 @@ export const searchEmployees = createAsyncThunk(
   }
 );
 
-export const getEmployeeStats = createAsyncThunk(
-  'employees/getEmployeeStats',
-  async (_, { rejectWithValue }) => {
-    try {
-      const stats = await employeeService.getEmployeeStats();
-      return stats;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to get stats';
-      return rejectWithValue(message);
-    }
-  }
-);
+// export const getEmployeeStats = createAsyncThunk(
+//   'employees/getEmployeeStats',
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const stats = await employeeService.getEmployeeStats();
+//       return stats;
+//     } catch (error: any) {
+//       const message = error.response?.data?.message || 'Failed to get stats';
+//       return rejectWithValue(message);
+//     }
+//   }
+// );
 
 // Employee slice
 const employeeSlice = createSlice({
@@ -349,8 +321,8 @@ const employeeSlice = createSlice({
       })
       .addCase(fetchEmployees.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.employees = action.payload.employees;
-        state.totalEmployees = action.payload.total;
+        state.employees = action.payload;
+        state.totalEmployees = action.payload.length;
         state.error = null;
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
@@ -388,10 +360,10 @@ const employeeSlice = createSlice({
         
         // Add recent activity
         const activity = {
-          employeeId: action.payload.employeeId,
-          employeeName: `${action.payload.firstName} ${action.payload.lastName}`,
+          employeeId: action.payload.id,
+          employeeName: action.payload.fullName,
           action: 'created',
-          details: `Employee ${action.payload.employeeId} was created`,
+          details: `Employee ${action.payload.id} was created`,
         };
         employeeSlice.caseReducers.addRecentActivity(state, { payload: activity, type: 'addRecentActivity' });
       })
@@ -419,10 +391,10 @@ const employeeSlice = createSlice({
         
         // Add recent activity
         const activity = {
-          employeeId: action.payload.employeeId,
-          employeeName: `${action.payload.firstName} ${action.payload.lastName}`,
+          employeeId: action.payload.id,
+          employeeName: action.payload.fullName,
           action: 'updated',
-          details: `Employee ${action.payload.employeeId} was updated`,
+          details: `Employee ${action.payload.id} was updated`,
         };
         employeeSlice.caseReducers.addRecentActivity(state, { payload: activity, type: 'addRecentActivity' });
       })
@@ -450,10 +422,10 @@ const employeeSlice = createSlice({
         // Add recent activity
         if (deletedEmployee) {
           const activity = {
-            employeeId: deletedEmployee.employeeId,
-            employeeName: `${deletedEmployee.firstName} ${deletedEmployee.lastName}`,
+            employeeId: deletedEmployee.id,
+            employeeName: deletedEmployee.fullName,
             action: 'deleted',
-            details: `Employee ${deletedEmployee.employeeId} was deleted`,
+            details: `Employee ${deletedEmployee.id} was deleted`,
           };
           employeeSlice.caseReducers.addRecentActivity(state, { payload: activity, type: 'addRecentActivity' });
         }
@@ -496,8 +468,8 @@ const employeeSlice = createSlice({
       })
       .addCase(searchEmployees.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.employees = action.payload.employees;
-        state.totalEmployees = action.payload.total;
+        state.employees = action.payload;
+        state.totalEmployees = action.payload.length;
       })
       .addCase(searchEmployees.rejected, (state, action) => {
         state.isLoading = false;

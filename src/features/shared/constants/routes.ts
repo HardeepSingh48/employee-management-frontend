@@ -71,9 +71,10 @@ export const isEmployeeRoute = (pathname: string): boolean => {
 
 // Helper function to check if route is public
 export const isPublicRoute = (pathname: string): boolean => {
-  const publicRoutes = [ROUTES.PUBLIC.HOME, ROUTES.PUBLIC.LOGIN];
+  const publicRoutes: string[] = [ROUTES.PUBLIC.HOME, ROUTES.PUBLIC.LOGIN];
   return publicRoutes.includes(pathname);
 };
+
 
 // Helper function to get redirect route based on user role
 export const getDefaultRouteForRole = (role: string): string => {

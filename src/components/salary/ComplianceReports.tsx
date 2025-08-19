@@ -298,6 +298,16 @@ function FormDComponent() {
   );
 }
 
+interface FilterControlsProps {
+  selectedYear: string;
+  selectedMonth: string;
+  selectedSite: string;
+  setSelectedYear: (year: string) => void;
+  setSelectedMonth: (month: string) => void;
+  setSelectedSite: (site: string) => void;
+  onDownload: () => void;
+  formName: string;
+}
 // Reusable Filter Controls Component
 function FilterControls({ 
   selectedYear, 
@@ -308,7 +318,7 @@ function FilterControls({
   setSelectedSite, 
   onDownload, 
   formName 
-}) {
+}:FilterControlsProps) {
   const months = [
     { value: '01', label: 'January' },
     { value: '02', label: 'February' },

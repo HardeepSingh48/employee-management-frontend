@@ -27,7 +27,7 @@ export default function MonthlyView() {
         const employeeData = await employeeService.getEmployees();
         setEmployees(employeeData);
         if (employeeData.length > 0) {
-          setSelectedEmployee(employeeData[0].employee_id);
+          setSelectedEmployee(employeeData[0].id);
         }
       } catch (error) {
         console.error('Error loading employees:', error);
@@ -95,7 +95,7 @@ export default function MonthlyView() {
     }
   };
 
-  const selectedEmployeeData = employees.find(emp => emp.employee_id === selectedEmployee);
+  const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
 
   return (
     <div className="space-y-6">
@@ -109,8 +109,9 @@ export default function MonthlyView() {
             </SelectTrigger>
             <SelectContent>
               {employees.map((employee) => (
-                <SelectItem key={employee.employee_id} value={employee.employee_id}>
-                  {employee.employee_id} - {employee.first_name} {employee.last_name}
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.id} - {employee.fullName} 
+                  {/* {employee.last_name} */}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -166,15 +167,17 @@ export default function MonthlyView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Name</p>
-                <p>{selectedEmployeeData.first_name} {selectedEmployeeData.last_name}</p>
+                <p>{selectedEmployeeData.fullName} 
+                  {/* {selectedEmployeeData.last_name} */}
+                  </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Employee ID</p>
-                <p>{selectedEmployeeData.employee_id}</p>
+                <p>{selectedEmployeeData.id}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Department</p>
-                <p>{selectedEmployeeData.department_id || 'N/A'}</p>
+                <p>{selectedEmployeeData.department || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Designation</p>

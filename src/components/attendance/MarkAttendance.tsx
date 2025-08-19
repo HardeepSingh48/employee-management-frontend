@@ -15,18 +15,18 @@ import { Loader2, UserCheck, Clock } from 'lucide-react';
 import { attendanceService } from '@/lib/attendance-service';
 import { employeeService } from '@/lib/employee-service';
 import type { Employee } from '@/types/employee';
+import type { Attendance } from '@/types/attendance';
 
-const attendanceSchema = z.object({
+export const attendanceSchema = z.object({
   employee_id: z.string().min(1, 'Please select an employee'),
   attendance_date: z.string().min(1, 'Date is required'),
-  attendance_status: z.enum(['Present', 'Absent', 'Late', 'Half Day'], {
-    required_error: 'Please select attendance status',
-  }),
+  attendance_status: z.enum(['Present', 'Absent', 'Late', 'Half Day'])
+    .refine((val) => !!val, { message: "Please select attendance status" }),
   check_in_time: z.string().optional(),
   check_out_time: z.string().optional(),
   overtime_hours: z.string().optional(),
   remarks: z.string().optional(),
-});
+}) 
 
 type AttendanceFormValues = z.infer<typeof attendanceSchema>;
 
@@ -106,7 +106,7 @@ export default function MarkAttendance() {
     }
   };
 
-  const selectedEmployee = employees.find(emp => emp.employee_id === form.watch('employee_id'));
+  const selectedEmployee = employees.find(emp => emp.id === form.watch('employee_id'));
 
   return (
     <div className="space-y-6">
@@ -134,8 +134,9 @@ export default function MarkAttendance() {
                         </SelectItem>
                       ) : (
                         employees.map((employee) => (
-                          <SelectItem key={employee.employee_id} value={employee.employee_id}>
-                            {employee.employee_id} - {employee.first_name} {employee.last_name}
+                          <SelectItem key={employee.id} value={employee.id}>
+                            {employee.id} - {employee.fullName} 
+                            {/* {employee.last_name} */}
                           </SelectItem>
                         ))
                       )}
@@ -267,11 +268,13 @@ export default function MarkAttendance() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-muted-foreground">Name</p>
-                    <p>{selectedEmployee.first_name} {selectedEmployee.last_name}</p>
+                    <p>{selectedEmployee.fullName}
+                       {/* {selectedEmployee.last_name} */}
+                       </p>
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">Department</p>
-                    <p>{selectedEmployee.department_id || 'N/A'}</p>
+                    <p>{selectedEmployee.department || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">Designation</p>
@@ -279,7 +282,7 @@ export default function MarkAttendance() {
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">Employee ID</p>
-                    <p>{selectedEmployee.employee_id}</p>
+                    <p>{selectedEmployee.id}</p>
                   </div>
                 </div>
               </CardContent>

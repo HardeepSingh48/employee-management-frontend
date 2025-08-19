@@ -16,6 +16,7 @@ interface EmployeeRow {
   hire_date?: string | null;
 }
 
+
 export default function EmployeeList() {
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,18 @@ export default function EmployeeList() {
       try {
         setLoading(true);
         const data = await employeeService.getEmployees();
-        setEmployees(data);
+const rows: EmployeeRow[] = data.map((emp: any) => ({
+  employee_id: emp.id,
+  first_name: emp.firstName,
+  last_name: emp.lastName,
+  email: emp.email,
+  phone_number: emp.phoneNumber,
+  department_id: emp.departmentId,
+  designation: emp.designation,
+  employment_status: emp.status,
+  hire_date: emp.hireDate,
+}));
+setEmployees(rows);
       } catch (e: any) {
         setError(e?.message || 'Failed to fetch employees');
       } finally {
@@ -55,7 +67,7 @@ export default function EmployeeList() {
     if (!editing) return;
     try {
       const updated = await employeeService.updateEmployee(editing.employee_id, editValues as any);
-      setEmployees(prev => prev.map(e => (e.employee_id === updated.employee_id ? { ...e, ...updated } : e)));
+      setEmployees(prev => prev.map(e => (e.employee_id === updated.id ? { ...e, ...updated } : e)));
       setEditing(null);
     } catch (e) {
       console.error('Failed to update employee', e);

@@ -3,10 +3,10 @@ import { Employee, EmployeeFormData } from '@/types/employee';
 
 export const employeeService = {
   // Get all employees
-  getEmployees: async (): Promise<Employee[]> => {
-    const response = await api.get('/employees/all');
-    return response.data.data || response.data;
-  },
+getEmployees: async (params?: Record<string, any>): Promise<Employee[]> => {
+  const response = await api.get('/employees/all', { params });
+  return response.data.data || response.data;
+},
 
   // Get employee by ID
   getEmployee: async (id: string): Promise<Employee> => {
@@ -35,5 +35,10 @@ export const employeeService = {
   bulkImportEmployees: async (employees: EmployeeFormData[]): Promise<Employee[]> => {
     const response = await api.post('/employees/bulk-import', { employees });
     return response.data.data;
-  }
+  },
+  searchEmployees: async (query: string): Promise<Employee[]> => {
+  const response = await api.get(`/employees/search?q=${encodeURIComponent(query)}`);
+  return response.data;
+},
 };
+

@@ -1,10 +1,10 @@
 // src/app/api/employees/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
+// import { z } from 'zod';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { employeeSchema, EmployeeInput } from '@/lib/validations/employee';
+import { employeeSchema, EmployeeFormData } from '@/lib/validations/employee';
 
 // Comprehensive validation schema for employee data
 // const employeeSchema = z.object({
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const validatedData: EmployeeInput = validationResult.data;
+    const validatedData: EmployeeFormData = validationResult.data;
 
     // Check if salary code is valid
     const isValidSalaryCode = await isSalaryCodeValid(validatedData.salaryCode);

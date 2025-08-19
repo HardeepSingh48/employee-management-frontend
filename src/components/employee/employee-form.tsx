@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { employeeSchema, EmployeeFormSchema } from '@/lib/validations/employee';
+import { employeeSchema, EmployeeFormData } from '@/lib/validations/employee';
 import { BLOOD_GROUPS, DEPARTMENTS, EMPLOYMENT_TYPES, QUALIFICATIONS, SKILL_CATEGORIES } from '@/types/employee';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 
@@ -36,7 +36,7 @@ const EmployeeRegistrationForm: React.FC = () => {
   }, []);
 
   // Single useForm initialization with correct type
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormSchema>({
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       pfApplicability: false,
@@ -47,7 +47,7 @@ const EmployeeRegistrationForm: React.FC = () => {
     }
       });
 
-  const onSubmit = async (data: EmployeeFormSchema) => {
+  const onSubmit = async (data: EmployeeFormData) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();

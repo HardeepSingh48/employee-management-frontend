@@ -9,11 +9,11 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, RefreshCw, Clock, UserCheck, UserX, AlertCircle } from 'lucide-react';
 import { attendanceService } from '@/lib/attendance-service';
-import type { AttendanceRecord } from '@/types/attendance';
+import type { Attendance } from '@/types/attendance';
 
 export default function TodayAttendance() {
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [filteredRecords, setFilteredRecords] = useState<AttendanceRecord[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
+  const [filteredRecords, setFilteredRecords] = useState<Attendance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentDate, setCurrentDate] = useState('');

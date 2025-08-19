@@ -245,8 +245,8 @@ export const ROUTE_GROUPS = {
 export const RouteHelpers = {
   // Check if route is public
   isPublicRoute: (pathname: string): boolean => {
-    return ROUTE_GROUPS.PUBLIC.includes(pathname);
-  },
+  return (ROUTE_GROUPS.PUBLIC as string[]).includes(pathname);
+},
 
   // Check if route is admin route
   isAdminRoute: (pathname: string): boolean => {

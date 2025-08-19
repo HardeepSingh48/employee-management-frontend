@@ -4,23 +4,18 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser, selectIsAuthenticated } from '@/store/auth-slice';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Clock, 
   Calendar, 
-  User, 
+
   CheckCircle, 
   XCircle, 
   AlertCircle,
   TrendingUp,
-  DollarSign,
-  Building2,
-  Phone,
-  Mail,
-  MapPin
 } from 'lucide-react';
 import EmployeeSidebar from '@/features/employee/components/layout/EmployeeSidebar';
 import MarkAttendanceCard from '@/features/employee/components/attendance/MarkAttendanceCard';

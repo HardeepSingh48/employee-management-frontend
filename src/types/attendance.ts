@@ -1,6 +1,6 @@
 export type AttendanceStatus = 'Present' | 'Absent' | 'Late' | 'Half Day' | 'Holiday' | 'Leave';
 
-export interface AttendanceRecord {
+export interface Attendance {
   attendance_id: string;
   employee_id: string;
   attendance_date: string;
@@ -47,7 +47,7 @@ export interface MonthlyAttendanceSummary {
   working_days: number;
   holiday_count: number;
   attendance_percentage: number;
-  records: AttendanceRecord[];
+  records: Attendance[];
 }
 
 export interface AttendanceFilters {

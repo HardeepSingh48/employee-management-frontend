@@ -115,16 +115,16 @@ export interface TokenPayload {
 }
 
 // Export all types
-export type {
-  User,
-  Employee,
-  LoginRequest,
-  LoginResponse,
-  RegisterRequest,
-  RegisterResponse,
-  AuthState,
-  AuthContextType,
-  UserPermissions,
-  AuthGuardProps,
-  TokenPayload,
-};
+// export type {
+//   User,
+//   Employee,
+//   LoginRequest,
+//   LoginResponse,
+//   RegisterRequest,
+//   RegisterResponse,
+//   AuthState,
+//   AuthContextType,
+//   UserPermissions,
+//   AuthGuardProps,
+//   TokenPayload,
+// };
