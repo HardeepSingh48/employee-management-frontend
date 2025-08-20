@@ -74,6 +74,13 @@ export const API_ENDPOINTS = {
     REPORTS: '/api/salary/reports',
   },
 
+  // Forms endpoints
+  FORMS: {
+    BASE: '/forms',
+    FORM_B: '/forms/form-b',
+    FORM_B_DOWNLOAD: '/forms/form-b/download',
+  },
+
   // File upload endpoints
   UPLOADS: {
     EMPLOYEE_DOCUMENTS: '/api/uploads/employee-documents',

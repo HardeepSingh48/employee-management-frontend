@@ -1,46 +1,24 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { formsService, FormBEmployee, FormBTotals } from '@/lib/forms-service';
 
-const mockFormBData = [
-  {
-    slNo: 1,
-    employeeCode: 'CN008',
-    employeeName: 'Parmar Santabhai Himmatbhai',
-    designation: 'HK',
-    rateOfWage: { bs: 8308, da: 1752 },
-    daysWorked: 26,
-    overtime: 2,
-    totalDays: 27,
-    grossEarnings: { bs: 6700, da: 1415, hra: 0, cov: 0, ota: 481, ae: 0 },
-    totalEarnings: 8634,
-    deductions: { esi: 374, ct: 61, ptax: 0, adv: 80, total: 515 },
-    netPayable: 7473
-  },
-  {
-    slNo: 2,
-    employeeCode: 'CN054',
-    employeeName: 'Chhagabai Kiranbhai Kevadiya',
-    designation: 'Assembly Worker',
-    rateOfWage: { bs: 8308, da: 1752 },
-    daysWorked: 26,
-    overtime: 0,
-    totalDays: 26,
-    grossEarnings: { bs: 6700, da: 1415, hra: 0, cov: 0, ota: 0, ae: 0 },
-    totalEarnings: 8115,
-    deductions: { esi: 374, ct: 61, ptax: 0, adv: 80, total: 515 },
-    netPayable: 6398
-  },
-  // Add more mock data as needed
-];
+
 
 export default function FormB() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedSite, setSelectedSite] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [formBData, setFormBData] = useState<FormBEmployee[]>([]);
+  const [totals, setTotals] = useState<FormBTotals | null>(null);
+  const [availableSites, setAvailableSites] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   const months = [
     { value: '01', label: 'January' },
@@ -57,66 +35,104 @@ export default function FormB() {
     { value: '12', label: 'December' }
   ];
 
-  const sites = [
-    { value: 'VADHWAN-GDC-DELUX-BEARING-PVT-LTD', label: 'Vadhwan GDC Delux Bearing Pvt Ltd' },
-    { value: 'RAJKOT-INDUSTRIAL-ESTATE', label: 'Rajkot Industrial Estate' },
-    { value: 'AHMEDABAD-BRANCH', label: 'Ahmedabad Branch' }
-  ];
+  const years = Array.from({ length: 5 }, (_, i) => {
+    const year = new Date().getFullYear() - i;
+    return { value: year.toString(), label: year.toString() };
+  });
 
-  const years = ['2023', '2024', '2025'].map(year => ({ value: year, label: year }));
+  // Load available sites on component mount
+  useEffect(() => {
+    const loadSites = async () => {
+      try {
+        const sites = await formsService.getAvailableSites();
+        setAvailableSites(sites);
+      } catch (error) {
+        console.error('Failed to load sites:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load available sites',
+          variant: 'destructive',
+        });
+      }
+    };
 
-  const handleDownload = () => {
-    if (!selectedMonth || !selectedSite || !selectedYear) {
-      alert('Please select month, site, and year before downloading');
+    loadSites();
+  }, [toast]);
+
+  // Load Form B data when filters change
+  useEffect(() => {
+    if (selectedMonth && selectedYear) {
+      loadFormBData();
+    }
+  }, [selectedMonth, selectedYear, selectedSite]);
+
+  const loadFormBData = async () => {
+    if (!selectedMonth || !selectedYear) return;
+
+    setIsLoading(true);
+    try {
+      const response = await formsService.getFormBData({
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
+        site: selectedSite && selectedSite !== 'all' ? selectedSite : undefined,
+      });
+
+      setFormBData(response.data);
+      setTotals(response.totals);
+    } catch (error: any) {
+      console.error('Failed to load Form B data:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load Form B data',
+        variant: 'destructive',
+      });
+      setFormBData([]);
+      setTotals(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!selectedMonth || !selectedYear) {
+      toast({
+        title: 'Error',
+        description: 'Please select month and year before downloading',
+        variant: 'destructive',
+      });
       return;
     }
 
-    // Create CSV content
-    const headers = [
-      'Sl.No', 'Employee Code', 'Employee Name', 'Designation', 
-      'Rate of Wage (BS)', 'Rate of Wage (DA)', 'Days Worked', 'Overtime', 'Total Days',
-      'BS', 'DA', 'HRA', 'COV', 'OTA', 'AE', 'Total Earnings',
-      'ESI', 'CT', 'PTAX', 'ADV', 'Total Deductions', 'Net Payable'
-    ];
+    setIsDownloading(true);
+    try {
+      const blob = await formsService.downloadFormBExcel({
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
+        site: selectedSite && selectedSite !== 'all' ? selectedSite : undefined,
+      });
 
-    const csvContent = [
-      headers.join(','),
-      ...mockFormBData.map(row => [
-        row.slNo,
-        row.employeeCode,
-        `"${row.employeeName}"`,
-        `"${row.designation}"`,
-        row.rateOfWage.bs,
-        row.rateOfWage.da,
-        row.daysWorked,
-        row.overtime,
-        row.totalDays,
-        row.grossEarnings.bs,
-        row.grossEarnings.da,
-        row.grossEarnings.hra,
-        row.grossEarnings.cov,
-        row.grossEarnings.ota,
-        row.grossEarnings.ae,
-        row.totalEarnings,
-        row.deductions.esi,
-        row.deductions.ct,
-        row.deductions.ptax,
-        row.deductions.adv,
-        row.deductions.total,
-        row.netPayable
-      ].join(','))
-    ].join('\n');
+      const filename = formsService.generateExcelFilename(
+        selectedSite && selectedSite !== 'all' ? selectedSite : 'All',
+        parseInt(selectedMonth),
+        parseInt(selectedYear)
+      );
 
-    // Download file
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `Form-B-${selectedSite}-${selectedYear}-${selectedMonth}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+      formsService.triggerFileDownload(blob, filename);
+
+      toast({
+        title: 'Success',
+        description: 'Form B Excel file downloaded successfully',
+      });
+    } catch (error: any) {
+      console.error('Failed to download Form B:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to download Form B Excel file',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -157,21 +173,30 @@ export default function FormB() {
           <Label htmlFor="site">Site</Label>
           <Select value={selectedSite} onValueChange={setSelectedSite}>
             <SelectTrigger>
-              <SelectValue placeholder="Select site" />
+              <SelectValue placeholder="Select site (optional)" />
             </SelectTrigger>
             <SelectContent>
-              {sites.map(site => (
-                <SelectItem key={site.value} value={site.value}>
-                  {site.label}
+              <SelectItem value="all">All Sites</SelectItem>
+              {availableSites.filter(site => site && site.trim() !== '').map(site => (
+                <SelectItem key={site} value={site}>
+                  {site}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="flex items-end">
-          <Button onClick={handleDownload} className="w-full">
-            <Download className="w-4 h-4 mr-2" />
-            Download Form B
+          <Button
+            onClick={handleDownload}
+            className="w-full"
+            disabled={isDownloading || !selectedMonth || !selectedYear}
+          >
+            {isDownloading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {isDownloading ? 'Downloading...' : 'Download Form B'}
           </Button>
         </div>
       </div>
@@ -211,32 +236,82 @@ export default function FormB() {
             </tr>
           </thead>
           <tbody>
-            {mockFormBData.map((row, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="border p-2 text-center">{row.slNo}</td>
-                <td className="border p-2 text-center">{row.employeeCode}</td>
-                <td className="border p-2">{row.employeeName}</td>
-                <td className="border p-2 text-center">{row.designation}</td>
-                <td className="border p-2 text-right">{row.rateOfWage.bs}</td>
-                <td className="border p-2 text-right">{row.rateOfWage.da}</td>
-                <td className="border p-2 text-center">{row.daysWorked}</td>
-                <td className="border p-2 text-center">{row.overtime}</td>
-                <td className="border p-2 text-center">{row.totalDays}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.bs}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.da}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.hra}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.cov}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.ota}</td>
-                <td className="border p-2 text-right">{row.grossEarnings.ae}</td>
-                <td className="border p-2 text-right font-semibold">{row.totalEarnings}</td>
-                <td className="border p-2 text-right">{row.deductions.esi}</td>
-                <td className="border p-2 text-right">{row.deductions.ct}</td>
-                <td className="border p-2 text-right">{row.deductions.ptax}</td>
-                <td className="border p-2 text-right">{row.deductions.adv}</td>
-                <td className="border p-2 text-right">{row.deductions.total}</td>
-                <td className="border p-2 text-right font-semibold text-green-600">{row.netPayable}</td>
+            {isLoading ? (
+              <tr>
+                <td colSpan={22} className="border p-8 text-center">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                    Loading Form B data...
+                  </div>
+                </td>
               </tr>
-            ))}
+            ) : formBData.length === 0 ? (
+              <tr>
+                <td colSpan={22} className="border p-8 text-center text-gray-500">
+                  {selectedMonth && selectedYear
+                    ? 'No data found for the selected criteria'
+                    : 'Please select month and year to view data'
+                  }
+                </td>
+              </tr>
+            ) : (
+              <>
+                {formBData.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border p-2 text-center">{row.slNo}</td>
+                    <td className="border p-2 text-center">{row.employeeCode}</td>
+                    <td className="border p-2">{row.employeeName}</td>
+                    <td className="border p-2 text-center">{row.designation}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.rateOfWage.bs)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.rateOfWage.da)}</td>
+                    <td className="border p-2 text-center">{row.daysWorked}</td>
+                    <td className="border p-2 text-center">{row.overtime}</td>
+                    <td className="border p-2 text-center">{row.totalDays.toFixed(1)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.bs)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.da)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.hra)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.cov)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.ota)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.ae)}</td>
+                    <td className="border p-2 text-right font-semibold">{formsService.formatNumber(row.totalEarnings)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.pf)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.esi)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.cit)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.ptax)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.adv)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.total)}</td>
+                    <td className="border p-2 text-right font-semibold text-green-600">{formsService.formatNumber(row.netPayable)}</td>
+                  </tr>
+                ))}
+                {totals && (
+                  <tr className="bg-gray-100 font-semibold">
+                    <td className="border p-2 text-center">-</td>
+                    <td className="border p-2 text-center">-</td>
+                    <td className="border p-2">TOTAL</td>
+                    <td className="border p-2 text-center">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-center">{totals.totalDaysWorked}</td>
+                    <td className="border p-2 text-center">{totals.totalOvertime.toFixed(1)}</td>
+                    <td className="border p-2 text-center">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(totals.totalEarnings)}</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(totals.totalDeductions)}</td>
+                    <td className="border p-2 text-right text-green-600">{formsService.formatNumber(totals.totalNetPayable)}</td>
+                  </tr>
+                )}
+              </>
+            )}
           </tbody>
         </table>
       </div>
