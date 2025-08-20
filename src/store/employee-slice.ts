@@ -361,7 +361,7 @@ const employeeSlice = createSlice({
         // Add recent activity
         const activity = {
           employeeId: action.payload.id,
-          employeeName: action.payload.fullName,
+          employeeName: action.payload.fullName || '',
           action: 'created',
           details: `Employee ${action.payload.id} was created`,
         };
@@ -392,7 +392,7 @@ const employeeSlice = createSlice({
         // Add recent activity
         const activity = {
           employeeId: action.payload.id,
-          employeeName: action.payload.fullName,
+          employeeName: action.payload.fullName || '',
           action: 'updated',
           details: `Employee ${action.payload.id} was updated`,
         };
@@ -423,7 +423,7 @@ const employeeSlice = createSlice({
         if (deletedEmployee) {
           const activity = {
             employeeId: deletedEmployee.id,
-            employeeName: deletedEmployee.fullName,
+            employeeName: deletedEmployee.fullName || '',
             action: 'deleted',
             details: `Employee ${deletedEmployee.id} was deleted`,
           };

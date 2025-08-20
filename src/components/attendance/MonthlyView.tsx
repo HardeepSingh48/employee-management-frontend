@@ -27,8 +27,8 @@ export default function MonthlyView() {
         const employeeData = await employeeService.getEmployees();
         setEmployees(employeeData);
         if (employeeData.length > 0) {
-          setSelectedEmployee(employeeData[0].id);
-        }
+  setSelectedEmployee(employeeData[0].id ?? "");
+}
       } catch (error) {
         console.error('Error loading employees:', error);
         toast({
@@ -109,7 +109,7 @@ export default function MonthlyView() {
             </SelectTrigger>
             <SelectContent>
               {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
+                <SelectItem key={employee.id} value={employee.id ?? ''}>
                   {employee.id} - {employee.fullName} 
                   {/* {employee.last_name} */}
                 </SelectItem>

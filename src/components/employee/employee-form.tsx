@@ -105,15 +105,10 @@ const EmployeeRegistrationForm: React.FC = () => {
       // Split fullName into first_name and last_name
       const nameParts = data.fullName.trim().split(' ').filter(part => part.length > 0);
       const firstName = nameParts[0] || '';
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'N/A';
 
       formData.append('first_name', firstName);
-      if (lastName) {
-        formData.append('last_name', lastName);
-      } else {
-        // If no last name, use a placeholder or leave empty
-        formData.append('last_name', '');
-      }
+      formData.append('last_name', lastName);
 
       // Append mapped fields
       Object.entries(data).forEach(([frontendKey, value]) => {

@@ -106,7 +106,7 @@ export default function MarkAttendance() {
     }
   };
 
-  const selectedEmployee = employees.find(emp => emp.id === form.watch('employee_id'));
+  const selectedEmployee = employees.find(emp => (emp.employee_id || emp.id) === form.watch('employee_id'));
 
   return (
     <div className="space-y-6">
@@ -134,10 +134,12 @@ export default function MarkAttendance() {
                         </SelectItem>
                       ) : (
                         employees.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.id} - {employee.fullName} 
-                            {/* {employee.last_name} */}
-                          </SelectItem>
+                          <SelectItem
+  key={employee.employee_id ?? employee.id ?? ""}
+  value={employee.employee_id ?? employee.id ?? ""}
+>
+  {(employee.employee_id ?? employee.id ?? "")} - {employee.full_name || employee.fullName || `${employee.first_name} ${employee.last_name}`}
+</SelectItem>
                         ))
                       )}
                     </SelectContent>

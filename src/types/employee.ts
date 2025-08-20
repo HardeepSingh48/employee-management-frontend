@@ -3,10 +3,18 @@ import type { EmployeeFormData } from "@/lib/validations/employee";
 export type { EmployeeFormData } from "@/lib/validations/employee";
 
 export interface Employee {
-  id: string;
+   id: string; // optional if backend doesn’t always send it
+  employee_id?: string; // add this line
 
   // Personal Information
-  fullName: string;
+  fullName?: string;
+
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+
+
+
   dateOfBirth: string;
   gender: "Male" | "Female" | "Other";
   maritalStatus: "Single" | "Married" | "Divorced" | "Widowed";
@@ -15,7 +23,7 @@ export interface Employee {
 
   // Contact Information
   permanentAddress: string;
-  mobileNumber: string;
+  mobileNumber?: string;
   alternateContactNumber?: string;
 
   // Government IDs
@@ -28,8 +36,8 @@ export interface Employee {
   // Employment Details
   dateOfJoining: string;
   employmentType: "Full-time" | "Part-time" | "Contract" | "Intern";
-  department: string;
-  designation: string;
+  department?: string;
+  designation?: string;
   workLocation: string;
   reportingManager?: string;
 
@@ -62,7 +70,7 @@ export interface Employee {
   chequeFileUrl?: string;
 
   // System fields
-  status: "active" | "inactive";
+  status?: "active" | "inactive";
   profileImage?: string;
   createdAt: string;
   updatedAt: string;
