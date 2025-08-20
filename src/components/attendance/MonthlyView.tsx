@@ -20,15 +20,30 @@ export default function MonthlyView() {
   const [monthlySummary, setMonthlySummary] = useState<MonthlyAttendanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper function to get employee name
+  const getEmployeeName = (employee: Employee) => {
+    return employee.full_name || 
+           employee.fullName || 
+           `${employee.first_name || ''} ${employee.last_name || ''}`.trim() ||
+           'Unknown Employee';
+  };
+
+  // Helper function to get employee ID
+  const getEmployeeId = (employee: Employee) => {
+    return employee.employee_id || employee.id || '';
+  };
+
   // Load employees on component mount
   useEffect(() => {
     const loadEmployees = async () => {
       try {
         const employeeData = await employeeService.getEmployees();
+        // console.log('Loaded employees:', employeeData); // Debug log
         setEmployees(employeeData);
         if (employeeData.length > 0) {
-  setSelectedEmployee(employeeData[0].id ?? "");
-}
+          const firstEmployeeId = getEmployeeId(employeeData[0]);
+          setSelectedEmployee(String(firstEmployeeId));
+        }
       } catch (error) {
         console.error('Error loading employees:', error);
         toast({
@@ -95,7 +110,9 @@ export default function MonthlyView() {
     }
   };
 
-  const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
+  const selectedEmployeeData = employees.find(emp => 
+    String(getEmployeeId(emp)) === String(selectedEmployee)
+  );
 
   return (
     <div className="space-y-6">
@@ -103,17 +120,33 @@ export default function MonthlyView() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="text-sm font-medium mb-2 block">Employee</label>
-          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+          <Select 
+            value={selectedEmployee || ''} 
+            onValueChange={setSelectedEmployee}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id ?? ''}>
-                  {employee.id} - {employee.fullName} 
-                  {/* {employee.last_name} */}
+              {employees.length === 0 ? (
+                <SelectItem value="no-employees" disabled>
+                  No employees found
                 </SelectItem>
-              ))}
+              ) : (
+                employees.map((employee) => {
+                  const employeeId = getEmployeeId(employee);
+                  const employeeName = getEmployeeName(employee);
+                  
+                  return (
+                    <SelectItem 
+                      key={employeeId} 
+                      value={String(employeeId)}
+                    >
+                      {employeeId} - {employeeName}
+                    </SelectItem>
+                  );
+                })
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -167,13 +200,11 @@ export default function MonthlyView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Name</p>
-                <p>{selectedEmployeeData.fullName} 
-                  {/* {selectedEmployeeData.last_name} */}
-                  </p>
+                <p>{getEmployeeName(selectedEmployeeData)}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Employee ID</p>
-                <p>{selectedEmployeeData.id}</p>
+                <p>{getEmployeeId(selectedEmployeeData)}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Department</p>

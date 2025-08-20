@@ -26,7 +26,7 @@ export const attendanceSchema = z.object({
   check_out_time: z.string().optional(),
   overtime_hours: z.string().optional(),
   remarks: z.string().optional(),
-}) 
+})
 
 type AttendanceFormValues = z.infer<typeof attendanceSchema>;
 
@@ -38,9 +38,13 @@ export default function MarkAttendance() {
   const form = useForm<AttendanceFormValues>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
+      employee_id: '', // Initialize with empty string instead of undefined
       attendance_date: attendanceService.getCurrentDate(),
       attendance_status: 'Present',
       overtime_hours: '0',
+      check_in_time: '',
+      check_out_time: '',
+      remarks: '',
     },
   });
 
@@ -81,7 +85,7 @@ export default function MarkAttendance() {
       };
 
       const result = await attendanceService.markAttendance(attendanceData);
-      
+
       toast({
         title: 'Success',
         description: 'Attendance marked successfully',
@@ -89,9 +93,13 @@ export default function MarkAttendance() {
 
       // Reset form but keep the date
       form.reset({
+        employee_id: '',
         attendance_date: data.attendance_date,
         attendance_status: 'Present',
         overtime_hours: '0',
+        check_in_time: '',
+        check_out_time: '',
+        remarks: '',
       });
 
     } catch (error: any) {
@@ -120,7 +128,10 @@ export default function MarkAttendance() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Employee</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || ''}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select employee" />
@@ -129,18 +140,29 @@ export default function MarkAttendance() {
                     <SelectContent>
                       {isLoading ? (
                         <SelectItem value="loading" disabled>
-                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                          Loading employees...
+                          <div className="flex items-center">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Loading employees...
+                          </div>
+                        </SelectItem>
+                      ) : employees.length === 0 ? (
+                        <SelectItem value="no-employees" disabled>
+                          No employees found
                         </SelectItem>
                       ) : (
-                        employees.map((employee) => (
-                          <SelectItem
-  key={employee.employee_id ?? employee.id ?? ""}
-  value={employee.employee_id ?? employee.id ?? ""}
->
-  {(employee.employee_id ?? employee.id ?? "")} - {employee.full_name || employee.fullName || `${employee.first_name} ${employee.last_name}`}
-</SelectItem>
-                        ))
+                        employees.map((employee) => {
+                          const employeeId = employee.employee_id || employee.id || '';
+                          const employeeName = employee.full_name || employee.fullName || `${employee.first_name || ''} ${employee.last_name || ''}`.trim();
+                          
+                          return (
+                            <SelectItem
+                              key={employeeId}
+                              value={String(employeeId)}
+                            >
+                              {employeeId} - {employeeName}
+                            </SelectItem>
+                          );
+                        })
                       )}
                     </SelectContent>
                   </Select>
@@ -171,7 +193,10 @@ export default function MarkAttendance() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Attendance Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || ''} // Ensure value is never undefined
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
@@ -246,7 +271,7 @@ export default function MarkAttendance() {
               <FormItem>
                 <FormLabel>Remarks (Optional)</FormLabel>
                 <FormControl>
-                  <Textarea 
+                  <Textarea
                     placeholder="Add any additional notes about attendance..."
                     className="resize-none"
                     {...field}
@@ -270,9 +295,7 @@ export default function MarkAttendance() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="font-medium text-muted-foreground">Name</p>
-                    <p>{selectedEmployee.fullName}
-                       {/* {selectedEmployee.last_name} */}
-                       </p>
+                    <p>{selectedEmployee.fullName || selectedEmployee.full_name || `${selectedEmployee.first_name} ${selectedEmployee.last_name}`}</p>
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">Department</p>
@@ -284,7 +307,7 @@ export default function MarkAttendance() {
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">Employee ID</p>
-                    <p>{selectedEmployee.id}</p>
+                    <p>{selectedEmployee.employee_id || selectedEmployee.id}</p>
                   </div>
                 </div>
               </CardContent>
