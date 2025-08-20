@@ -127,8 +127,10 @@ export const formsService = {
       const salaryCodes = response.data.data || [];
       
       // Extract unique site names
-      const sites = [...new Set(salaryCodes.map((code: any) => code.site_name))];
-      return sites.filter(Boolean); // Remove any null/undefined values
+      const sites = [...new Set(salaryCodes.map((code: any) => code.site_name as string))];
+      return sites.filter((site): site is string => 
+  typeof site === 'string' && Boolean(site) && site.trim() !== ''
+); // Remove any null/undefined/empty values
     } catch (error: any) {
       console.error('Failed to fetch available sites:', error);
       return [];
