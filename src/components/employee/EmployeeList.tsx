@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { employeeService } from '@/lib/employee-service';
-import { EditModal } from '@/components/ui/CustomModal';
+import { ComprehensiveEditModal } from '@/components/ui/modals/ComprehensiveEditModal';
 
 interface EmployeeRow {
   employee_id: string;
@@ -14,16 +14,45 @@ interface EmployeeRow {
   designation?: string;
   employment_status?: string;
   hire_date?: string | null;
+  // Add all other employee fields that might be returned
+  date_of_birth?: string;
+  gender?: string;
+  marital_status?: string;
+  nationality?: string;
+  blood_group?: string;
+  address?: string;
+  alternate_contact_number?: string;
+  adhar_number?: string;
+  pan_card_number?: string;
+  voter_id_driving_license?: string;
+  uan?: string;
+  esic_number?: string;
+  employment_type?: string;
+  work_location?: string;
+  reporting_manager?: string;
+  salary_code?: string;
+  skill_category?: string;
+  pf_applicability?: boolean;
+  esic_applicability?: boolean;
+  professional_tax_applicability?: boolean;
+  salary_advance_loan?: number;
+  bank_account_number?: string;
+  bank_name?: string;
+  ifsc_code?: string;
+  highest_qualification?: string;
+  year_of_passing?: number;
+  additional_certifications?: string;
+  experience_duration?: number;
+  emergency_contact_name?: string;
+  emergency_contact_relationship?: string;
+  emergency_contact_phone?: string;
 }
-
-
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EmployeeRow | null>(null);
-  const [editValues, setEditValues] = useState<Partial<EmployeeRow>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -40,7 +69,39 @@ export default function EmployeeList() {
           department_id: emp.department_id,
           designation: emp.designation,
           employment_status: emp.employment_status,
-          hire_date: emp.hire_date
+          hire_date: emp.hire_date,
+          // Map all other fields
+          date_of_birth: emp.date_of_birth,
+          gender: emp.gender,
+          marital_status: emp.marital_status,
+          nationality: emp.nationality,
+          blood_group: emp.blood_group,
+          address: emp.address,
+          alternate_contact_number: emp.alternate_contact_number,
+          adhar_number: emp.adhar_number,
+          pan_card_number: emp.pan_card_number,
+          voter_id_driving_license: emp.voter_id_driving_license,
+          uan: emp.uan,
+          esic_number: emp.esic_number,
+          employment_type: emp.employment_type,
+          work_location: emp.work_location,
+          reporting_manager: emp.reporting_manager,
+          salary_code: emp.salary_code,
+          skill_category: emp.skill_category,
+          pf_applicability: emp.pf_applicability,
+          esic_applicability: emp.esic_applicability,
+          professional_tax_applicability: emp.professional_tax_applicability,
+          salary_advance_loan: emp.salary_advance_loan,
+          bank_account_number: emp.bank_account_number,
+          bank_name: emp.bank_name,
+          ifsc_code: emp.ifsc_code,
+          highest_qualification: emp.highest_qualification,
+          year_of_passing: emp.year_of_passing,
+          additional_certifications: emp.additional_certifications,
+          experience_duration: emp.experience_duration,
+          emergency_contact_name: emp.emergency_contact_name,
+          emergency_contact_relationship: emp.emergency_contact_relationship,
+          emergency_contact_phone: emp.emergency_contact_phone
         }));
         setEmployees(transformedData);
       } catch (e: any) {
@@ -52,27 +113,53 @@ export default function EmployeeList() {
     void load();
   }, []);
 
-  const openEdit = (row: EmployeeRow) => {
-    setEditing(row);
-    setEditValues({
-      first_name: row.first_name,
-      last_name: row.last_name,
-      email: row.email || '',
-      phone_number: row.phone_number || '',
-      department_id: row.department_id || '',
-      designation: row.designation || '',
-      employment_status: row.employment_status || 'Active'
-    });
+  const openEdit = async (row: EmployeeRow) => {
+    try {
+      // Fetch complete employee details for editing
+      // If your employeeService has a method to get single employee with full details
+      const fullEmployeeData = await employeeService.getEmployee(row.employee_id);
+      console.log('Full employee data for editing:', fullEmployeeData);
+      setEditing(fullEmployeeData as EmployeeRow);
+    } catch (error) {
+      console.error('Error fetching full employee details:', error);
+      // Fallback to the row data we have
+      console.log('Using basic row data:', row);
+      setEditing(row);
+    }
   };
 
-  const saveEdit = async () => {
+  const saveEdit = async (formData: FormData) => {
     if (!editing) return;
+    
     try {
-      const updated = await employeeService.updateEmployee(editing.employee_id, editValues as any);
-      setEmployees(prev => prev.map(e => (e.employee_id === updated.id ? { ...e, ...updated } : e)));
+      // Convert FormData to regular object for the API call
+      const updateData: any = {};
+      
+      // Extract all form data entries
+      for (let [key, value] of formData.entries()) {
+        // Skip file uploads for now - you might want to handle these separately
+        if (value instanceof File) {
+          continue;
+        }
+        updateData[key] = value;
+      }
+
+      const updated = await employeeService.updateEmployee(editing.employee_id, updateData);
+      
+      // Update the local state with the updated employee data
+      setEmployees(prev => prev.map(e => 
+        e.employee_id === editing.employee_id 
+          ? { ...e, ...updated } 
+          : e
+      ));
+      
       setEditing(null);
-    } catch (e) {
+      
+      // Show success message
+      alert('Employee updated successfully!');
+    } catch (e: any) {
       console.error('Failed to update employee', e);
+      alert(`Error updating employee: ${e.message || 'Unknown error'}`);
     }
   };
 
@@ -118,7 +205,7 @@ export default function EmployeeList() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3"></th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -131,12 +218,21 @@ export default function EmployeeList() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.department_id || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.designation || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${emp.employment_status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        emp.employment_status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-200 text-gray-700'
+                      }`}>
                         {emp.employment_status || 'Active'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button onClick={() => openEdit(emp)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm">Edit</button>
+                      <button 
+                        onClick={() => openEdit(emp)} 
+                        className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                      >
+                        Edit Details
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -146,25 +242,13 @@ export default function EmployeeList() {
         )}
       </div>
 
-      <EditModal
+      {/* Comprehensive Edit Modal */}
+      <ComprehensiveEditModal
         isOpen={!!editing}
         onClose={() => setEditing(null)}
-        title={editing ? `Edit Employee: ${editing.employee_id}` : 'Edit Employee'}
-        values={editValues}
-        fields={[
-          { name: 'first_name', label: 'First Name', type: 'text' },
-          { name: 'last_name', label: 'Last Name', type: 'text' },
-          { name: 'email', label: 'Email', type: 'text' },
-          { name: 'phone_number', label: 'Phone', type: 'text' },
-          { name: 'department_id', label: 'Department', type: 'text' },
-          { name: 'designation', label: 'Designation', type: 'text' },
-          { name: 'employment_status', label: 'Status', type: 'text' },
-        ]}
-        onChange={setEditValues as any}
+        employee={editing}
         onSave={saveEdit}
-        saveLabel="Save Changes"
       />
     </div>
   );
 }
-
