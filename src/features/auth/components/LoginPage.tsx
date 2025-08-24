@@ -172,6 +172,7 @@ export default function LoginPage() {
           <div className="text-xs text-gray-600 space-y-1">
             <p><strong>Admin:</strong> admin@company.com / admin123</p>
             <p><strong>Employee:</strong> employee@company.com / emp123</p>
+            <p><strong>Supervisor:</strong> sup@company.com / sup123</p>
           </div>
         </div>
       </div>
