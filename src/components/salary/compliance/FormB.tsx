@@ -217,6 +217,7 @@ export default function FormB() {
               <th colSpan={6} className="border p-2 text-center">Gross Earnings</th>
               <th rowSpan={3} className="border p-2 text-center">Total Earnings</th>
               <th colSpan={5} className="border p-2 text-center">Deductions</th>
+              <th rowSpan={3} className="border p-2 text-center">Total Deductions</th>
               <th rowSpan={3} className="border p-2 text-center">Net Payable</th>
             </tr>
             <tr>
@@ -232,7 +233,7 @@ export default function FormB() {
               <th className="border p-1 text-center">CT</th>
               <th className="border p-1 text-center">PTAX</th>
               <th className="border p-1 text-center">ADV</th>
-              <th className="border p-1 text-center">Total</th>
+              {/* <th className="border p-1 text-center">Total</th> */}
             </tr>
           </thead>
           <tbody>

@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, selectUser } from '@/store/auth-slice';
 import {
   Home, Users, Calendar, Clock, TrendingUp,
-  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut
+  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
@@ -23,6 +23,7 @@ export default function AdminSidebar({ activeItem, onItemClick }: AdminSidebarPr
     { name: 'Home', icon: Home, path: '/dashboard' },
     { name: 'Attendance', icon: Users, path: '/attendance' },
     { name: 'Employees', icon: User, path: '/employees' },
+    { name: 'Sites', icon: MapPin, path: '/sites' },
     { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
     { name: 'Salary Calc', icon: Calculator, path: '/salary' },
     { name: 'Leave', icon: Calendar, path: '/leave' },
