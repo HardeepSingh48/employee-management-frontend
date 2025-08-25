@@ -12,29 +12,67 @@ import { AppDispatch } from '@/store';
 interface SidebarProps {
   activeItem: string;
   onItemClick: (item: string) => void;
+  userRole?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userRole }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector(selectUser);
 
-  const sidebarItems = [
-    { name: 'Home', icon: Home, path: '/dashboard' },
-    { name: 'Attendance', icon: Users, path: '/attendance' },
-    { name: 'Employees', icon: User, path: '/employees' },
-    { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
-    { name: 'Salary Calc', icon: Calculator, path: '/salary' },
-    { name: 'Leave', icon: Calendar, path: '/leave' },
-    { name: 'Timesheet', icon: Clock, path: '/timesheet' },
-    { name: 'Performance', icon: TrendingUp, path: '/performance' },
-    { name: 'Reports', icon: Briefcase, path: '/reports' },
-    { name: 'More', icon: MoreHorizontal, path: '/more' }
-  ];
+  // Role-based sidebar items
+  const getSidebarItems = () => {
+    const role = userRole || user?.role;
+    
+    switch (role) {
+      case 'supervisor':
+        return [
+          { name: 'Dashboard', icon: Home, path: '/supervisor/dashboard' },
+          { name: 'Mark Attendance', icon: Clock, path: '/supervisor/dashboard?tab=individual' },
+          { name: 'Bulk Attendance', icon: Users, path: '/supervisor/dashboard?tab=bulk' },
+          { name: 'Attendance Records', icon: Calendar, path: '/supervisor/dashboard?tab=records' },
+          { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
+          { name: 'Salary', icon: Calculator, path: '/salary' }
+        ];
+      case 'employee':
+        return [
+          { name: 'Dashboard', icon: Home, path: '/employee/dashboard' },
+          { name: 'Attendance', icon: Clock, path: '/employee/attendance' },
+          { name: 'Profile', icon: User, path: '/employee/profile' },
+          { name: 'Salary', icon: DollarSign, path: '/employee/salary' }
+        ];
+      case 'admin':
+      default:
+        return [
+          { name: 'Home', icon: Home, path: '/dashboard' },
+          { name: 'Attendance', icon: Users, path: '/attendance' },
+          { name: 'Employees', icon: User, path: '/employees' },
+          { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
+          { name: 'Salary Calc', icon: Calculator, path: '/salary' },
+          { name: 'Leave', icon: Calendar, path: '/leave' },
+          { name: 'Timesheet', icon: Clock, path: '/timesheet' },
+          { name: 'Performance', icon: TrendingUp, path: '/performance' },
+          { name: 'Reports', icon: Briefcase, path: '/reports' },
+          { name: 'More', icon: MoreHorizontal, path: '/more' }
+        ];
+    }
+  };
+
+  const sidebarItems = getSidebarItems();
 
   const handleItemClick = (item: { name: string; path: string }) => {
     onItemClick(item.name);
-    router.push(item.path);
+    
+    // For supervisor, handle tab navigation within the dashboard
+    if (userRole === 'supervisor' && item.path.includes('?tab=')) {
+      const tab = item.path.split('?tab=')[1];
+      // Update the active tab in the parent component
+      onItemClick(tab);
+      // Navigate to supervisor dashboard with the tab
+      router.push(`/supervisor/dashboard?tab=${tab}`);
+    } else {
+      router.push(item.path);
+    }
   };
 
   const handleLogout = () => {

@@ -17,7 +17,7 @@ import {
   AlertCircle,
   TrendingUp,
 } from 'lucide-react';
-import EmployeeSidebar from '@/features/employee/components/layout/EmployeeSidebar';
+import { Sidebar } from '@/components/layout/Sidebar';
 import MarkAttendanceCard from '@/features/employee/components/attendance/MarkAttendanceCard';
 import AttendanceHistory from '@/features/employee/components/attendance/AttendanceHistory';
 import ProfileCard from '@/features/employee/components/profile/ProfileCard';
@@ -68,7 +68,7 @@ export default function EmployeeDashboard() {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/dashboard/stats`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/dashboard/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -118,7 +118,7 @@ export default function EmployeeDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <EmployeeSidebar activeItem={activeTab} onItemClick={setActiveTab} />
+      <Sidebar activeItem={activeTab} onItemClick={setActiveTab} userRole="employee" />
       
       <div className="ml-16">
         {/* Header */}

@@ -29,6 +29,8 @@ export default function LoginPage() {
     if (isAuthenticated && user) {
       if (user.role === 'admin') {
         router.push('/dashboard');
+      } else if (user.role === 'supervisor') {
+        router.push('/supervisor/dashboard');
       } else {
         router.push('/employee/dashboard');
       }
@@ -50,6 +52,8 @@ export default function LoginPage() {
         const userRole = result.payload.user.role;
         if (userRole === 'admin') {
           router.push('/dashboard');
+        } else if (userRole === 'supervisor') {
+          router.push('/supervisor/dashboard');
         } else {
           router.push('/employee/dashboard');
         }

@@ -10,18 +10,20 @@ export default function HomePage() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-    } else if (user) {
-      // Redirect based on user role
-      if (user.role === 'admin') {
-        router.push('/dashboard');
-      } else {
-        router.push('/employee/dashboard');
+      useEffect(() => {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (user) {
+        // Redirect based on user role
+        if (user.role === 'admin') {
+          router.push('/dashboard');
+        } else if (user.role === 'supervisor') {
+          router.push('/supervisor/dashboard');
+        } else {
+          router.push('/employee/dashboard');
+        }
       }
-    }
-  }, [isAuthenticated, user, router]);
+    }, [isAuthenticated, user, router]);
 
   // Show loading while redirecting
   return (

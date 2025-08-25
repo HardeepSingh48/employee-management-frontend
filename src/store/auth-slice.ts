@@ -7,10 +7,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'hr' | 'manager' | 'employee';
+  role: 'admin' | 'hr' | 'manager' | 'employee' | 'supervisor';
   department?: string;
   profileImage?: string;
   permissions: string[];
+  site_id?: string;
 }
 
 export interface LoginCredentials {

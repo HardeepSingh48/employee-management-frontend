@@ -229,11 +229,11 @@ export default function FormB() {
               <th className="border p-1 text-center">COV</th>
               <th className="border p-1 text-center">OTA</th>
               <th className="border p-1 text-center">AE</th>
+              <th className="border p-1 text-center">PF</th>
               <th className="border p-1 text-center">ESI</th>
-              <th className="border p-1 text-center">CT</th>
+              <th className="border p-1 text-center">CIT</th>
               <th className="border p-1 text-center">PTAX</th>
               <th className="border p-1 text-center">ADV</th>
-              {/* <th className="border p-1 text-center">Total</th> */}
             </tr>
           </thead>
           <tbody>

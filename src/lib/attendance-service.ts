@@ -123,6 +123,27 @@ export const attendanceService = {
     return response.data.data;
   },
 
+  // Get site employees (for supervisors)
+  getSiteEmployees: async (): Promise<any[]> => {
+    const response = await api.get('/attendance/site-employees');
+    return response.data.data;
+  },
+
+  // Get site attendance with filtering
+  getSiteAttendance: async (
+    startDate?: string,
+    endDate?: string,
+    employeeId?: string
+  ): Promise<AttendanceRecord[]> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (employeeId) params.append('employee_id', employeeId);
+    
+    const response = await api.get(`/attendance/site-attendance?${params.toString()}`);
+    return response.data.data;
+  },
+
   // Helper function to format date for API
   formatDate: (date: Date): string => {
     return date.toISOString().split('T')[0];

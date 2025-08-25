@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser, selectIsAuthenticated } from '@/store/auth-slice';
 import { useRouter } from 'next/navigation';
-import AdminSidebar from '@/features/admin/components/layout/AdminSidebar';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminSidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
+      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole="admin" />
 
       <div className="ml-16">
         {/* Header */}
