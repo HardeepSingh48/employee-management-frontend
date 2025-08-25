@@ -15,13 +15,15 @@ import {
   AlertCircle,
   TrendingUp,
   Users,
-  FileSpreadsheet
+  FileSpreadsheet,
+  DollarSign
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import MarkAttendance from '@/features/supervisor/components/attendance/MarkAttendance';
 import BulkAttendance from '@/features/supervisor/components/attendance/BulkAttendance';
 import AttendanceRecords from '@/features/supervisor/components/attendance/AttendanceRecords';
 import SiteSalaryReport from '@/features/supervisor/components/salary/SiteSalaryReport';
+import DeductionsPage from '@/app/dashboard/deductions/page';
 
 interface DashboardStats {
   site_employees_count: number;
@@ -61,7 +63,7 @@ function SupervisorDashboardContent() {
 
     // Check for tab parameter in URL
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['dashboard', 'individual', 'bulk', 'records', 'salary'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'individual', 'bulk', 'records', 'salary', 'deductions'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
 
@@ -146,12 +148,13 @@ function SupervisorDashboardContent() {
 
         <div className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-5">
+                    <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="individual">Mark Attendance</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Attendance</TabsTrigger>
           <TabsTrigger value="records">Attendance Records</TabsTrigger>
           <TabsTrigger value="salary">Salary Report</TabsTrigger>
+          <TabsTrigger value="deductions">Deductions</TabsTrigger>
         </TabsList>
 
             <TabsContent value="dashboard" className="space-y-6">
@@ -279,6 +282,10 @@ function SupervisorDashboardContent() {
               
               <TabsContent value="salary">
                 <SiteSalaryReport />
+              </TabsContent>
+              
+              <TabsContent value="deductions">
+                <DeductionsPage />
               </TabsContent>
             </Tabs>
           </div>

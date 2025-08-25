@@ -32,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
           { name: 'Bulk Attendance', icon: Users, path: '/supervisor/dashboard?tab=bulk' },
           { name: 'Attendance Records', icon: Calendar, path: '/supervisor/dashboard?tab=records' },
           { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
+          { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
           { name: 'Salary', icon: Calculator, path: '/salary' }
         ];
       case 'employee':

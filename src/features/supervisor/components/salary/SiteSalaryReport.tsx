@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { attendanceService } from '@/lib/attendance-service';
+import { salaryService } from '@/lib/salary-service';
 import { Calculator, Download, Calendar, DollarSign, TrendingUp, Clock } from 'lucide-react';
 
 interface Employee {
@@ -36,6 +37,16 @@ interface SalarySummary {
   attendance_percentage: number;
   basic_salary?: number;
   calculated_salary?: number;
+  // Salary calculation fields
+  daily_wage?: number;
+  basic?: number;
+  pf?: number;
+  esic?: number;
+  total_earnings?: number;
+  total_deductions?: number;
+  net_salary?: number;
+  // Dynamic deduction fields
+  [key: string]: any; // For dynamic deduction types like "Clothes", "Loan", etc.
 }
 
 export default function SiteSalaryReport() {
@@ -82,18 +93,44 @@ export default function SiteSalaryReport() {
 
       for (const employee of employeesToProcess) {
         try {
-          const summary = await attendanceService.getMonthlyAttendanceSummary(
+          // Get attendance summary
+          const attendanceSummary = await attendanceService.getMonthlyAttendanceSummary(
             employee.employee_id,
             selectedYear,
             selectedMonth
           );
           
-          // if (summary.success) {
-          //   summaries.push({
-          //     ...summary.data,
-          //     employee_name: employee.full_name
-          //   });
-          // }
+          // Calculate salary with deductions
+          const salaryResult = await salaryService.calculateIndividualSalary({
+            employee_id: employee.employee_id,
+            year: selectedYear,
+            month: selectedMonth
+          });
+          
+          if (attendanceSummary && salaryResult) {
+            const summary: SalarySummary = {
+              ...attendanceSummary,
+              employee_name: employee.full_name,
+              // Add salary calculation data
+              daily_wage: salaryResult['Daily Wage'],
+              basic: salaryResult['Basic'],
+              pf: salaryResult['PF'],
+              esic: salaryResult['ESIC'],
+              total_earnings: salaryResult['Total Earnings'],
+              total_deductions: salaryResult['Total Deductions'],
+              net_salary: salaryResult['Net Salary'],
+              // Add dynamic deduction fields
+              ...Object.fromEntries(
+                Object.entries(salaryResult).filter(([key, value]) => 
+                  !['Employee ID', 'Employee Name', 'Skill Level', 'Present Days', 'Daily Wage', 
+                    'Basic', 'Special Basic', 'DA', 'HRA', 'Overtime', 'Others', 'Total Earnings',
+                    'PF', 'ESIC', 'Society', 'Income Tax', 'Insurance', 'Others Recoveries',
+                    'Total Deductions', 'Net Salary'].includes(key) && typeof value === 'number' && value > 0
+                )
+              )
+            };
+            summaries.push(summary);
+          }
         } catch (error) {
           console.error(`Error loading summary for ${employee.employee_id}:`, error);
         }
@@ -352,8 +389,13 @@ export default function SiteSalaryReport() {
                     <th className="border border-gray-200 px-4 py-2 text-left">Overtime</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Working Days</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Attendance %</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Basic Salary</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Calculated</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Daily Wage</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Basic</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">PF</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">ESIC</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Deductions</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Total Deductions</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Net Salary</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -390,12 +432,49 @@ export default function SiteSalaryReport() {
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         <span className="font-medium">
-                          ₹{summary.basic_salary?.toLocaleString() || 'N/A'}
+                          ₹{summary.daily_wage?.toLocaleString() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        <span className="font-medium">
+                          ₹{summary.basic?.toLocaleString() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        <span className="font-medium">
+                          ₹{summary.pf?.toLocaleString() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        <span className="font-medium">
+                          ₹{summary.esic?.toLocaleString() || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        <div className="space-y-1">
+                          {Object.entries(summary)
+                            .filter(([key, value]) => 
+                              !['employee_id', 'employee_name', 'year', 'month', 'present_days', 'absent_days', 
+                                'late_days', 'half_days', 'total_overtime_hours', 'working_days', 'holiday_count', 
+                                'attendance_percentage', 'basic_salary', 'calculated_salary', 'daily_wage', 'basic', 
+                                'pf', 'esic', 'total_earnings', 'total_deductions', 'net_salary'].includes(key) && 
+                                typeof value === 'number' && value > 0
+                            )
+                            .map(([key, value]) => (
+                              <div key={key} className="text-xs">
+                                <span className="font-medium">{key}:</span> ₹{value.toLocaleString()}
+                              </div>
+                            ))}
+                        </div>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        <span className="font-medium text-red-600">
+                          ₹{summary.total_deductions?.toLocaleString() || 'N/A'}
                         </span>
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         <span className="font-bold text-green-600">
-                          ₹{summary.calculated_salary?.toLocaleString() || 'N/A'}
+                          ₹{summary.net_salary?.toLocaleString() || 'N/A'}
                         </span>
                       </td>
                     </tr>

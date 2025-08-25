@@ -28,6 +28,7 @@ export interface FormBEmployee {
     cit: number;
     ptax: number;
     adv: number;
+    otherRecoveries: number;
     total: number;
   };
   netPayable: number;
@@ -40,6 +41,7 @@ export interface FormBTotals {
   totalOvertime: number;
   totalEarnings: number;
   totalDeductions: number;
+  totalOtherRecoveries: number;
   totalNetPayable: number;
 }
 
@@ -148,7 +150,10 @@ export const formsService = {
   },
 
   // Format number for display
-  formatNumber: (value: number): string => {
+  formatNumber: (value: number | null | undefined): string => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0';
+    }
     return new Intl.NumberFormat('en-IN').format(value);
   },
 

@@ -216,7 +216,7 @@ export default function FormB() {
               <th rowSpan={3} className="border p-2 text-center">Total Days</th>
               <th colSpan={6} className="border p-2 text-center">Gross Earnings</th>
               <th rowSpan={3} className="border p-2 text-center">Total Earnings</th>
-              <th colSpan={5} className="border p-2 text-center">Deductions</th>
+              <th colSpan={6} className="border p-2 text-center">Deductions</th>
               <th rowSpan={3} className="border p-2 text-center">Total Deductions</th>
               <th rowSpan={3} className="border p-2 text-center">Net Payable</th>
             </tr>
@@ -234,12 +234,13 @@ export default function FormB() {
               <th className="border p-1 text-center">CIT</th>
               <th className="border p-1 text-center">PTAX</th>
               <th className="border p-1 text-center">ADV</th>
+              <th className="border p-1 text-center">Other Recoveries</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={22} className="border p-8 text-center">
+                <td colSpan={23} className="border p-8 text-center">
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                     Loading Form B data...
@@ -248,7 +249,7 @@ export default function FormB() {
               </tr>
             ) : formBData.length === 0 ? (
               <tr>
-                <td colSpan={22} className="border p-8 text-center text-gray-500">
+                <td colSpan={23} className="border p-8 text-center text-gray-500">
                   {selectedMonth && selectedYear
                     ? 'No data found for the selected criteria'
                     : 'Please select month and year to view data'
@@ -280,6 +281,7 @@ export default function FormB() {
                     <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.cit)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.ptax)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.adv)}</td>
+                    <td className="border p-2 text-right font-medium text-blue-600">{formsService.formatNumber(row.deductions.otherRecoveries || 0)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.total)}</td>
                     <td className="border p-2 text-right font-semibold text-green-600">{formsService.formatNumber(row.netPayable)}</td>
                   </tr>
@@ -307,6 +309,7 @@ export default function FormB() {
                     <td className="border p-2 text-right">-</td>
                     <td className="border p-2 text-right">-</td>
                     <td className="border p-2 text-right">-</td>
+                    <td className="border p-2 text-right font-medium text-blue-600">{formsService.formatNumber(totals.totalOtherRecoveries || 0)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(totals.totalDeductions)}</td>
                     <td className="border p-2 text-right text-green-600">{formsService.formatNumber(totals.totalNetPayable)}</td>
                   </tr>
