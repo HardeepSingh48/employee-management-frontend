@@ -88,6 +88,12 @@ export const FRONTEND_ROUTES = {
       EMPLOYEE_SALARY: (id: string) => `/salary/employee/${id}`,
     },
 
+    // Payroll Generation
+    PAYROLL: {
+      BASE: '/payroll',
+      GENERATE: '/dashboard/payroll',
+    },
+
     // Leave Management
     LEAVE: {
       BASE: '/leave',

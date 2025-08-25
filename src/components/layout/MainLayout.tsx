@@ -20,6 +20,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       '/employees': 'Employees',
       '/salary-codes': 'Salary Codes',
       '/salary': 'Salary Calc',
+      '/dashboard/payroll': 'Payroll',
       '/leave': 'Leave',
       '/timesheet': 'Timesheet',
       '/performance': 'Performance',

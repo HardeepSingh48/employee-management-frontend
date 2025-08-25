@@ -249,6 +249,14 @@ export const ADMIN_NAVIGATION: NavigationItem[] = [
     ],
   },
   {
+    id: 'payroll',
+    label: 'Payroll Generation',
+    icon: Receipt,
+    route: '/dashboard/payroll',
+    description: 'Generate and download payslips',
+    permissions: ['Admin', 'Supervisor'],
+  },
+  {
     id: 'leave',
     label: 'Leave Management',
     icon: CalendarDays,

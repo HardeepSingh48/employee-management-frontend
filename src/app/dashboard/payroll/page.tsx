@@ -1,0 +1,531 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Download, 
+  Eye, 
+  Users, 
+  Calendar, 
+  Building2, 
+  FileText,
+  Loader2,
+  Search,
+  CheckSquare,
+  Square
+} from 'lucide-react';
+import PayrollService, { Employee, Site } from '@/lib/payroll-service';
+
+type SelectionMode = 'single' | 'range' | 'multi';
+
+interface PayrollFilters {
+  siteId: string;
+  startDate: string;
+  endDate: string;
+  selectionMode: SelectionMode;
+  selectedEmployeeId: number | null;
+  rangeFrom: number | null;
+  rangeTo: number | null;
+  selectedEmployeeIds: number[];
+}
+
+export default function PayrollPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [filters, setFilters] = useState<PayrollFilters>({
+    siteId: '',
+    startDate: '',
+    endDate: '',
+    selectionMode: 'single',
+    selectedEmployeeId: null,
+    rangeFrom: null,
+    rangeTo: null,
+    selectedEmployeeIds: [],
+  });
+
+  // Load initial data
+  useEffect(() => {
+    loadSites();
+    loadEmployees();
+  }, []);
+
+  // Load employees when site filter changes
+  useEffect(() => {
+    loadEmployees();
+  }, [filters.siteId]);
+
+  const loadSites = async () => {
+    const response = await PayrollService.getSites();
+    if (response.success && response.data) {
+      setSites(response.data);
+      
+      // If supervisor has only one site, automatically select it
+      if (response.data.length === 1 && response.data[0]) {
+        setFilters(prev => ({
+          ...prev,
+          siteId: response.data![0].site_id
+        }));
+      }
+    }
+  };
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    const response = await PayrollService.getEmployees(filters.siteId || undefined);
+    if (response.success && response.data) {
+      setEmployees(response.data);
+    } else {
+      setError(response.message);
+    }
+    setLoading(false);
+  };
+
+  const handleFilterChange = (key: keyof PayrollFilters, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      // Reset selection when mode changes
+      ...(key === 'selectionMode' ? {
+        selectedEmployeeId: null,
+        rangeFrom: null,
+        rangeTo: null,
+        selectedEmployeeIds: [],
+      } : {}),
+    }));
+  };
+
+  const handleEmployeeToggle = (employeeId: number) => {
+    setFilters(prev => ({
+      ...prev,
+      selectedEmployeeIds: prev.selectedEmployeeIds.includes(employeeId)
+        ? prev.selectedEmployeeIds.filter(id => id !== employeeId)
+        : [...prev.selectedEmployeeIds, employeeId],
+    }));
+  };
+
+  const handleSelectAll = () => {
+    const filteredEmployees = getFilteredEmployees();
+    const allSelected = filteredEmployees.every(emp => filters.selectedEmployeeIds.includes(emp.employee_id));
+    
+    if (allSelected) {
+      // Deselect all visible employees
+      setFilters(prev => ({
+        ...prev,
+        selectedEmployeeIds: prev.selectedEmployeeIds.filter(id => 
+          !filteredEmployees.some(emp => emp.employee_id === id)
+        ),
+      }));
+    } else {
+      // Select all visible employees
+      setFilters(prev => ({
+        ...prev,
+        selectedEmployeeIds: [
+          ...prev.selectedEmployeeIds,
+          ...filteredEmployees
+            .filter(emp => !prev.selectedEmployeeIds.includes(emp.employee_id))
+            .map(emp => emp.employee_id)
+        ],
+      }));
+    }
+  };
+
+  const getFilteredEmployees = () => {
+    return employees.filter(emp => 
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.employee_id.toString().includes(searchTerm)
+    );
+  };
+
+  const getSelectedEmployeeIds = (): number[] => {
+    switch (filters.selectionMode) {
+      case 'single':
+        return filters.selectedEmployeeId ? [filters.selectedEmployeeId] : [];
+      case 'range':
+        if (filters.rangeFrom && filters.rangeTo) {
+          return employees
+            .filter(emp => emp.employee_id >= filters.rangeFrom! && emp.employee_id <= filters.rangeTo!)
+            .map(emp => emp.employee_id);
+        }
+        return [];
+      case 'multi':
+        return filters.selectedEmployeeIds;
+      default:
+        return [];
+    }
+  };
+
+  const validateSelection = (): string | null => {
+    if (!filters.startDate || !filters.endDate) {
+      return 'Please select start and end dates';
+    }
+
+    const selectedIds = getSelectedEmployeeIds();
+    if (selectedIds.length === 0) {
+      return 'Please select at least one employee';
+    }
+
+    return null;
+  };
+
+  const handlePreview = async () => {
+    const validationError = validateSelection();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setPreviewLoading(true);
+    setError(null);
+
+    try {
+      const selectedIds = getSelectedEmployeeIds();
+      const response = await PayrollService.previewPayroll({
+        employee_ids: selectedIds,
+        start_date: filters.startDate,
+        end_date: filters.endDate,
+      });
+
+      if (response.success && response.data) {
+        setPreviewHtml(response.data.preview_html);
+        setSuccess(`Preview generated for ${response.data.preview_count} of ${response.data.total_employees} employees`);
+      } else {
+        setError(response.message);
+      }
+    } catch (err: any) {
+      setError('Failed to generate preview');
+    }
+
+    setPreviewLoading(false);
+  };
+
+  const handleGenerate = async () => {
+    const validationError = validateSelection();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setGenerateLoading(true);
+    setError(null);
+
+    try {
+      const selectedIds = getSelectedEmployeeIds();
+      const filename = `payslip_${filters.startDate}_${filters.endDate}_${new Date().getTime()}.pdf`;
+
+      let request: any = {
+        start_date: filters.startDate,
+        end_date: filters.endDate,
+        filename,
+      };
+
+      if (filters.selectionMode === 'range' && filters.rangeFrom && filters.rangeTo) {
+        request.employee_range = {
+          from: filters.rangeFrom,
+          to: filters.rangeTo,
+        };
+      } else {
+        request.employee_ids = selectedIds;
+      }
+
+      const response = await PayrollService.generatePayroll(request);
+
+      if (response instanceof Blob) {
+        // Download the PDF
+        PayrollService.downloadBlob(response, filename);
+        setSuccess(`Payroll PDF generated and downloaded successfully for ${selectedIds.length} employees`);
+      } else {
+        setError(response.message);
+      }
+    } catch (err: any) {
+      setError('Failed to generate payroll PDF');
+    }
+
+    setGenerateLoading(false);
+  };
+
+  const filteredEmployees = getFilteredEmployees();
+  const selectedIds = getSelectedEmployeeIds();
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Payroll Generation</h1>
+          <p className="text-muted-foreground">Generate and download payslips for employees</p>
+        </div>
+        <Badge variant="outline" className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          {selectedIds.length} Selected
+        </Badge>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Filters Panel */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Filters & Selection
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Site Filter */}
+              {sites.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Site Filter</Label>
+                  {sites.length === 1 ? (
+                    <div className="p-2 bg-muted rounded-md text-sm">
+                      <strong>Site:</strong> {sites[0].site_name || 'Unnamed Site'}
+                    </div>
+                  ) : (
+                    <Select value={filters.siteId || "all"} onValueChange={(value) => handleFilterChange('siteId', value === "all" ? "" : value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a site" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sites</SelectItem>
+                        {sites.map(site => (
+                          <SelectItem key={site.site_id} value={site.site_id}>
+                            {site.site_name || 'Unnamed Site'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Date Range */}
+              <div className="space-y-2">
+                <Label>Pay Period</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Start Date</Label>
+                    <Input
+                      type="date"
+                      value={filters.startDate}
+                      onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">End Date</Label>
+                    <Input
+                      type="date"
+                      value={filters.endDate}
+                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Selection Mode */}
+              <div className="space-y-2">
+                <Label>Selection Mode</Label>
+                <Tabs value={filters.selectionMode} onValueChange={(value) => handleFilterChange('selectionMode', value as SelectionMode)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="single">Single</TabsTrigger>
+                    <TabsTrigger value="range">Range</TabsTrigger>
+                    <TabsTrigger value="multi">Multi</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="single" className="space-y-2">
+                    <Label>Select Employee</Label>
+                    <Select value={filters.selectedEmployeeId?.toString() || 'none'} onValueChange={(value) => handleFilterChange('selectedEmployeeId', value !== 'none' ? parseInt(value) : null)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose an employee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Select an employee</SelectItem>
+                        {employees.map(emp => (
+                          <SelectItem key={emp.employee_id} value={emp.employee_id.toString()}>
+                            {emp.employee_id} - {emp.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TabsContent>
+
+                  <TabsContent value="range" className="space-y-2">
+                    <Label>Employee ID Range</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">From ID</Label>
+                        <Input
+                          type="number"
+                          placeholder="From"
+                          value={filters.rangeFrom || ''}
+                          onChange={(e) => handleFilterChange('rangeFrom', e.target.value ? parseInt(e.target.value) : null)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">To ID</Label>
+                        <Input
+                          type="number"
+                          placeholder="To"
+                          value={filters.rangeTo || ''}
+                          onChange={(e) => handleFilterChange('rangeTo', e.target.value ? parseInt(e.target.value) : null)}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="multi" className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Select Multiple Employees</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSelectAll}
+                        className="text-xs"
+                      >
+                        {filteredEmployees.every(emp => filters.selectedEmployeeIds.includes(emp.employee_id)) ? (
+                          <>
+                            <Square className="h-3 w-3 mr-1" />
+                            Deselect All
+                          </>
+                        ) : (
+                          <>
+                            <CheckSquare className="h-3 w-3 mr-1" />
+                            Select All
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search employees..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-4">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                      ) : (
+                        filteredEmployees.map(emp => (
+                          <div key={emp.employee_id} className="flex items-center space-x-2">
+                            <Checkbox
+                              checked={filters.selectedEmployeeIds.includes(emp.employee_id)}
+                              onCheckedChange={() => handleEmployeeToggle(emp.employee_id)}
+                            />
+                            <div className="flex-1 text-sm">
+                              <div className="font-medium">{emp.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                ID: {emp.employee_id} | {emp.department} | {emp.skill_level}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              <Separator />
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <Button
+                  onClick={handlePreview}
+                  disabled={previewLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {previewLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Eye className="h-4 w-4 mr-2" />
+                  )}
+                  Preview (First 3)
+                </Button>
+
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generateLoading}
+                  className="w-full"
+                >
+                  {generateLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  Generate PDF
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Preview Panel */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Payslip Preview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {previewHtml ? (
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-96 border-0"
+                    title="Payslip Preview"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-96 text-muted-foreground">
+                  <div className="text-center">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Click "Preview" to see payslip layout</p>
+                    <p className="text-sm">Preview shows first 3 selected employees</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
