@@ -3,6 +3,7 @@ import api from './api';
 export interface AttendanceRecord {
   attendance_id: string;
   employee_id: string;
+  employee_name?: string;
   attendance_date: string;
   check_in_time?: string;
   check_out_time?: string;

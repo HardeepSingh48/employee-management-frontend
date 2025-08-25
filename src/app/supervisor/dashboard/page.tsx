@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser, selectIsAuthenticated } from '@/store/auth-slice';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -38,7 +38,7 @@ interface DashboardStats {
   };
 }
 
-export default function SupervisorDashboard() {
+function SupervisorDashboardContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -284,5 +284,26 @@ export default function SupervisorDashboard() {
           </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function DashboardLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading dashboard...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function SupervisorDashboard() {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <SupervisorDashboardContent />
+    </Suspense>
   );
 }

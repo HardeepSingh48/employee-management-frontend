@@ -14,16 +14,16 @@ import { Calendar, Clock, Download, Search, Filter } from 'lucide-react';
 interface AttendanceRecord {
   attendance_id: string;
   employee_id: string;
-  employee_name: string;
+  employee_name?: string;
   attendance_date: string;
   attendance_status: string;
-  check_in_time: string | null;
-  check_out_time: string | null;
+  check_in_time?: string | undefined | null; // Make optional
+  check_out_time?: string | undefined | null; // Make optional
   overtime_hours: number;
   total_hours_worked: number;
-  remarks: string | null;
+  remarks?: string | undefined | null; // Make optional
   marked_by: string;
-  created_date: string | null;
+  created_date?: string | undefined | null; // Make optional
 }
 
 interface Employee {
@@ -131,7 +131,7 @@ export default function AttendanceRecords() {
       headers.join(','),
       ...attendanceRecords.map(record => [
         record.employee_id,
-        `"${record.employee_name}"`,
+        `"${record.employee_name || 'N/A'}"`,
         record.attendance_date,
         record.attendance_status,
         record.check_in_time || '',
@@ -172,10 +172,10 @@ export default function AttendanceRecords() {
     }
   };
 
-  const formatDateTime = (dateTimeString: string | null) => {
-    if (!dateTimeString) return '-';
-    return new Date(dateTimeString).toLocaleString();
-  };
+const formatDateTime = (dateTimeString: string | null | undefined) => {
+  if (!dateTimeString) return '-';
+  return new Date(dateTimeString).toLocaleString();
+};
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -301,7 +301,7 @@ export default function AttendanceRecords() {
                     <tr key={record.attendance_id} className="hover:bg-gray-50">
                       <td className="border border-gray-200 px-4 py-2">
                         <div>
-                          <div className="font-medium">{record.employee_name}</div>
+                          <div className="font-medium">{record.employee_name || 'N/A'}</div>
                           <div className="text-sm text-gray-600">{record.employee_id}</div>
                         </div>
                       </td>

@@ -88,12 +88,12 @@ export default function SiteSalaryReport() {
             selectedMonth
           );
           
-          if (summary.success) {
-            summaries.push({
-              ...summary.data,
-              employee_name: employee.full_name
-            });
-          }
+          // if (summary.success) {
+          //   summaries.push({
+          //     ...summary.data,
+          //     employee_name: employee.full_name
+          //   });
+          // }
         } catch (error) {
           console.error(`Error loading summary for ${employee.employee_id}:`, error);
         }
