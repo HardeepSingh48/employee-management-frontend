@@ -59,10 +59,10 @@ export default function BulkAttendance() {
         return;
       }
 
-      if (selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-          selectedFile.type === 'application/vnd.ms-excel' ||
-          selectedFile.name.endsWith('.xlsx') ||
-          selectedFile.name.endsWith('.xls')) {
+      if (selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        selectedFile.type === 'application/vnd.ms-excel' ||
+        selectedFile.name.endsWith('.xlsx') ||
+        selectedFile.name.endsWith('.xls')) {
         setFile(selectedFile);
         setUploadResult(null); // Clear previous results
         toast({
@@ -81,7 +81,7 @@ export default function BulkAttendance() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!file || !month || !year) {
       toast({
         title: "Missing information",
@@ -93,7 +93,7 @@ export default function BulkAttendance() {
 
     setLoading(true);
     setUploadResult(null);
-    
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -101,11 +101,11 @@ export default function BulkAttendance() {
       formData.append('year', year);
 
       const token = localStorage?.getItem('token');
-      
+
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/bulk-mark-excel`, {
         method: 'POST',
         headers: {
@@ -119,18 +119,18 @@ export default function BulkAttendance() {
 
       const result: UploadResult = await response.json();
       setUploadResult(result);
-      
+
       if (result.success) {
         toast({
           title: "Upload successful",
           description: result.message || "Attendance data has been uploaded successfully.",
         });
-        
+
         // Reset form
         setFile(null);
         setMonth('');
         setYear(new Date().getFullYear().toString());
-        
+
         // Reset file input
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
@@ -143,20 +143,20 @@ export default function BulkAttendance() {
       }
     } catch (error: any) {
       console.error('Error uploading file:', error);
-      
+
       let errorMessage = "An error occurred while uploading the file.";
       if (error.name === 'AbortError') {
         errorMessage = "Upload timed out. Please try again.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setUploadResult({
         success: false,
         message: errorMessage,
         errors: [errorMessage]
       });
-      
+
       toast({
         title: "Upload error",
         description: errorMessage,
@@ -294,9 +294,9 @@ export default function BulkAttendance() {
 
               {/* Submit Button */}
               <div className="space-y-2">
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   disabled={loading || !file || !month || !year}
                 >
                   {loading ? (
@@ -311,11 +311,33 @@ export default function BulkAttendance() {
                     </>
                   )}
                 </Button>
-                
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full" 
+                {/* Add this button temporarily in your form for debugging
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={async () => {
+                    if (!file) return;
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const token = localStorage?.getItem('token');
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/debug-columns`, {
+                      method: 'POST',
+                      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+                      body: formData,
+                    });
+                    const result = await response.json();
+                    console.log('Debug result:', result);
+                    alert(JSON.stringify(result.debug_info, null, 2));
+                  }}
+                  disabled={!file}
+                >
+                  Debug Columns
+                </Button> */}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
                   onClick={downloadTemplate}
                   disabled={loading}
                 >
@@ -348,7 +370,7 @@ export default function BulkAttendance() {
                   </ul>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                 <div>
