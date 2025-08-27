@@ -167,13 +167,69 @@ export default function BulkAttendance() {
     }
   };
 
-  const downloadTemplate = () => {
-    // This would typically trigger a download of a template file
+const downloadTemplate = async () => {
+  try {
+    const token = localStorage?.getItem('token');
+    
+    if (!token) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to download the template.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show loading state
     toast({
-      title: "Template Download",
-      description: "Contact your administrator to get the attendance template file.",
+      title: "Generating template...",
+      description: "Please wait while we prepare your template file.",
     });
-  };
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to download template');
+    }
+
+    // Get the blob from response
+    const blob = await response.blob();
+    
+    // Create a download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'attendance_template.xlsx';
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Clean up
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Template downloaded",
+      description: "The attendance template has been downloaded successfully.",
+    });
+
+  } catch (error: any) {
+    console.error('Error downloading template:', error);
+    toast({
+      title: "Download failed",
+      description: error.message || "Failed to download template. Please try again or contact your administrator.",
+      variant: "destructive",
+    });
+  }
+};
 
   return (
     <div className="p-6">
