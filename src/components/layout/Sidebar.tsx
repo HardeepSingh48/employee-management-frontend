@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, selectUser } from '@/store/auth-slice';
 import {
   Home, Users, Calendar, Clock, TrendingUp,
-  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt
+  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
@@ -34,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
           { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
           { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
           { name: 'Salary', icon: Calculator, path: '/salary' },
+          { name: 'Compliance', icon: Shield, path: '/compliance' },
           { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' }
         ];
       case 'employee':
@@ -51,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
           { name: 'Employees', icon: User, path: '/employees' },
           { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
           { name: 'Salary Calc', icon: Calculator, path: '/salary' },
+          { name: 'Compliance', icon: Shield, path: '/compliance' },
           { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
           { name: 'Leave', icon: Calendar, path: '/leave' },
           { name: 'Timesheet', icon: Clock, path: '/timesheet' },
