@@ -61,9 +61,9 @@ export default function BulkAttendance() {
 
   const downloadTemplate = () => {
     // Create a sample CSV template
-    const csvContent = `Employee ID,Date,Status,Check In Time,Check Out Time,Overtime Hours,Remarks
+    const csvContent = `Employee ID,Date,Status,Check In Time,Check Out Time,Overtime Shifts,Remarks
 EMP001,2024-08-14,Present,09:00,17:00,0,
-EMP002,2024-08-14,Late,09:30,17:00,0,Traffic delay
+EMP002,2024-08-14,Late,09:30,17:00,0.5,Traffic delay
 EMP003,2024-08-14,Absent,,,0,Sick leave`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -146,7 +146,7 @@ EMP003,2024-08-14,Absent,,,0,Sick leave`;
                   <li>• Column C: Status (Present/Absent/Late/Half Day, required)</li>
                   <li>• Column D: Check In Time (HH:MM format, optional)</li>
                   <li>• Column E: Check Out Time (HH:MM format, optional)</li>
-                  <li>• Column F: Overtime Hours (number, optional)</li>
+                  <li>• Column F: Overtime Shifts (0, 0.5, 1.0, 1.5, etc., optional)</li>
                   <li>• Column G: Remarks (text, optional)</li>
                 </ul>
               </div>

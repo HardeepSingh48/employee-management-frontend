@@ -19,6 +19,7 @@ interface AttendanceRecord {
   attendance_status: string;
   check_in_time?: string | undefined | null; // Make optional
   check_out_time?: string | undefined | null; // Make optional
+  overtime_shifts: number;
   overtime_hours: number;
   total_hours_worked: number;
   remarks?: string | undefined | null; // Make optional
@@ -120,6 +121,7 @@ export default function AttendanceRecords() {
       'Status',
       'Check In',
       'Check Out',
+      'Overtime Shifts',
       'Overtime Hours',
       'Total Hours',
       'Remarks',
@@ -136,6 +138,7 @@ export default function AttendanceRecords() {
         record.attendance_status,
         record.check_in_time || '',
         record.check_out_time || '',
+        record.overtime_shifts,
         record.overtime_hours,
         record.total_hours_worked,
         `"${record.remarks || ''}"`,
@@ -290,7 +293,8 @@ const formatDateTime = (dateTimeString: string | null | undefined) => {
                     <th className="border border-gray-200 px-4 py-2 text-left">Status</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Check In</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Check Out</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime Shifts</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime Hours</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Total Hours</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Remarks</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Marked By</th>
@@ -318,6 +322,9 @@ const formatDateTime = (dateTimeString: string | null | undefined) => {
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         {formatDateTime(record.check_out_time)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        {record.overtime_shifts} shifts
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         {record.overtime_hours} hrs

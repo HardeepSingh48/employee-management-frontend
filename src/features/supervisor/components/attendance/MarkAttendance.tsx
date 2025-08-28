@@ -27,7 +27,7 @@ interface BulkAttendanceData {
   employee_id: string;
   attendance_status: 'Present' | 'Absent' | 'Late' | 'Half Day';
   attendance_date: string;
-  overtime_hours?: number;
+  overtime_shifts?: number;
 }
 
 export default function MarkAttendance() {
@@ -37,7 +37,7 @@ export default function MarkAttendance() {
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [attendanceDate, setAttendanceDate] = useState('');
   const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'Late' | 'Half Day'>('Present');
-  const [overtimeHours, setOvertimeHours] = useState(0);
+  const [overtimeShifts, setOvertimeShifts] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [bulkAttendance, setBulkAttendance] = useState<BulkAttendanceData[]>([]);
   const [bulkDate, setBulkDate] = useState('');
@@ -62,7 +62,7 @@ export default function MarkAttendance() {
          employee_id: emp.employee_id,
          attendance_status: 'Present' as const,
          attendance_date: bulkDate || new Date().toISOString().split('T')[0],
-         overtime_hours: 0
+         overtime_shifts: 0
        }));
       setBulkAttendance(bulkData);
     } catch (error: any) {
@@ -93,7 +93,7 @@ export default function MarkAttendance() {
         employee_id: selectedEmployee,
         attendance_date: attendanceDate,
         attendance_status: attendanceStatus,
-        overtime_hours: overtimeHours,
+        overtime_shifts: overtimeShifts,
         remarks: remarks
       };
 
@@ -107,7 +107,7 @@ export default function MarkAttendance() {
       // Reset form
       setSelectedEmployee('');
       setAttendanceStatus('Present');
-      setOvertimeHours(0);
+      setOvertimeShifts(0);
       setRemarks('');
     } catch (error: any) {
       toast({
@@ -152,7 +152,7 @@ export default function MarkAttendance() {
          employee_id: emp.employee_id,
          attendance_status: 'Present' as const,
          attendance_date: bulkDate,
-         overtime_hours: 0
+         overtime_shifts: 0
        }));
       setBulkAttendance(resetBulkData);
     } catch (error: any) {
@@ -176,11 +176,11 @@ export default function MarkAttendance() {
     );
   };
 
-  const updateBulkOvertime = (employeeId: string, overtimeHours: number) => {
+  const updateBulkOvertime = (employeeId: string, overtimeShifts: number) => {
     setBulkAttendance(prev => 
       prev.map(record => 
         record.employee_id === employeeId 
-          ? { ...record, overtime_hours: overtimeHours }
+          ? { ...record, overtime_shifts: overtimeShifts }
           : record
       )
     );
@@ -192,9 +192,9 @@ export default function MarkAttendance() {
     );
   };
 
-  const setAllBulkOvertime = (overtimeHours: number) => {
+  const setAllBulkOvertime = (overtimeShifts: number) => {
     setBulkAttendance(prev => 
-      prev.map(record => ({ ...record, overtime_hours: overtimeHours }))
+      prev.map(record => ({ ...record, overtime_shifts: overtimeShifts }))
     );
   };
 
@@ -301,16 +301,18 @@ export default function MarkAttendance() {
                   </div>
 
                                      <div>
-                     <Label htmlFor="overtime">Overtime Hours</Label>
+                     <Label htmlFor="overtime">Overtime (Shifts)</Label>
                      <Input
                        id="overtime"
                        type="number"
                        min="0"
                        step="0.5"
-                       value={overtimeHours}
-                       onChange={(e) => setOvertimeHours(parseFloat(e.target.value) || 0)}
+                       max="3"
+                       value={overtimeShifts}
+                       onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
                        placeholder="0.0"
                      />
+                     <p className="text-xs text-gray-500 mt-1">1 shift = 8 hours; 0.5 = 4 hours</p>
                    </div>
 
                    <div>
@@ -414,9 +416,10 @@ export default function MarkAttendance() {
                                type="number"
                                min="0"
                                step="0.5"
+                               max="3"
                                placeholder="OT"
                                className="w-20"
-                               value={record.overtime_hours || 0}
+                               value={record.overtime_shifts || 0}
                                onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
                              />
                            </div>

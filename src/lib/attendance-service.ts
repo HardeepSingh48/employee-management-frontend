@@ -8,6 +8,7 @@ export interface AttendanceRecord {
   check_in_time?: string;
   check_out_time?: string;
   attendance_status: 'Present' | 'Absent' | 'Late' | 'Half Day' | 'Holiday' | 'Leave';
+  overtime_shifts: number;
   overtime_hours: number;
   late_minutes: number;
   early_departure_minutes: number;
@@ -26,7 +27,8 @@ export interface AttendanceMarkRequest {
   attendance_status: 'Present' | 'Absent' | 'Late' | 'Half Day';
   check_in_time?: string;
   check_out_time?: string;
-  overtime_hours?: number;
+  overtime_shifts?: number;
+  overtime_hours?: number; // Backward compatibility
   remarks?: string;
   marked_by?: string;
 }
@@ -44,6 +46,7 @@ export interface MonthlyAttendanceSummary {
   absent_days: number;
   late_days: number;
   half_days: number;
+  total_overtime_shifts: number;
   total_overtime_hours: number;
   working_days: number;
   holiday_count: number;
@@ -55,7 +58,8 @@ export interface AttendanceUpdateRequest {
   attendance_status?: 'Present' | 'Absent' | 'Late' | 'Half Day';
   check_in_time?: string;
   check_out_time?: string;
-  overtime_hours?: number;
+  overtime_shifts?: number;
+  overtime_hours?: number; // Backward compatibility
   remarks?: string;
   is_approved?: boolean;
   approved_by?: string;

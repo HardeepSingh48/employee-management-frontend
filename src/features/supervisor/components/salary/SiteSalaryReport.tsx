@@ -31,6 +31,7 @@ interface SalarySummary {
   absent_days: number;
   late_days: number;
   half_days: number;
+  total_overtime_shifts: number;
   total_overtime_hours: number;
   working_days: number;
   holiday_count: number;
@@ -85,7 +86,7 @@ export default function SiteSalaryReport() {
     setLoading(true);
     try {
       const summaries: SalarySummary[] = [];
-      
+
       // Filter employees if specific employee is selected
       const employeesToProcess = selectedEmployee && selectedEmployee !== 'all'
         ? employees.filter(emp => emp.employee_id === selectedEmployee)
@@ -99,14 +100,14 @@ export default function SiteSalaryReport() {
             selectedYear,
             selectedMonth
           );
-          
+
           // Calculate salary with deductions
           const salaryResult = await salaryService.calculateIndividualSalary({
             employee_id: employee.employee_id,
             year: selectedYear,
             month: selectedMonth
           });
-          
+
           if (attendanceSummary && salaryResult) {
             const summary: SalarySummary = {
               ...attendanceSummary,
@@ -121,8 +122,8 @@ export default function SiteSalaryReport() {
               net_salary: salaryResult['Net Salary'],
               // Add dynamic deduction fields
               ...Object.fromEntries(
-                Object.entries(salaryResult).filter(([key, value]) => 
-                  !['Employee ID', 'Employee Name', 'Skill Level', 'Present Days', 'Daily Wage', 
+                Object.entries(salaryResult).filter(([key, value]) =>
+                  !['Employee ID', 'Employee Name', 'Skill Level', 'Present Days', 'Daily Wage',
                     'Basic', 'Special Basic', 'DA', 'HRA', 'Overtime', 'Others', 'Total Earnings',
                     'PF', 'ESIC', 'Society', 'Income Tax', 'Insurance', 'Others Recoveries',
                     'Total Deductions', 'Net Salary'].includes(key) && typeof value === 'number' && value > 0
@@ -135,7 +136,7 @@ export default function SiteSalaryReport() {
           console.error(`Error loading summary for ${employee.employee_id}:`, error);
         }
       }
-      
+
       setSalarySummaries(summaries);
     } catch (error: any) {
       toast({
@@ -168,6 +169,7 @@ export default function SiteSalaryReport() {
       'Absent Days',
       'Late Days',
       'Half Days',
+      'Overtime Shifts',
       'Overtime Hours',
       'Working Days',
       'Holidays',
@@ -187,6 +189,7 @@ export default function SiteSalaryReport() {
         summary.absent_days,
         summary.late_days,
         summary.half_days,
+        summary.total_overtime_shifts,
         summary.total_overtime_hours,
         summary.working_days,
         summary.holiday_count,
@@ -231,9 +234,10 @@ export default function SiteSalaryReport() {
 
   const totalPresentDays = salarySummaries.reduce((sum, s) => sum + s.present_days, 0);
   const totalAbsentDays = salarySummaries.reduce((sum, s) => sum + s.absent_days, 0);
+  const totalOvertimeShifts = salarySummaries.reduce((sum, s) => sum + s.total_overtime_shifts, 0);
   const totalOvertimeHours = salarySummaries.reduce((sum, s) => sum + s.total_overtime_hours, 0);
-  const averageAttendance = salarySummaries.length > 0 
-    ? salarySummaries.reduce((sum, s) => sum + s.attendance_percentage, 0) / salarySummaries.length 
+  const averageAttendance = salarySummaries.length > 0
+    ? salarySummaries.reduce((sum, s) => sum + s.attendance_percentage, 0) / salarySummaries.length
     : 0;
 
   return (
@@ -359,7 +363,7 @@ export default function SiteSalaryReport() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Salary Report for {monthNames[selectedMonth - 1]} {selectedYear} 
+            Salary Report for {monthNames[selectedMonth - 1]} {selectedYear}
             ({salarySummaries.length} employees)
           </CardTitle>
         </CardHeader>
@@ -386,7 +390,8 @@ export default function SiteSalaryReport() {
                     <th className="border border-gray-200 px-4 py-2 text-left">Absent</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Late</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Half Days</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime Shifts</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Overtime Hours</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Working Days</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Attendance %</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Daily Wage</th>
@@ -418,6 +423,9 @@ export default function SiteSalaryReport() {
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         <Badge className="bg-orange-100 text-orange-800">{summary.half_days}</Badge>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-2">
+                        {summary.total_overtime_shifts} shifts
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         {summary.total_overtime_hours.toFixed(1)} hrs
@@ -453,12 +461,15 @@ export default function SiteSalaryReport() {
                       <td className="border border-gray-200 px-4 py-2">
                         <div className="space-y-1">
                           {Object.entries(summary)
-                            .filter(([key, value]) => 
-                              !['employee_id', 'employee_name', 'year', 'month', 'present_days', 'absent_days', 
-                                'late_days', 'half_days', 'total_overtime_hours', 'working_days', 'holiday_count', 
-                                'attendance_percentage', 'basic_salary', 'calculated_salary', 'daily_wage', 'basic', 
-                                'pf', 'esic', 'total_earnings', 'total_deductions', 'net_salary'].includes(key) && 
-                                typeof value === 'number' && value > 0
+                            .filter(([key, value]) =>
+                              !['employee_id', 'employee_name', 'year', 'month', 'present_days', 'absent_days',
+                                'late_days', 'half_days', 'total_overtime_shifts', 'total_overtime_hours', 'working_days', 'holiday_count',
+                                'attendance_percentage', 'basic_salary', 'calculated_salary', 'daily_wage', 'basic',
+                                'pf', 'esic', 'total_earnings', 'total_deductions', 'net_salary',
+                                // exclude overtime-related fields
+                                'Overtime Allowance', 'Overtime Hours', 'Overtime Rate Hourly', 'Overtime Shifts'
+                              ].includes(key) &&
+                              typeof value === 'number' && value > 0
                             )
                             .map(([key, value]) => (
                               <div key={key} className="text-xs">

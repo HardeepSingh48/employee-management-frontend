@@ -24,7 +24,7 @@ export const attendanceSchema = z.object({
     .refine((val) => !!val, { message: "Please select attendance status" }),
   check_in_time: z.string().optional(),
   check_out_time: z.string().optional(),
-  overtime_hours: z.string().optional(),
+  overtime_shifts: z.string().optional(),
   remarks: z.string().optional(),
 })
 
@@ -41,7 +41,7 @@ export default function MarkAttendance() {
       employee_id: '', // Initialize with empty string instead of undefined
       attendance_date: attendanceService.getCurrentDate(),
       attendance_status: 'Present',
-      overtime_hours: '0',
+      overtime_shifts: '0',
       check_in_time: '',
       check_out_time: '',
       remarks: '',
@@ -79,7 +79,7 @@ export default function MarkAttendance() {
         attendance_status: data.attendance_status,
         check_in_time: data.check_in_time ? `${data.attendance_date}T${data.check_in_time}:00` : undefined,
         check_out_time: data.check_out_time ? `${data.attendance_date}T${data.check_out_time}:00` : undefined,
-        overtime_hours: data.overtime_hours ? parseFloat(data.overtime_hours) : 0,
+        overtime_shifts: data.overtime_shifts ? parseFloat(data.overtime_shifts) : 0,
         remarks: data.remarks,
         marked_by: 'admin',
       };
@@ -96,7 +96,7 @@ export default function MarkAttendance() {
         employee_id: '',
         attendance_date: data.attendance_date,
         attendance_status: 'Present',
-        overtime_hours: '0',
+        overtime_shifts: '0',
         check_in_time: '',
         check_out_time: '',
         remarks: '',
@@ -214,18 +214,18 @@ export default function MarkAttendance() {
               )}
             />
 
-            {/* Overtime Hours */}
+            {/* Overtime Shifts */}
             <FormField
               control={form.control}
-              name="overtime_hours"
+              name="overtime_shifts"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Overtime Hours</FormLabel>
+                  <FormLabel>Overtime (Shifts)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.5" min="0" max="12" {...field} />
+                    <Input type="number" step="0.5" min="0" max="3" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Enter overtime hours (0-12)
+                    1 shift = 8 hours; 0.5 = 4 hours
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -30,10 +30,10 @@ export default function AttendanceReports() {
       });
       
       // In a real implementation, this would download the actual report
-      const csvContent = `Employee ID,Name,Present Days,Absent Days,Late Days,Attendance %
-EMP001,John Doe,22,3,1,88%
-EMP002,Jane Smith,25,0,0,100%
-EMP003,Bob Johnson,20,5,2,80%`;
+      const csvContent = `Employee ID,Name,Present Days,Absent Days,Late Days,Overtime Shifts,Overtime Hours,Attendance %
+EMP001,John Doe,22,3,1,1.5,12,88%
+EMP002,Jane Smith,25,0,0,0.5,4,100%
+EMP003,Bob Johnson,20,5,2,2.0,16,80%`;
 
       const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);

@@ -441,6 +441,20 @@ const downloadTemplate = async () => {
               </div>
 
               <div className="flex items-start gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="font-medium text-sm">Overtime Shifts (Optional):</p>
+                  <ul className="text-xs text-gray-600 mt-1 space-y-1">
+                    <li>• 0.5 = 4 hours (half shift)</li>
+                    <li>• 1.0 = 8 hours (full shift)</li>
+                    <li>• 1.5 = 12 hours (one and half shifts)</li>
+                    <li>• 2.0 = 16 hours (two shifts)</li>
+                    <li>• Use 0.5 increments only</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
                 <div>
                   <p className="font-medium text-sm">Important Notes:</p>
