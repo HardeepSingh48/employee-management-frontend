@@ -171,14 +171,14 @@ export default function LoginPage() {
         </Card>
 
         {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+        {/* <div className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-sm font-medium text-gray-900 mb-2">Demo Credentials</h3>
           <div className="text-xs text-gray-600 space-y-1">
             <p><strong>Admin:</strong> admin@company.com / admin123</p>
             <p><strong>Employee:</strong> employee@company.com / emp123</p>
             <p><strong>Supervisor:</strong> sup@company.com / sup123</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -12,6 +12,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarActive, setSidebarActive] = useState('Home');
   const pathname = usePathname();
 
+  // Check if current page is login page
+  const isLoginPage = pathname === '/login';
+
   // Update active sidebar item based on current path
   useEffect(() => {
     const pathToItemMap: { [key: string]: string } = {
@@ -36,10 +39,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
-      
-      {/* Main content area with left margin to account for sidebar */}
-      <div className="ml-16">
+      {/* Only show sidebar if not on login page */}
+      {!isLoginPage && (
+        <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
+      )}
+
+      {/* Main content area with conditional left margin */}
+      <div className={isLoginPage ? '' : 'ml-16'}>
         {children}
       </div>
     </div>

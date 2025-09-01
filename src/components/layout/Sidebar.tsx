@@ -54,11 +54,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
           { name: 'Salary Calc', icon: Calculator, path: '/salary' },
           { name: 'Compliance', icon: Shield, path: '/compliance' },
           { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
-          { name: 'Leave', icon: Calendar, path: '/leave' },
-          { name: 'Timesheet', icon: Clock, path: '/timesheet' },
-          { name: 'Performance', icon: TrendingUp, path: '/performance' },
+          // { name: 'Leave', icon: Calendar, path: '/leave' },
+          // { name: 'Timesheet', icon: Clock, path: '/timesheet' },
+          // { name: 'Performance', icon: TrendingUp, path: '/performance' },
           { name: 'Reports', icon: Briefcase, path: '/reports' },
-          { name: 'More', icon: MoreHorizontal, path: '/more' }
+          // { name: 'More', icon: MoreHorizontal, path: '/more' }
         ];
     }
   };
