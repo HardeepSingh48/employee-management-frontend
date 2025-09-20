@@ -46,7 +46,7 @@ const getSidebarItems = () => {
           { name: 'Attendance Records', icon: Calendar, path: '/supervisor/dashboard?tab=records' },
           { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
           { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
-          { name: 'Salary', icon: Calculator, path: '/salary' },
+          // { name: 'Salary', icon: Calculator, path: '/salary' },
           { name: 'Compliance', icon: Shield, path: '/compliance' },
           { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' }
         ];

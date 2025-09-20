@@ -87,11 +87,11 @@ export default function SalaryPage() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="excel" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3">
+          {/* <TabsTrigger value="excel" className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
             Excel Upload
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="monthly" className="flex items-center gap-2">
             <FileSpreadsheet className="w-4 h-4" />
             Monthly
@@ -104,10 +104,10 @@ export default function SalaryPage() {
             <TrendingUp className="w-4 h-4" />
             Reports
           </TabsTrigger>
-          <TabsTrigger value="compliance" className="flex items-center gap-2">
+          {/* <TabsTrigger value="compliance" className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4" />
             Compliance
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="excel" className="space-y-4">

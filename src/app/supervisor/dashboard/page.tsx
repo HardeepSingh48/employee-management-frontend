@@ -19,8 +19,8 @@ import {
   DollarSign
 } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
-import MarkAttendance from '@/features/supervisor/components/attendance/MarkAttendance';
-import BulkAttendance from '@/features/supervisor/components/attendance/BulkAttendance';
+import MarkAttendance from '@/components/attendance/MarkAttendance';
+import BulkAttendance from '@/components/attendance/BulkAttendance';
 import AttendanceRecords from '@/features/supervisor/components/attendance/AttendanceRecords';
 import SiteSalaryReport from '@/features/supervisor/components/salary/SiteSalaryReport';
 import DeductionsPage from '@/app/dashboard/deductions/page';

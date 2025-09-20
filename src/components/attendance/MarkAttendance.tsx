@@ -1,337 +1,443 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/hooks/use-toast';
-import { Loader2, UserCheck, Clock } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { attendanceService } from '@/lib/attendance-service';
-import { employeeService } from '@/lib/employee-service';
-import type { Employee } from '@/types/employee';
-import type { Attendance } from '@/types/attendance';
+import { Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
-export const attendanceSchema = z.object({
-  employee_id: z.string().min(1, 'Please select an employee'),
-  attendance_date: z.string().min(1, 'Date is required'),
-  attendance_status: z.enum(['Present', 'Absent', 'Late', 'Half Day'])
-    .refine((val) => !!val, { message: "Please select attendance status" }),
-  check_in_time: z.string().optional(),
-  check_out_time: z.string().optional(),
-  overtime_shifts: z.string().optional(),
-  remarks: z.string().optional(),
-})
+interface Employee {
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  site_id: string;
+  department_name: string;
+  designation: string;
+}
 
-type AttendanceFormValues = z.infer<typeof attendanceSchema>;
+interface BulkAttendanceData {
+  employee_id: string;
+  attendance_status: 'Present' | 'Absent' | 'Late' | 'Half Day';
+  attendance_date: string;
+  overtime_shifts?: number;
+}
 
 export default function MarkAttendance() {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [attendanceDate, setAttendanceDate] = useState('');
+  const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'Late' | 'Half Day'>('Present');
+  const [overtimeShifts, setOvertimeShifts] = useState(0);
+  const [remarks, setRemarks] = useState('');
+  const [bulkAttendance, setBulkAttendance] = useState<BulkAttendanceData[]>([]);
+  const [bulkDate, setBulkDate] = useState('');
+  const { toast } = useToast();
 
-  const form = useForm<AttendanceFormValues>({
-    resolver: zodResolver(attendanceSchema),
-    defaultValues: {
-      employee_id: '', // Initialize with empty string instead of undefined
-      attendance_date: attendanceService.getCurrentDate(),
-      attendance_status: 'Present',
-      overtime_shifts: '0',
-      check_in_time: '',
-      check_out_time: '',
-      remarks: '',
-    },
-  });
-
-  // Load employees on component mount
   useEffect(() => {
-    const loadEmployees = async () => {
-      setIsLoading(true);
-      try {
-        const employeeData = await employeeService.getEmployees();
-        setEmployees(employeeData);
-      } catch (error) {
-        console.error('Error loading employees:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load employees',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadEmployees();
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    setAttendanceDate(today);
+    setBulkDate(today);
   }, []);
 
-  const onSubmit = async (data: AttendanceFormValues) => {
-    setIsSubmitting(true);
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const data = await attendanceService.getSiteEmployees();
+      console.log('Loaded employees:', data); // Debug log
+      setEmployees(data);
+
+              // Initialize bulk attendance with all employees as Present
+        const bulkData = data.map((emp: Employee) => ({
+          employee_id: emp.employee_id,
+          attendance_status: 'Present' as const,
+          attendance_date: bulkDate || new Date().toISOString().split('T')[0],
+          overtime_shifts: 0
+        }));
+      setBulkAttendance(bulkData);
+    } catch (error: any) {
+      console.error('Error loading employees:', error); // Debug log
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to load employees',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleIndividualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEmployee || !attendanceDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select an employee and date',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const attendanceData = {
-        employee_id: data.employee_id,
-        attendance_date: data.attendance_date,
-        attendance_status: data.attendance_status,
-        check_in_time: data.check_in_time ? `${data.attendance_date}T${data.check_in_time}:00` : undefined,
-        check_out_time: data.check_out_time ? `${data.attendance_date}T${data.check_out_time}:00` : undefined,
-        overtime_shifts: data.overtime_shifts ? parseFloat(data.overtime_shifts) : 0,
-        remarks: data.remarks,
-        marked_by: 'admin',
+        employee_id: selectedEmployee,
+        attendance_date: attendanceDate,
+        attendance_status: attendanceStatus,
+        overtime_shifts: overtimeShifts,
+        remarks: remarks
       };
 
-      const result = await attendanceService.markAttendance(attendanceData);
+      await attendanceService.markAttendance(attendanceData);
 
       toast({
         title: 'Success',
         description: 'Attendance marked successfully',
       });
 
-      // Reset form but keep the date
-      form.reset({
-        employee_id: '',
-        attendance_date: data.attendance_date,
-        attendance_status: 'Present',
-        overtime_shifts: '0',
-        check_in_time: '',
-        check_out_time: '',
-        remarks: '',
-      });
-
+      // Reset form
+      setSelectedEmployee('');
+      setAttendanceStatus('Present');
+      setOvertimeShifts(0);
+      setRemarks('');
     } catch (error: any) {
-      console.error('Error marking attendance:', error);
       toast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to mark attendance',
         variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const selectedEmployee = employees.find(emp => (emp.employee_id || emp.id) === form.watch('employee_id'));
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkDate || bulkAttendance.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please select a date and ensure employees are loaded',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const attendanceRecords = bulkAttendance.map(record => ({
+        ...record,
+        attendance_date: bulkDate
+      }));
+
+      const result = await attendanceService.bulkMarkAttendance({
+        attendance_records: attendanceRecords
+      });
+
+      toast({
+        title: 'Success',
+        description: `Successfully marked attendance for ${result.successful_count} out of ${result.total_count} employees`,
+      });
+
+             // Reset bulk attendance to Present for all employees
+       const resetBulkData = employees.map((emp: Employee) => ({
+         employee_id: emp.employee_id,
+         attendance_status: 'Present' as const,
+         attendance_date: bulkDate,
+         overtime_shifts: 0
+       }));
+      setBulkAttendance(resetBulkData);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to mark bulk attendance',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
+    setBulkAttendance(prev => 
+      prev.map(record => 
+        record.employee_id === employeeId 
+          ? { ...record, attendance_status: status }
+          : record
+      )
+    );
+  };
+
+  const updateBulkOvertime = (employeeId: string, overtimeShifts: number) => {
+    setBulkAttendance(prev => 
+      prev.map(record => 
+        record.employee_id === employeeId 
+          ? { ...record, overtime_shifts: overtimeShifts }
+          : record
+      )
+    );
+  };
+
+  const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
+    setBulkAttendance(prev => 
+      prev.map(record => ({ ...record, attendance_status: status }))
+    );
+  };
+
+  const setAllBulkOvertime = (overtimeShifts: number) => {
+    setBulkAttendance(prev => 
+      prev.map(record => ({ ...record, overtime_shifts: overtimeShifts }))
+    );
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Present': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'Absent': return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'Late': return <AlertCircle className="w-4 h-4 text-yellow-600" />;
+      case 'Half Day': return <Clock className="w-4 h-4 text-orange-600" />;
+      default: return null;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Present': return 'bg-green-100 text-green-800';
+      case 'Absent': return 'bg-red-100 text-red-800';
+      case 'Late': return 'bg-yellow-100 text-yellow-800';
+      case 'Half Day': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading employees...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Employee Selection */}
-            <FormField
-              control={form.control}
-              name="employee_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value || ''}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employee" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>
-                          <div className="flex items-center">
-                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            Loading employees...
+    <div className="p-6 space-y-6">
+      <div className="flex items-center space-x-2">
+        <Clock className="w-6 h-6 text-blue-600" />
+        <h2 className="text-2xl font-bold">Mark Attendance</h2>
+      </div>
+
+      <Tabs defaultValue="individual" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="individual" className="flex items-center space-x-2">
+            <Users className="w-4 h-4" />
+            <span>Individual</span>
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4" />
+            <span>Bulk Mark Today</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="individual" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Mark Individual Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleIndividualSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="employee">Employee</Label>
+                    <select
+                      id="employee"
+                      value={selectedEmployee}
+                      onChange={(e) => setSelectedEmployee(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select employee</option>
+                      {employees.map((emp) => {
+                        const displayText = `${emp.full_name || emp.employee_id || 'Unknown'} - ${emp.designation || 'No designation'}`;
+                        return (
+                          <option key={emp.employee_id} value={emp.employee_id}>
+                            {displayText}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={attendanceDate}
+                      onChange={(e) => setAttendanceDate(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <select
+                      id="status"
+                      value={attendanceStatus}
+                      onChange={(e) => setAttendanceStatus(e.target.value as 'Present' | 'Absent' | 'Late' | 'Half Day')}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="Present">Present</option>
+                      <option value="Absent">Absent</option>
+                      <option value="Late">Late</option>
+                      <option value="Half Day">Half Day</option>
+                    </select>
+                  </div>
+
+                                     <div>
+                     <Label htmlFor="overtime">Overtime (Shifts)</Label>
+                     <Input
+                       id="overtime"
+                       type="number"
+                       min="0"
+                       step="0.5"
+                       max="3"
+                       value={overtimeShifts}
+                       onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
+                       placeholder="0.0"
+                     />
+                     <p className="text-xs text-gray-500 mt-1">1 shift = 8 hours; 0.5 = 4 hours</p>
+                   </div>
+
+                   <div>
+                     <Label htmlFor="remarks">Remarks (Optional)</Label>
+                     <Input
+                       id="remarks"
+                       value={remarks}
+                       onChange={(e) => setRemarks(e.target.value)}
+                       placeholder="Add any remarks..."
+                     />
+                   </div>
+                </div>
+
+                <Button type="submit" disabled={submitting} className="w-full">
+                  {submitting ? 'Marking Attendance...' : 'Mark Attendance'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bulk" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bulk Mark Attendance for Today</CardTitle>
+              <p className="text-sm text-gray-600">
+                Mark attendance for all employees at once. Default status is "Present".
+              </p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleBulkSubmit} className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <Label htmlFor="bulk-date">Date</Label>
+                    <Input
+                      id="bulk-date"
+                      type="date"
+                      value={bulkDate}
+                      onChange={(e) => setBulkDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                                     <div className="flex space-x-2">
+                     <Button
+                       type="button"
+                       variant="outline"
+                       onClick={() => setAllBulkAttendance('Present')}
+                       className="text-green-600"
+                     >
+                       All Present
+                     </Button>
+                     <Button
+                       type="button"
+                       variant="outline"
+                       onClick={() => setAllBulkAttendance('Absent')}
+                       className="text-red-600"
+                     >
+                       All Absent
+                     </Button>
+                     <Button
+                       type="button"
+                       variant="outline"
+                       onClick={() => setAllBulkOvertime(0)}
+                       className="text-blue-600"
+                     >
+                       Clear OT
+                     </Button>
+                   </div>
+                </div>
+
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-3">Employee Attendance</h4>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {bulkAttendance.map((record) => {
+                      const employee = employees.find(emp => emp.employee_id === record.employee_id);
+                      return (
+                        <div key={record.employee_id} className="flex items-center justify-between p-2 border rounded">
+                          <div className="flex items-center space-x-3">
+                            {getStatusIcon(record.attendance_status)}
+                            <div>
+                              <p className="font-medium">{employee?.full_name || employee?.employee_id}</p>
+                              <p className="text-sm text-gray-600">{employee?.designation || 'No designation'}</p>
+                            </div>
                           </div>
-                        </SelectItem>
-                      ) : employees.length === 0 ? (
-                        <SelectItem value="no-employees" disabled>
-                          No employees found
-                        </SelectItem>
-                      ) : (
-                        employees.map((employee) => {
-                          const employeeId = employee.employee_id || employee.id || '';
-                          const employeeName = employee.full_name || employee.fullName || `${employee.first_name || ''} ${employee.last_name || ''}`.trim();
-                          
-                          return (
-                            <SelectItem
-                              key={employeeId}
-                              value={String(employeeId)}
-                            >
-                              {employeeId} - {employeeName}
-                            </SelectItem>
-                          );
-                        })
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Date */}
-            <FormField
-              control={form.control}
-              name="attendance_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Attendance Status */}
-            <FormField
-              control={form.control}
-              name="attendance_status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Attendance Status</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value || ''} // Ensure value is never undefined
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Present">Present</SelectItem>
-                      <SelectItem value="Absent">Absent</SelectItem>
-                      <SelectItem value="Late">Late</SelectItem>
-                      <SelectItem value="Half Day">Half Day</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Overtime Shifts */}
-            <FormField
-              control={form.control}
-              name="overtime_shifts"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Overtime (Shifts)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.5" min="0" max="3" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    1 shift = 8 hours; 0.5 = 4 hours
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Check-in Time */}
-            <FormField
-              control={form.control}
-              name="check_in_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-in Time (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Check-out Time */}
-            <FormField
-              control={form.control}
-              name="check_out_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Check-out Time (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Remarks */}
-          <FormField
-            control={form.control}
-            name="remarks"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Remarks (Optional)</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Add any additional notes about attendance..."
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Employee Info Card */}
-          {selectedEmployee && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <UserCheck className="w-5 h-5" />
-                  Employee Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium text-muted-foreground">Name</p>
-                    <p>{selectedEmployee.fullName || selectedEmployee.full_name || `${selectedEmployee.first_name} ${selectedEmployee.last_name}`}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Department</p>
-                    <p>{selectedEmployee.department || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Designation</p>
-                    <p>{selectedEmployee.designation || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Employee ID</p>
-                    <p>{selectedEmployee.employee_id || selectedEmployee.id}</p>
+                                                     <div className="flex space-x-2">
+                             <select
+                               value={record.attendance_status}
+                               onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'Late' | 'Half Day')}
+                               className="flex h-8 w-32 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                             >
+                               <option value="Present">Present</option>
+                               <option value="Absent">Absent</option>
+                               <option value="Late">Late</option>
+                               <option value="Half Day">Half Day</option>
+                             </select>
+                             <Input
+                               type="number"
+                               min="0"
+                               step="0.5"
+                               max="3"
+                               placeholder="OT"
+                               className="w-20"
+                               value={record.overtime_shifts || 0}
+                               onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
+                             />
+                           </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting} className="min-w-[120px]">
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  Marking...
-                </>
-              ) : (
-                <>
-                  <Clock className="w-4 h-4 mr-2" />
-                  Mark Attendance
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </Form>
+                <Button type="submit" disabled={submitting} className="w-full">
+                  {submitting ? 'Marking Bulk Attendance...' : `Mark Attendance for ${bulkAttendance.length} Employees`}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
