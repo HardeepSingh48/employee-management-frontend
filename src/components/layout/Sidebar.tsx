@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, selectUser } from '@/store/auth-slice';
 import {
   Home, Users, Calendar, Clock, TrendingUp,
-  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield
+  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield, Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
@@ -21,8 +21,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
   const user = useSelector(selectUser);
 
   // Role-based sidebar items
-  const getSidebarItems = () => {
+const getSidebarItems = () => {
     const role = userRole || user?.role;
+
+    // Define the base items for an admin
+    const adminItems = [
+      { name: 'Home', icon: Home, path: '/dashboard' },
+      { name: 'Attendance', icon: Users, path: '/attendance' },
+      { name: 'Employees', icon: User, path: '/employees' },
+      { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
+      { name: 'Salary Calc', icon: Calculator, path: '/salary' },
+      { name: 'Compliance', icon: Shield, path: '/compliance' },
+      { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
+      { name: 'Sites', icon: Calendar, path: '/sites' },
+      { name: 'Reports', icon: Briefcase, path: '/reports' },
+    ];
     
     switch (role) {
       case 'supervisor':
@@ -44,22 +57,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
           { name: 'Profile', icon: User, path: '/employee/profile' },
           { name: 'Salary', icon: DollarSign, path: '/employee/salary' }
         ];
+      case 'superadmin':
+        // Return all admin items PLUS the new User Management item
+        return [
+            ...adminItems,
+            { name: 'User Management', icon: Settings, path: '/dashboard/users' }
+        ];
       case 'admin':
       default:
-        return [
-          { name: 'Home', icon: Home, path: '/dashboard' },
-          { name: 'Attendance', icon: Users, path: '/attendance' },
-          { name: 'Employees', icon: User, path: '/employees' },
-          { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
-          { name: 'Salary Calc', icon: Calculator, path: '/salary' },
-          { name: 'Compliance', icon: Shield, path: '/compliance' },
-          { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
-          { name: 'Sites', icon: Calendar, path: '/sites' },
-          // { name: 'Timesheet', icon: Clock, path: '/timesheet' },
-          // { name: 'Performance', icon: TrendingUp, path: '/performance' },
-          { name: 'Reports', icon: Briefcase, path: '/reports' },
-          // { name: 'More', icon: MoreHorizontal, path: '/more' }
-        ];
+        // Default case just returns the admin items
+        return adminItems;
     }
   };
 

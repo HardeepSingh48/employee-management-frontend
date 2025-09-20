@@ -277,9 +277,12 @@ export const RouteHelpers = {
   getDefaultRouteForRole: (role: string): string => {
     switch (role) {
       case 'admin':
+      case 'superadmin':
       case 'hr':
       case 'manager':
         return FRONTEND_ROUTES.ADMIN.DASHBOARD;
+      case 'supervisor':
+        return FRONTEND_ROUTES.ADMIN.DASHBOARD; // or create supervisor dashboard
       case 'employee':
         return FRONTEND_ROUTES.EMPLOYEE.DASHBOARD;
       default:
@@ -303,15 +306,15 @@ export const RouteHelpers = {
   // Check if user has access to route
   hasAccessToRoute: (pathname: string, userRole: string): boolean => {
     if (RouteHelpers.isPublicRoute(pathname)) return true;
-    
+
     if (RouteHelpers.isAdminRoute(pathname)) {
-      return ['admin', 'hr', 'manager'].includes(userRole);
+      return ['admin', 'superadmin', 'hr', 'manager'].includes(userRole);
     }
-    
+
     if (RouteHelpers.isEmployeeRoute(pathname)) {
       return userRole === 'employee';
     }
-    
+
     return false;
   },
 };

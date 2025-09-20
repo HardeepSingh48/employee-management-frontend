@@ -31,13 +31,13 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (user?.role !== 'admin') {
+    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
       router.push('/employee/dashboard');
       return;
     }
   }, [isAuthenticated, user, router]);
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'superadmin')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole="admin" />
+      <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole={user?.role} />
 
       <div className="ml-16">
         {/* Header */}

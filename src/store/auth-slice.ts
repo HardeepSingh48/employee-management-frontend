@@ -7,7 +7,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'hr' | 'manager' | 'employee' | 'supervisor';
+  role: 'admin' |'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
   department?: string;
   profileImage?: string;
   permissions: string[];
@@ -198,22 +198,24 @@ const authSlice = createSlice({
     
     initializeAuth: (state) => {
       // Initialize auth from localStorage on app startup
-      const token = localStorage.getItem('token');
-      const userString = localStorage.getItem('user');
-      const lastLoginTime = localStorage.getItem('lastLoginTime');
-      
-      if (token && userString) {
-        try {
-          const user = JSON.parse(userString);
-          state.user = user;
-          state.token = token;
-          state.isAuthenticated = true;
-          state.lastLoginTime = lastLoginTime;
-        } catch (error) {
-          // If parsing fails, clear invalid data
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('lastLoginTime');
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        const userString = localStorage.getItem('user');
+        const lastLoginTime = localStorage.getItem('lastLoginTime');
+        
+        if (token && userString) {
+          try {
+            const user = JSON.parse(userString);
+            state.user = user;
+            state.token = token;
+            state.isAuthenticated = true;
+            state.lastLoginTime = lastLoginTime;
+          } catch (error) {
+            // If parsing fails, clear invalid data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('lastLoginTime');
+          }
         }
       }
     },

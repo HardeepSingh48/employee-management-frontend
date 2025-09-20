@@ -22,12 +22,9 @@ export default function LoginPage() {
   const { isLoading, error, isAuthenticated, user } = useSelector(selectAuth);
 
   useEffect(() => {
-    // Clear any previous errors when component mounts
-    dispatch(clearError());
-    
-    // Redirect if already authenticated
+    // This block handles redirection for already authenticated users
     if (isAuthenticated && user) {
-      if (user.role === 'admin') {
+      if (user.role === 'admin' || user.role === 'superadmin') {
         router.push('/dashboard');
       } else if (user.role === 'supervisor') {
         router.push('/supervisor/dashboard');
@@ -50,7 +47,7 @@ export default function LoginPage() {
       if (loginUser.fulfilled.match(result)) {
         // Login successful - redirect based on role
         const userRole = result.payload.user.role;
-        if (userRole === 'admin') {
+        if (userRole === 'admin' || userRole === 'superadmin') {
           router.push('/dashboard');
         } else if (userRole === 'supervisor') {
           router.push('/supervisor/dashboard');
@@ -171,14 +168,15 @@ export default function LoginPage() {
         </Card>
 
         {/* Demo Credentials */}
-        {/* <div className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
           <h3 className="text-sm font-medium text-gray-900 mb-2">Demo Credentials</h3>
           <div className="text-xs text-gray-600 space-y-1">
             <p><strong>Admin:</strong> admin@company.com / admin123</p>
             <p><strong>Employee:</strong> employee@company.com / emp123</p>
             <p><strong>Supervisor:</strong> sup@company.com / sup123</p>
+            <p><strong>Superadmin:</strong> superadmin@company.com / superadmin123</p>
           </div>
-        </div> */}
+        </div>
       </div>
     </div>
   );

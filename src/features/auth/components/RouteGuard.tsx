@@ -125,7 +125,7 @@ export function withRouteGuard<P extends object>(
 // Specific route guards for common use cases
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   return (
-    <RouteGuard requiredRole={['admin', 'hr', 'manager']}>
+    <RouteGuard requiredRole={['admin', 'superadmin', 'hr', 'manager']}>
       {children}
     </RouteGuard>
   );
