@@ -98,7 +98,7 @@ CREATE TABLE deductions (
 ### Example Output
 ```json
 {
-  "Employee ID": 910001,
+  "Employee ID": 91510001,
   "Employee Name": "PRADIPTA DAS",
   "Skill Level": "Skilled",
   "Present Days": 24,
@@ -120,7 +120,7 @@ CREATE TABLE deductions (
 ```javascript
 // Frontend
 const deductionData = {
-  employee_id: "910001",
+  employee_id: "91510001",
   deduction_type: "Clothes",
   total_amount: 20000,
   months: 9,
@@ -144,7 +144,7 @@ await deductionsService.createDeduction(deductionData);
 ```python
 # Backend
 total_deduction, deduction_details = SalaryService.get_monthly_deductions(
-    employee_id="910001", 
+    employee_id="91510001", 
     year=2025, 
     month=9
 )
@@ -195,6 +195,7 @@ python test_deductions.py
 - **Deduction History**: Track changes and modifications
 - **Notifications**: Alert when deductions are about to expire
 - **Reporting**: Dedicated deduction reports and analytics
+
 
 
 

@@ -112,7 +112,7 @@ export default function BulkAttendance() {
           'Authorization': token ? `Bearer ${token}` : '',
         },
         body: formData,
-        signal: controller.signal
+        // signal: controller.signal
       });
 
       clearTimeout(timeoutId);
@@ -167,69 +167,69 @@ export default function BulkAttendance() {
     }
   };
 
-const downloadTemplate = async () => {
-  try {
-    const token = localStorage?.getItem('token');
-    
-    if (!token) {
+  const downloadTemplate = async () => {
+    try {
+      const token = localStorage?.getItem('token');
+
+      if (!token) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to download the template.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Show loading state
       toast({
-        title: "Authentication required",
-        description: "Please log in to download the template.",
+        title: "Generating template...",
+        description: "Please wait while we prepare your template file.",
+      });
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download template');
+      }
+
+      // Get the blob from response
+      const blob = await response.blob();
+
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'attendance_template.xlsx';
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Template downloaded",
+        description: "The attendance template has been downloaded successfully.",
+      });
+
+    } catch (error: any) {
+      console.error('Error downloading template:', error);
+      toast({
+        title: "Download failed",
+        description: error.message || "Failed to download template. Please try again or contact your administrator.",
         variant: "destructive",
       });
-      return;
     }
-
-    // Show loading state
-    toast({
-      title: "Generating template...",
-      description: "Please wait while we prepare your template file.",
-    });
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to download template');
-    }
-
-    // Get the blob from response
-    const blob = await response.blob();
-    
-    // Create a download link
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'attendance_template.xlsx';
-    
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    window.URL.revokeObjectURL(url);
-
-    toast({
-      title: "Template downloaded",
-      description: "The attendance template has been downloaded successfully.",
-    });
-
-  } catch (error: any) {
-    console.error('Error downloading template:', error);
-    toast({
-      title: "Download failed",
-      description: error.message || "Failed to download template. Please try again or contact your administrator.",
-      variant: "destructive",
-    });
-  }
-};
+  };
 
   return (
     <div className="p-6">
@@ -350,24 +350,31 @@ const downloadTemplate = async () => {
 
               {/* Submit Button */}
               <div className="space-y-2">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading || !file || !month || !year}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Attendance Data
-                    </>
-                  )}
-                </Button>
-                {/* Add this button temporarily in your form for debugging
+              {loading ? (
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                  Processing Excel file... This may take a few minutes for large files.
+                </div>
+              ) : (
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || !file || !month || !year}
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Attendance Data
+                      </>
+                    )}
+                  </Button>
+                )}
+                  {/* Add this button temporarily in your form for debugging
                 <Button
                   type="button"
                   variant="secondary"
@@ -390,17 +397,17 @@ const downloadTemplate = async () => {
                   Debug Columns
                 </Button> */}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={downloadTemplate}
-                  disabled={loading}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Template
-                </Button>
-              </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={downloadTemplate}
+                    disabled={loading}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Template
+                  </Button>
+                </div>
             </form>
           </CardContent>
         </Card>

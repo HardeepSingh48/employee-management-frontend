@@ -95,7 +95,7 @@ export default function MonthlyView() {
     return months[month - 1];
   };
 
-  const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Present':
         return <Badge variant="default" className="bg-green-100 text-green-800">P</Badge>;
@@ -105,6 +105,12 @@ export default function MonthlyView() {
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">L</Badge>;
       case 'Half Day':
         return <Badge variant="outline" className="border-blue-500 text-blue-700">H</Badge>;
+      case 'Holiday':
+        return <Badge variant="outline" className="border-purple-500 text-purple-700">HOL</Badge>;
+      case 'Leave':
+        return <Badge variant="outline" className="border-orange-500 text-orange-700">LV</Badge>;
+      case 'OFF':
+        return <Badge variant="outline" className="border-gray-500 text-gray-700 bg-gray-50">OFF</Badge>;
       default:
         return <Badge variant="outline">{status.charAt(0)}</Badge>;
     }
