@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, FileSpreadsheet, Calendar, Users, AlertCircle, CheckCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { sitesService, type Site } from '@/lib/sites-service';
 
 interface UploadResult {
   success: boolean;
@@ -25,6 +26,8 @@ export default function BulkAttendance() {
   const [loading, setLoading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const { toast } = useToast();
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
 
   const months = [
     { value: '1', label: 'January' },
@@ -45,6 +48,24 @@ export default function BulkAttendance() {
     const year = new Date().getFullYear() - 2 + i;
     return { value: year.toString(), label: year.toString() };
   });
+
+  // Load sites for dropdown
+  useEffect(() => {
+    const loadSites = async () => {
+      try {
+        const response = await sitesService.getSites(1, 1000);
+        setSites(response.data || []);
+      } catch (error: any) {
+        console.error('Failed to load sites:', error);
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to load sites',
+          variant: 'destructive',
+        });
+      }
+    };
+    loadSites();
+  }, [toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -180,13 +201,24 @@ export default function BulkAttendance() {
         return;
       }
 
+      if (!month || !year || !selectedSiteId) {
+        toast({
+          title: 'Missing information',
+          description: 'Please select month, year, and site to download the template.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Show loading state
       toast({
         title: "Generating template...",
         description: "Please wait while we prepare your template file.",
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template`, {
+      const selectedSite = sites.find(s => s.site_id === selectedSiteId);
+      const params = new URLSearchParams({ month, year, site: selectedSite?.site_name || '' });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -206,7 +238,11 @@ export default function BulkAttendance() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'attendance_template.xlsx';
+      const monthNum = parseInt(month, 10);
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const monthName = monthNum >= 1 && monthNum <= 12 ? monthNames[monthNum - 1] : 'Month';
+      const safeSite = (selectedSite?.site_name || 'site').replace(/[^a-zA-Z0-9_-]+/g, '_');
+      link.download = `attendance_template_${safeSite}_${monthName}_${year}.xlsx`;
 
       // Trigger download
       document.body.appendChild(link);
@@ -348,6 +384,23 @@ export default function BulkAttendance() {
                 </Select>
               </div>
 
+              {/* Site Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="site">Site Name</Label>
+                <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select site" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sites.map((siteItem) => (
+                      <SelectItem key={siteItem.site_id} value={siteItem.site_id}>
+                        {siteItem.site_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Submit Button */}
               <div className="space-y-2">
               {loading ? (
@@ -402,7 +455,7 @@ export default function BulkAttendance() {
                     variant="outline"
                     className="w-full"
                     onClick={downloadTemplate}
-                    disabled={loading}
+                    disabled={loading || !month || !year || !selectedSiteId}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Template
