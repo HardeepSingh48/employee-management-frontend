@@ -120,6 +120,9 @@ export default function BulkAttendance() {
       formData.append('file', file);
       formData.append('month', month);
       formData.append('year', year);
+      if (selectedSiteId) {
+        formData.append('site_id', selectedSiteId);
+      }
 
       const token = localStorage?.getItem('token');
 
@@ -217,7 +220,7 @@ export default function BulkAttendance() {
       });
 
       const selectedSite = sites.find(s => s.site_id === selectedSiteId);
-      const params = new URLSearchParams({ month, year, site: selectedSite?.site_name || '' });
+      const params = new URLSearchParams({ month, year, site_id: selectedSiteId });
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {

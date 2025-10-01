@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Calendar, TrendingUp, Clock, User } from 'lucide-react';
 import { attendanceService } from '@/lib/attendance-service';
+import { sitesService, type Site } from '@/lib/sites-service';
 import { employeeService } from '@/lib/employee-service';
 import type { MonthlyAttendanceSummary } from '@/types/attendance';
 import type { Employee } from '@/types/employee';
@@ -19,6 +20,8 @@ export default function MonthlyView() {
   const [selectedMonth, setSelectedMonth] = useState<string>((new Date().getMonth() + 1).toString());
   const [monthlySummary, setMonthlySummary] = useState<MonthlyAttendanceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
 
   // Helper function to get employee name
   const getEmployeeName = (employee: Employee) => {
@@ -33,10 +36,12 @@ export default function MonthlyView() {
     return employee.employee_id || employee.id || '';
   };
 
-  // Load employees on component mount
+  // Load sites and employees on component mount
   useEffect(() => {
-    const loadEmployees = async () => {
+    const loadData = async () => {
       try {
+        const sitesRes = await sitesService.getSites(1, 1000);
+        setSites(sitesRes.data || []);
         const employeeData = await employeeService.getEmployees();
         // console.log('Loaded employees:', employeeData); // Debug log
         setEmployees(employeeData);
@@ -54,7 +59,7 @@ export default function MonthlyView() {
       }
     };
 
-    loadEmployees();
+    loadData();
   }, []);
 
   // Load monthly summary when employee, year, or month changes
@@ -123,7 +128,20 @@ const getStatusBadge = (status: string) => {
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="text-sm font-medium mb-2 block">Site Name</label>
+          <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select site" />
+            </SelectTrigger>
+            <SelectContent>
+              {sites.map((s) => (
+                <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <label className="text-sm font-medium mb-2 block">Employee</label>
           <Select 
@@ -134,12 +152,14 @@ const getStatusBadge = (status: string) => {
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {employees.length === 0 ? (
+              {employees.filter((e:any) => !selectedSiteId || String((e as any).site_id || '') === selectedSiteId).length === 0 ? (
                 <SelectItem value="no-employees" disabled>
                   No employees found
                 </SelectItem>
               ) : (
-                employees.map((employee) => {
+                employees
+                  .filter((e:any) => !selectedSiteId || String((e as any).site_id || '') === selectedSiteId)
+                  .map((employee) => {
                   const employeeId = getEmployeeId(employee);
                   const employeeName = getEmployeeName(employee);
                   

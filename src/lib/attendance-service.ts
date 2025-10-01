@@ -138,12 +138,14 @@ export const attendanceService = {
   getSiteAttendance: async (
     startDate?: string,
     endDate?: string,
-    employeeId?: string
+    employeeId?: string,
+    siteId?: string
   ): Promise<AttendanceRecord[]> => {
     const params = new URLSearchParams();
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
     if (employeeId) params.append('employee_id', employeeId);
+    if (siteId) params.append('site_id', siteId);
     
     const response = await api.get(`/attendance/site-attendance?${params.toString()}`);
     return response.data.data;
