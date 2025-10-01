@@ -34,6 +34,7 @@ const getSidebarItems = () => {
       { name: 'Compliance', icon: Shield, path: '/compliance' },
       { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
       { name: 'Sites', icon: Calendar, path: '/sites' },
+      { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
       { name: 'Reports', icon: Briefcase, path: '/reports' },
     ];
     
