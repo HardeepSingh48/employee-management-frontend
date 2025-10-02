@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 import { EditModal } from '@/components/ui/CustomModal';
+import * as XLSX from 'xlsx';
+import { Download } from 'lucide-react';
 
 const SalaryCodeList: React.FC = () => {
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
@@ -48,6 +50,31 @@ const SalaryCodeList: React.FC = () => {
     }
   };
 
+  const downloadExcel = () => {
+    // Prepare data for Excel export
+    const exportData = salaryCodes.map(code => ({
+      'Site Name': code.site_name,
+      'Rank': code.rank,
+      'State': code.state,
+      'Base Wage': code.base_wage,
+      'Salary Code': code.salary_code
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Salary Codes');
+
+    // Generate filename with current date
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `salary_codes_${date}.xlsx`;
+
+    // Download the file
+    XLSX.writeFile(wb, filename);
+  };
+
   if (loading) {
     return (
       <div className="bg-white shadow-lg rounded-lg p-6">
@@ -72,8 +99,20 @@ const SalaryCodeList: React.FC = () => {
   return (
     <div className="bg-white shadow-lg rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800">Salary Codes</h2>
-        <p className="text-gray-600 mt-1">Manage existing salary codes</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Salary Codes</h2>
+            <p className="text-gray-600 mt-1">Manage existing salary codes</p>
+          </div>
+          <button
+            onClick={downloadExcel}
+            className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            disabled={salaryCodes.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Excel
+          </button>
+        </div>
       </div>
 
       <div className="p-6">
