@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Calendar, TrendingUp, Clock, User } from 'lucide-react';
 import { attendanceService } from '@/lib/attendance-service';
+import type { AttendanceRecord } from '@/lib/attendance-service';
 import { sitesService, type Site } from '@/lib/sites-service';
 import { employeeService } from '@/lib/employee-service';
+import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 import type { MonthlyAttendanceSummary } from '@/types/attendance';
 import type { Employee } from '@/types/employee';
 
@@ -22,6 +24,8 @@ export default function MonthlyView() {
   const [isLoading, setIsLoading] = useState(false);
   const [sites, setSites] = useState<Site[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
+  const [siteAttendance, setSiteAttendance] = useState<AttendanceRecord[]>([]);
+  const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
 
   // Helper function to get employee name
   const getEmployeeName = (employee: Employee) => {
@@ -36,13 +40,28 @@ export default function MonthlyView() {
     return employee.employee_id || employee.id || '';
   };
 
-  // Load sites and employees on component mount
+  // Helper function to get salary codes for selected site
+  const getSalaryCodesForSite = (siteId: string) => {
+    const selectedSite = sites.find(s => s.site_id === siteId);
+    if (!selectedSite) return [];
+
+    return salaryCodes
+      .filter(sc => sc.site_name === selectedSite.site_name)
+      .map(sc => sc.salary_code);
+  };
+
+  // Load sites, salary codes and employees on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const sitesRes = await sitesService.getSites(1, 1000);
+        const [sitesRes, salaryCodesRes, employeeData] = await Promise.all([
+          sitesService.getSites(1, 1000),
+          salaryCodesService.getSalaryCodes(),
+          employeeService.getEmployees()
+        ]);
+
         setSites(sitesRes.data || []);
-        const employeeData = await employeeService.getEmployees();
+        setSalaryCodes(salaryCodesRes);
         // console.log('Loaded employees:', employeeData); // Debug log
         setEmployees(employeeData);
         if (employeeData.length > 0) {
@@ -50,10 +69,10 @@ export default function MonthlyView() {
           setSelectedEmployee(String(firstEmployeeId));
         }
       } catch (error) {
-        console.error('Error loading employees:', error);
+        console.error('Error loading data:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load employees',
+          description: 'Failed to load data',
           variant: 'destructive',
         });
       }
@@ -68,6 +87,57 @@ export default function MonthlyView() {
       loadMonthlySummary();
     }
   }, [selectedEmployee, selectedYear, selectedMonth]);
+
+  // Update selected employee when site changes
+  useEffect(() => {
+    if (selectedSiteId && employees.length > 0) {
+      const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+      const filteredEmployees = employees.filter((e: any) =>
+        siteSalaryCodes.includes(e.salary_code || e.salaryCode)
+      );
+
+      if (filteredEmployees.length > 0) {
+        // Check if current selected employee is still valid
+        const currentEmployee = employees.find(emp =>
+          String(getEmployeeId(emp)) === String(selectedEmployee)
+        );
+        const isCurrentValid = currentEmployee && siteSalaryCodes.includes(currentEmployee.salary_code || currentEmployee.salaryCode || '');
+
+        if (!isCurrentValid) {
+          // Select first employee from filtered list
+          const firstEmployeeId = getEmployeeId(filteredEmployees[0]);
+          setSelectedEmployee(String(firstEmployeeId));
+        }
+      } else {
+        // No employees for this site
+        setSelectedEmployee('');
+      }
+    }
+  }, [selectedSiteId, employees, salaryCodes]);
+
+  // Load site attendance when site, year, or month changes
+  useEffect(() => {
+    const loadSiteAttendance = async () => {
+      if (!selectedYear || !selectedMonth || !selectedSiteId) {
+        setSiteAttendance([]);
+        return;
+      }
+      try {
+        const yearNum = parseInt(selectedYear, 10);
+        const monthNum = parseInt(selectedMonth, 10);
+        const start = new Date(yearNum, monthNum - 1, 1);
+        const end = new Date(yearNum, monthNum, 0);
+        const startDate = attendanceService.formatDate(start);
+        const endDate = attendanceService.formatDate(end);
+        const records = await attendanceService.getSiteAttendance(startDate, endDate, undefined, selectedSiteId);
+        setSiteAttendance(records || []);
+      } catch (error) {
+        console.error('Error loading site attendance:', error);
+        setSiteAttendance([]);
+      }
+    };
+    loadSiteAttendance();
+  }, [selectedSiteId, selectedYear, selectedMonth]);
 
   const loadMonthlySummary = async () => {
     if (!selectedEmployee) return;
@@ -152,27 +222,32 @@ const getStatusBadge = (status: string) => {
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {employees.filter((e:any) => !selectedSiteId || String((e as any).site_id || '') === selectedSiteId).length === 0 ? (
-                <SelectItem value="no-employees" disabled>
-                  No employees found
-                </SelectItem>
-              ) : (
-                employees
-                  .filter((e:any) => !selectedSiteId || String((e as any).site_id || '') === selectedSiteId)
-                  .map((employee) => {
-                  const employeeId = getEmployeeId(employee);
-                  const employeeName = getEmployeeName(employee);
-                  
-                  return (
-                    <SelectItem 
-                      key={employeeId} 
-                      value={String(employeeId)}
-                    >
-                      {employeeId} - {employeeName}
-                    </SelectItem>
-                  );
-                })
-              )}
+              {(() => {
+                const siteSalaryCodes = selectedSiteId ? getSalaryCodesForSite(selectedSiteId) : [];
+                const filteredEmployees = employees.filter((e: any) =>
+                  !selectedSiteId || siteSalaryCodes.includes(e.salary_code || e.salaryCode)
+                );
+
+                return filteredEmployees.length === 0 ? (
+                  <SelectItem value="no-employees" disabled>
+                    No employees found
+                  </SelectItem>
+                ) : (
+                  filteredEmployees.map((employee) => {
+                    const employeeId = getEmployeeId(employee);
+                    const employeeName = getEmployeeName(employee);
+
+                    return (
+                      <SelectItem
+                        key={employeeId}
+                        value={String(employeeId)}
+                      >
+                        {employeeId} - {employeeName}
+                      </SelectItem>
+                    );
+                  })
+                );
+              })()}
             </SelectContent>
           </Select>
         </div>

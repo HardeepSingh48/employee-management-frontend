@@ -42,7 +42,8 @@ export interface Employee {
   reportingManager?: string;
 
   // Salary & Benefits
-  salaryCode: string;
+  salaryCode?: string;
+  salary_code?: string;
   skillCategory?: string;
   pfApplicability: boolean;
   esicApplicability: boolean;
