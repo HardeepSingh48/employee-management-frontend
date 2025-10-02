@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,13 +8,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Calculator, Download, Calendar } from 'lucide-react';
 import { salaryService, type SalaryCalculationData } from '@/lib/salary-service';
+import { sitesService, type Site } from '@/lib/sites-service';
 
 export default function MonthlySalaryCalculation() {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedMonth, setSelectedMonth] = useState<string>((new Date().getMonth() + 1).toString());
+  const [selectedSite, setSelectedSite] = useState<string>("all");
+  const [sites, setSites] = useState<Site[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [salaryData, setSalaryData] = useState<SalaryCalculationData[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Load sites on component mount
+  useEffect(() => {
+    const loadSites = async () => {
+      try {
+        const response = await sitesService.getSites(1, 1000); // Get all sites
+        setSites(response.data);
+      } catch (error) {
+        console.error('Error loading sites:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load sites',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadSites();
+  }, []);
 
   const handleCalculateMonthlySalary = async () => {
     if (!selectedYear || !selectedMonth) {
@@ -30,7 +52,8 @@ export default function MonthlySalaryCalculation() {
     try {
       const result = await salaryService.calculateMonthlySalary({
         year: parseInt(selectedYear),
-        month: parseInt(selectedMonth)
+        month: parseInt(selectedMonth),
+        site_id: selectedSite === "all" ? undefined : selectedSite
       });
       
       setSalaryData(result);
@@ -105,7 +128,24 @@ export default function MonthlySalaryCalculation() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Site</label>
+              <Select value={selectedSite} onValueChange={setSelectedSite}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Sites" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sites</SelectItem>
+                  {sites.map((site) => (
+                    <SelectItem key={site.site_id} value={site.site_id}>
+                      {site.site_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Year</label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -141,8 +181,8 @@ export default function MonthlySalaryCalculation() {
               </Select>
             </div>
 
-            <Button 
-              onClick={handleCalculateMonthlySalary} 
+            <Button
+              onClick={handleCalculateMonthlySalary}
               disabled={isCalculating}
               className="min-w-[150px]"
             >

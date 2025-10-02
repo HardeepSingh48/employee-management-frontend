@@ -38,6 +38,7 @@ export interface SalaryAdjustments {
 export interface MonthlySalaryRequest {
   year: number;
   month: number;
+  site_id?: string;
 }
 
 export interface IndividualSalaryRequest {
