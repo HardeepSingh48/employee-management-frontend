@@ -29,8 +29,8 @@ type SelectionMode = 'single' | 'range' | 'multi';
 
 interface PayrollFilters {
   siteId: string;
-  startDate: string;
-  endDate: string;
+  year: string;
+  month: string;
   selectionMode: SelectionMode;
   selectedEmployeeId: number | null;
   rangeFrom: number | null;
@@ -51,8 +51,8 @@ export default function PayrollPage() {
 
   const [filters, setFilters] = useState<PayrollFilters>({
     siteId: '',
-    startDate: '',
-    endDate: '',
+    year: new Date().getFullYear().toString(),
+    month: (new Date().getMonth() + 1).toString(),
     selectionMode: 'single',
     selectedEmployeeId: null,
     rangeFrom: null,
@@ -172,8 +172,8 @@ export default function PayrollPage() {
   };
 
   const validateSelection = (): string | null => {
-    if (!filters.startDate || !filters.endDate) {
-      return 'Please select start and end dates';
+    if (!filters.year || !filters.month) {
+      return 'Please select year and month';
     }
 
     const selectedIds = getSelectedEmployeeIds();
@@ -198,8 +198,8 @@ export default function PayrollPage() {
       const selectedIds = getSelectedEmployeeIds();
       const response = await PayrollService.previewPayroll({
         employee_ids: selectedIds,
-        start_date: filters.startDate,
-        end_date: filters.endDate,
+        year: parseInt(filters.year),
+        month: parseInt(filters.month),
       });
 
       if (response.success && response.data) {
@@ -227,11 +227,11 @@ export default function PayrollPage() {
 
     try {
       const selectedIds = getSelectedEmployeeIds();
-      const filename = `payslip_${filters.startDate}_${filters.endDate}_${new Date().getTime()}.pdf`;
+      const filename = `payslip_${filters.year}_${filters.month}_${new Date().getTime()}.pdf`;
 
       let request: any = {
-        start_date: filters.startDate,
-        end_date: filters.endDate,
+        year: parseInt(filters.year),
+        month: parseInt(filters.month),
         filename,
       };
 
@@ -325,25 +325,42 @@ export default function PayrollPage() {
                 </div>
               )}
 
-              {/* Date Range */}
+              {/* Month and Year Selection */}
               <div className="space-y-2">
                 <Label>Pay Period</Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-muted-foreground">Start Date</Label>
-                    <Input
-                      type="date"
-                      value={filters.startDate}
-                      onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                    />
+                    <Label className="text-xs text-muted-foreground">Year</Label>
+                    <Select value={filters.year} onValueChange={(value) => handleFilterChange('year', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 5 }, (_, i) => {
+                          const year = new Date().getFullYear() - 2 + i;
+                          return (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">End Date</Label>
-                    <Input
-                      type="date"
-                      value={filters.endDate}
-                      onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                    />
+                    <Label className="text-xs text-muted-foreground">Month</Label>
+                    <Select value={filters.month} onValueChange={(value) => handleFilterChange('month', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>

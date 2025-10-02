@@ -16,8 +16,8 @@ export interface Site {
 
 export interface PayrollPreviewRequest {
   employee_ids: number[];
-  start_date: string;
-  end_date: string;
+  year: number;
+  month: number;
 }
 
 export interface PayrollGenerateRequest {
@@ -26,8 +26,8 @@ export interface PayrollGenerateRequest {
     from: number;
     to: number;
   };
-  start_date: string;
-  end_date: string;
+  year: number;
+  month: number;
   filename?: string;
 }
 
@@ -106,8 +106,8 @@ export class PayrollService {
     try {
       const params = new URLSearchParams({
         employee_ids: request.employee_ids.join(','),
-        start_date: request.start_date,
-        end_date: request.end_date,
+        year: request.year.toString(),
+        month: request.month.toString(),
       });
 
       const response = await api.get(`${this.baseUrl}/preview?${params.toString()}`);

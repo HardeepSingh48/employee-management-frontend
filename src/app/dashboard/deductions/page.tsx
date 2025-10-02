@@ -6,12 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Download, Upload, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { deductionsService, Deduction } from '@/lib/deductions-service';
 import AddDeductionModal from '@/components/deductions/AddDeductionModal';
 import BulkUploadModal from '@/components/deductions/BulkUploadModal';
 import EditDeductionModal from '@/components/deductions/EditDeductionModal';
+import { sitesService, type Site } from '@/lib/sites-service';
+import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 
 export default function DeductionsPage() {
   const [deductions, setDeductions] = useState<Deduction[]>([]);
@@ -22,26 +25,65 @@ export default function DeductionsPage() {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDeduction, setSelectedDeduction] = useState<Deduction | null>(null);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('all');
   const { toast } = useToast();
+
+  // Helper function to get salary codes for selected site
+  const getSalaryCodesForSite = (siteId: string) => {
+    const selectedSite = sites.find(s => s.site_id === siteId);
+    if (!selectedSite) return [];
+
+    return salaryCodes
+      .filter(sc => sc.site_name === selectedSite.site_name)
+      .map(sc => sc.salary_code);
+  };
 
   useEffect(() => {
     loadDeductions();
+  }, [selectedSiteId]);
+
+  // Load sites and salary codes on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [sitesRes, salaryCodesRes] = await Promise.all([
+          sitesService.getSites(1, 1000),
+          salaryCodesService.getSalaryCodes()
+        ]);
+
+        setSites(sitesRes.data || []);
+        setSalaryCodes(salaryCodesRes);
+      } catch (error) {
+        console.error('Error loading sites and salary codes:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load sites and salary codes',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
   }, []);
 
   useEffect(() => {
-    // Filter deductions based on search term
+    // Filter deductions based on search term (site filtering is now done in backend)
     const filtered = deductions.filter(deduction =>
       deduction.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deduction.deduction_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deduction.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     setFilteredDeductions(filtered);
   }, [deductions, searchTerm]);
 
   const loadDeductions = async () => {
     try {
       setLoading(true);
-      const data = await deductionsService.getAllDeductions();
+      const params = selectedSiteId === "all" ? {} : { site_id: selectedSiteId };
+      const data = await deductionsService.getAllDeductions(params);
       setDeductions(data);
     } catch (error: any) {
       toast({
@@ -184,6 +226,22 @@ export default function DeductionsPage() {
             View and manage all employee deductions
           </CardDescription>
           <div className="flex items-center space-x-2">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Site</label>
+              <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="All Sites" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sites</SelectItem>
+                  {sites.map((site) => (
+                    <SelectItem key={site.site_id} value={site.site_id}>
+                      {site.site_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input

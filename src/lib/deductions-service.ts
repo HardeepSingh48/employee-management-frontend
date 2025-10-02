@@ -38,8 +38,8 @@ export interface BulkUploadResponse {
 
 export const deductionsService = {
   // Get all deductions
-  getAllDeductions: async (): Promise<Deduction[]> => {
-    const response = await api.get('/deductions');
+  getAllDeductions: async (params?: { site_id?: string }): Promise<Deduction[]> => {
+    const response = await api.get('/deductions', { params });
     return response.data.data;
   },
 

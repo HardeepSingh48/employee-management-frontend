@@ -34,7 +34,7 @@ const getSidebarItems = () => {
       { name: 'Compliance', icon: Shield, path: '/compliance' },
       { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
       { name: 'Sites', icon: Calendar, path: '/sites' },
-      { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
+      { name: 'Deductions', icon: DollarSign, path: '/dashboard/deductions' },
       { name: 'Reports', icon: Briefcase, path: '/reports' },
     ];
     
@@ -46,7 +46,7 @@ const getSidebarItems = () => {
           { name: 'Bulk Attendance', icon: Users, path: '/supervisor/dashboard?tab=bulk' },
           { name: 'Attendance Records', icon: Calendar, path: '/supervisor/dashboard?tab=records' },
           { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
-          { name: 'Deductions', icon: DollarSign, path: '/supervisor/dashboard?tab=deductions' },
+          { name: 'Deductions', icon: DollarSign, path: '/dashboard/deductions' },
           // { name: 'Salary', icon: Calculator, path: '/salary' },
           { name: 'Compliance', icon: Shield, path: '/compliance' },
           { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' }
