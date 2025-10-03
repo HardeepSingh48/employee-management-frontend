@@ -24,6 +24,7 @@ import {
   Square
 } from 'lucide-react';
 import PayrollService, { Employee, Site } from '@/lib/payroll-service';
+import BonusCalculation from '@/components/payroll/BonusCalculation';
 
 type SelectionMode = 'single' | 'range' | 'multi';
 
@@ -267,14 +268,28 @@ export default function PayrollPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Payroll Generation</h1>
-          <p className="text-muted-foreground">Generate and download payslips for employees</p>
+          <h1 className="text-3xl font-bold">Payroll Management</h1>
+          <p className="text-muted-foreground">Generate payslips and calculate bonuses for employees</p>
         </div>
-        <Badge variant="outline" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          {selectedIds.length} Selected
-        </Badge>
       </div>
+
+      <Tabs defaultValue="payroll" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          <TabsTrigger value="bonus">Bonus</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="payroll" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Payroll Generation</h2>
+              <p className="text-muted-foreground">Generate and download payslips for employees</p>
+            </div>
+            <Badge variant="outline" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {selectedIds.length} Selected
+            </Badge>
+          </div>
 
       {error && (
         <Alert variant="destructive">
@@ -543,6 +558,13 @@ export default function PayrollPage() {
           </Card>
         </div>
       </div>
+
+        </TabsContent>
+
+        <TabsContent value="bonus" className="space-y-6">
+          <BonusCalculation sites={sites} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

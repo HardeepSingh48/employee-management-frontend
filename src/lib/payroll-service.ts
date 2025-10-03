@@ -60,6 +60,38 @@ export interface SitesResponse {
   data?: Site[];
 }
 
+export interface BonusRecord {
+  employee_id: number;
+  employee_name: string;
+  basic_salary: number;
+  bonus_amount: number;
+  period_months: number;
+  error?: string;
+}
+
+export interface BonusCalculationRequest {
+  site_id?: string;
+  year: number;
+  start_month: number;
+  end_month: number;
+}
+
+export interface BonusCalculationResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    bonus_records: BonusRecord[];
+    total_employees: number;
+    total_bonus: number;
+    period: {
+      year: number;
+      start_month: number;
+      end_month: number;
+      month_count: number;
+    };
+  };
+}
+
 export class PayrollService {
   private static baseUrl = '/payroll';
 
@@ -163,6 +195,31 @@ export class PayrollService {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to generate payroll PDF',
+      };
+    }
+  }
+
+  /**
+   * Calculate bonus for employees
+   */
+  static async calculateBonus(request: BonusCalculationRequest): Promise<BonusCalculationResponse> {
+    try {
+      const params = new URLSearchParams({
+        year: request.year.toString(),
+        start_month: request.start_month.toString(),
+        end_month: request.end_month.toString(),
+      });
+
+      if (request.site_id) {
+        params.append('site_id', request.site_id);
+      }
+
+      const response = await api.get(`${this.baseUrl}/bonus?${params.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to calculate bonus',
       };
     }
   }
