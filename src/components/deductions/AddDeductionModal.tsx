@@ -31,6 +31,13 @@ export default function AddDeductionModal({ open, onClose, onSubmit }: AddDeduct
     months: '',
     start_month: '',
   });
+
+  // Calculate minimum date (first day of current month)
+  const getMinDate = () => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return firstDayOfMonth.toISOString().split('T')[0];
+  };
   const { toast } = useToast();
 
   // Helper function to get salary codes for selected site
@@ -79,11 +86,25 @@ export default function AddDeductionModal({ open, onClose, onSubmit }: AddDeduct
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.employee_id || !formData.deduction_type || !formData.total_amount || !formData.months || !formData.start_month) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate start month is not in the past
+    const selectedDate = new Date(formData.start_month);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+    if (selectedDate < currentMonthStart) {
+      toast({
+        title: 'Invalid Start Month',
+        description: 'Start month cannot be in the past. Please select current month or a future month.',
         variant: 'destructive',
       });
       return;
@@ -214,9 +235,13 @@ export default function AddDeductionModal({ open, onClose, onSubmit }: AddDeduct
             <Input
               id="start_month"
               type="date"
+              min={getMinDate()}
               value={formData.start_month}
               onChange={(e) => setFormData({ ...formData, start_month: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Start date must be current month or later
+            </p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

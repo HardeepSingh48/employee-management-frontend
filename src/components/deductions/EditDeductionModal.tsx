@@ -22,6 +22,13 @@ export default function EditDeductionModal({ open, onClose, deduction, onSubmit 
     start_month: '',
   });
 
+  // Calculate minimum date (first day of current month)
+  const getMinDate = () => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return firstDayOfMonth.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
     if (deduction) {
       setFormData({
@@ -35,8 +42,19 @@ export default function EditDeductionModal({ open, onClose, deduction, onSubmit 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.deduction_type || !formData.total_amount || !formData.months || !formData.start_month) {
+      return;
+    }
+
+    // Validate start month is not in the past
+    const selectedDate = new Date(formData.start_month);
+    const currentDate = new Date();
+    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+    if (selectedDate < currentMonthStart) {
+      // You could add a toast here if needed, but for now just prevent submission
+      alert('Start month cannot be in the past. Please select current month or a future month.');
       return;
     }
 
@@ -119,9 +137,13 @@ export default function EditDeductionModal({ open, onClose, deduction, onSubmit 
             <Input
               id="start_month"
               type="date"
+              min={getMinDate()}
               value={formData.start_month}
               onChange={(e) => setFormData({ ...formData, start_month: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Start date must be current month or later
+            </p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
