@@ -220,7 +220,10 @@ export default function BulkAttendance() {
       });
 
       const selectedSite = sites.find(s => s.site_id === selectedSiteId);
-      const params = new URLSearchParams({ month, year, site_id: selectedSiteId });
+      const params = new URLSearchParams({ month, year });
+      if (selectedSiteId) {
+        params.append('site_id', selectedSiteId);
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {
