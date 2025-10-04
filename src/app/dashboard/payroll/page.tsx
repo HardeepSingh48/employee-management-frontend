@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,8 @@ export default function PayrollPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  // OPTIMIZATION: Debounce search input to prevent excessive filtering
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const [filters, setFilters] = useState<PayrollFilters>({
     siteId: '',
@@ -112,25 +115,33 @@ export default function PayrollPage() {
     }));
   };
 
-  const handleEmployeeToggle = (employeeId: number) => {
+  // OPTIMIZATION: Memoize filtered employees to prevent unnecessary recalculations
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp =>
+      emp.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      emp.employee_id.toString().includes(debouncedSearchTerm)
+    );
+  }, [employees, debouncedSearchTerm]);
+
+  // OPTIMIZATION: Memoize callbacks to prevent unnecessary re-renders
+  const handleEmployeeToggle = useCallback((employeeId: number) => {
     setFilters(prev => ({
       ...prev,
       selectedEmployeeIds: prev.selectedEmployeeIds.includes(employeeId)
         ? prev.selectedEmployeeIds.filter(id => id !== employeeId)
         : [...prev.selectedEmployeeIds, employeeId],
     }));
-  };
+  }, []);
 
-  const handleSelectAll = () => {
-    const filteredEmployees = getFilteredEmployees();
-    const allSelected = filteredEmployees.every(emp => filters.selectedEmployeeIds.includes(emp.employee_id));
-    
+  const handleSelectAll = useCallback(() => {
+    const allSelected = filteredEmployees.every((emp: Employee) => filters.selectedEmployeeIds.includes(emp.employee_id));
+
     if (allSelected) {
       // Deselect all visible employees
       setFilters(prev => ({
         ...prev,
-        selectedEmployeeIds: prev.selectedEmployeeIds.filter(id => 
-          !filteredEmployees.some(emp => emp.employee_id === id)
+        selectedEmployeeIds: prev.selectedEmployeeIds.filter(id =>
+          !filteredEmployees.some((emp: Employee) => emp.employee_id === id)
         ),
       }));
     } else {
@@ -140,19 +151,12 @@ export default function PayrollPage() {
         selectedEmployeeIds: [
           ...prev.selectedEmployeeIds,
           ...filteredEmployees
-            .filter(emp => !prev.selectedEmployeeIds.includes(emp.employee_id))
-            .map(emp => emp.employee_id)
+            .filter((emp: Employee) => !prev.selectedEmployeeIds.includes(emp.employee_id))
+            .map((emp: Employee) => emp.employee_id)
         ],
       }));
     }
-  };
-
-  const getFilteredEmployees = () => {
-    return employees.filter(emp => 
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employee_id.toString().includes(searchTerm)
-    );
-  };
+  }, [filteredEmployees, filters.selectedEmployeeIds]);
 
   const getSelectedEmployeeIds = (): number[] => {
     switch (filters.selectionMode) {
@@ -261,7 +265,6 @@ export default function PayrollPage() {
     setGenerateLoading(false);
   };
 
-  const filteredEmployees = getFilteredEmployees();
   const selectedIds = getSelectedEmployeeIds();
 
   return (
