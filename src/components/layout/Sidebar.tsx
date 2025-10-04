@@ -33,9 +33,9 @@ const getSidebarItems = () => {
       { name: 'Salary Calc', icon: Calculator, path: '/salary' },
       { name: 'Compliance', icon: Shield, path: '/compliance' },
       { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },
-      { name: 'Sites', icon: Calendar, path: '/sites' },
+      // { name: 'Sites', icon: Calendar, path: '/sites' },
       { name: 'Deductions', icon: DollarSign, path: '/dashboard/deductions' },
-      { name: 'Reports', icon: Briefcase, path: '/reports' },
+      // { name: 'Reports', icon: Briefcase, path: '/reports' },
     ];
     
     switch (role) {
