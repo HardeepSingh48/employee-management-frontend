@@ -511,11 +511,10 @@ export default function BulkAttendance() {
                 <div>
                   <p className="font-medium text-sm">Overtime Shifts (Optional):</p>
                   <ul className="text-xs text-gray-600 mt-1 space-y-1">
-                    <li>• 0.5 = 4 hours (half shift)</li>
-                    <li>• 1.0 = 8 hours (full shift)</li>
-                    <li>• 1.5 = 12 hours (one and half shifts)</li>
-                    <li>• 2.0 = 16 hours (two shifts)</li>
-                    <li>• Use 0.5 increments only</li>
+                    <li>• Enter total overtime shifts for the entire month</li>
+                    <li>• Example: "2" means 2 overtime shifts for the whole month</li>
+                    <li>• Use 0.5 increments (e.g., 1.5, 2.0, 2.5)</li>
+                    <li>• Overtime will be applied to the first working day</li>
                   </ul>
                 </div>
               </div>
@@ -554,6 +553,7 @@ export default function BulkAttendance() {
               <ul className="text-xs text-amber-700 space-y-1">
                 <li>• Ensure Employee IDs match exactly with system records</li>
                 <li>• Date columns should be in DD/MM/YYYY format</li>
+                <li>• Overtime column contains total monthly shifts (not daily)</li>
                 <li>• Remove any merged cells or formatting</li>
                 <li>• Save as .xlsx for best compatibility</li>
               </ul>

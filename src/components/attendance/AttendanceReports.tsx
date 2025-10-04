@@ -191,8 +191,11 @@ export default function AttendanceReports() {
     }
     setGeneratingDepartment(true);
     try {
-      const employees = await attendanceService.getSiteEmployees();
-      const attendance = await attendanceService.getSiteAttendance(departmentFrom, departmentTo);
+      // Use parallel requests for better performance
+      const [employees, attendance] = await Promise.all([
+        attendanceService.getSiteEmployees(),
+        attendanceService.getSiteAttendance(departmentFrom, departmentTo)
+      ]);
 
       // Filter employees by department (supports department name or id fields if present)
       const filteredEmployees = (employees || []).filter((e: any) => {
