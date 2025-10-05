@@ -43,7 +43,7 @@ const getSidebarItems = () => {
         return [
           { name: 'Dashboard', icon: Home, path: '/supervisor/dashboard' },
           { name: 'Mark Attendance', icon: Clock, path: '/supervisor/dashboard?tab=individual' },
-          { name: 'Bulk Attendance', icon: Users, path: '/supervisor/dashboard?tab=bulk' },
+          // { name: 'Bulk Attendance', icon: Users, path: '/supervisor/dashboard?tab=bulk' },
           { name: 'Attendance Records', icon: Calendar, path: '/supervisor/dashboard?tab=records' },
           { name: 'Salary Report', icon: Calculator, path: '/supervisor/dashboard?tab=salary' },
           { name: 'Deductions', icon: DollarSign, path: '/dashboard/deductions' },

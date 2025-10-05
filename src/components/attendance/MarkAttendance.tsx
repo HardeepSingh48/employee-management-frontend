@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { selectUser } from '@/store/auth-slice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +32,7 @@ interface BulkAttendanceData {
 }
 
 export default function MarkAttendance() {
+  const user = useSelector(selectUser);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -50,21 +53,71 @@ export default function MarkAttendance() {
     setBulkDate(today);
   }, []);
 
+  // Calculate date restrictions based on user role
+  const getDateRestrictions = () => {
+    const today = new Date();
+    const userRole = user?.role;
+
+    if (userRole === 'admin') {
+      // Admin: no restrictions
+      return {
+        min: undefined,
+        max: undefined
+      };
+    } else if (userRole === 'supervisor') {
+      // Supervisor: current day + last 3 days
+      const minDate = new Date(today);
+      minDate.setDate(today.getDate() - 3);
+      return {
+        min: minDate.toISOString().split('T')[0],
+        max: today.toISOString().split('T')[0]
+      };
+    } else {
+      // Employee: only current day
+      return {
+        min: today.toISOString().split('T')[0],
+        max: today.toISOString().split('T')[0]
+      };
+    }
+  };
+
+  const dateRestrictions = getDateRestrictions();
+
   const loadEmployees = async () => {
     setLoading(true);
     try {
-      const data = await attendanceService.getSiteEmployees();
+      let data = await attendanceService.getSiteEmployees();
       console.log('Loaded employees:', data); // Debug log
+
+      // Filter employees based on user role
+      if (user?.role === 'employee') {
+        // Employees can only see themselves
+        // Note: Assuming user.employee_id exists for employees
+        const userEmployeeId = (user as any).employee_id;
+        if (userEmployeeId) {
+          data = data.filter(emp => emp.employee_id === userEmployeeId);
+          // Auto-select the employee
+          if (data.length > 0) {
+            setSelectedEmployee(data[0].employee_id);
+          }
+        } else {
+          // If no employee_id, show empty list
+          data = [];
+        }
+      }
+
       setEmployees(data);
 
-              // Initialize bulk attendance with all employees as Present
+      // Initialize bulk attendance with all employees as Present (only for supervisors and admins)
+      if (user?.role !== 'employee') {
         const bulkData = data.map((emp: Employee) => ({
           employee_id: emp.employee_id,
           attendance_status: 'Present' as const,
           attendance_date: bulkDate || new Date().toISOString().split('T')[0],
           overtime_shifts: 0
         }));
-      setBulkAttendance(bulkData);
+        setBulkAttendance(bulkData);
+      }
     } catch (error: any) {
       console.error('Error loading employees:', error); // Debug log
       toast({
@@ -240,15 +293,17 @@ export default function MarkAttendance() {
       </div>
 
       <Tabs defaultValue="individual" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className={`grid w-full ${user?.role === 'employee' ? 'grid-cols-1' : 'grid-cols-2'}`}>
           <TabsTrigger value="individual" className="flex items-center space-x-2">
             <Users className="w-4 h-4" />
             <span>Individual</span>
           </TabsTrigger>
-          <TabsTrigger value="bulk" className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4" />
-            <span>Bulk Mark Today</span>
-          </TabsTrigger>
+          {user?.role !== 'employee' && (
+            <TabsTrigger value="bulk" className="flex items-center space-x-2">
+              <Calendar className="w-4 h-4" />
+              <span>Bulk Mark Today</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="individual" className="space-y-4">
@@ -286,6 +341,8 @@ export default function MarkAttendance() {
                       type="date"
                       value={attendanceDate}
                       onChange={(e) => setAttendanceDate(e.target.value)}
+                      min={dateRestrictions.min}
+                      max={dateRestrictions.max}
                       required
                     />
                   </div>
@@ -339,7 +396,8 @@ export default function MarkAttendance() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="bulk" className="space-y-4">
+        {user?.role !== 'employee' && (
+          <TabsContent value="bulk" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Bulk Mark Attendance for Today</CardTitle>
@@ -357,6 +415,8 @@ export default function MarkAttendance() {
                       type="date"
                       value={bulkDate}
                       onChange={(e) => setBulkDate(e.target.value)}
+                      min={dateRestrictions.min}
+                      max={dateRestrictions.max}
                       required
                     />
                   </div>
@@ -436,7 +496,8 @@ export default function MarkAttendance() {
               </form>
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

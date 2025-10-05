@@ -148,10 +148,10 @@ function SupervisorDashboardContent() {
 
         <div className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-6">
+                    <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="individual">Mark Attendance</TabsTrigger>
-          <TabsTrigger value="bulk">Bulk Attendance</TabsTrigger>
+          {/* <TabsTrigger value="bulk">Bulk Attendance</TabsTrigger> */}
           <TabsTrigger value="records">Attendance Records</TabsTrigger>
           <TabsTrigger value="salary">Salary Report</TabsTrigger>
           <TabsTrigger value="deductions">Deductions</TabsTrigger>
