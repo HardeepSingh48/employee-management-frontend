@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, User, Lock, Building2 } from 'lucide-react';
 import { AppDispatch } from '@/store';
+import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -65,8 +66,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-28 h-28 bg-white rounded-full mb-4">
+            <motion.img
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              src="/assets/SSPL.png"
+              alt="SSPL Security Logo"
+              className="h-24 w-full transition-all duration-300 m-2 "
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Employee Management</h1>
           <p className="text-gray-600">Sign in to your account</p>
