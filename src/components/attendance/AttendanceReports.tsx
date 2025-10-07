@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2, Download, FileText, BarChart3, Calendar, Filter } from 'lucide-react';
 import { attendanceService, type AttendanceRecord } from '@/lib/attendance-service';
 import { sitesService, type Site } from '@/lib/sites-service';
+import * as XLSX from 'xlsx';
 
 export default function AttendanceReports() {
   // Loading state per report
@@ -91,37 +92,47 @@ export default function AttendanceReports() {
       const start = attendanceService.formatDate(startDate);
       const end = attendanceService.formatDate(endDate);
 
-      const records = await attendanceService.getSiteAttendance(start, end, undefined, selectedSiteId || undefined);
+      // Construct the API URL
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiBase = baseURL.endsWith('/api') ? baseURL : `${baseURL}/api`;
+      const url = `${apiBase}/attendance/monthly-report-excel?start_date=${start}&end_date=${end}${selectedSiteId ? `&site_id=${selectedSiteId}` : ''}`;
 
-      // Group by employee and aggregate
-      const map = new Map<string, { employee_id: string; employee_name: string; present: number; absent: number; late: number; halfDay: number; overtimeHours: number }>();
-      for (const r of records) {
-        const key = r.employee_id;
-        const current = map.get(key) || { employee_id: r.employee_id, employee_name: r.employee_name || '', present: 0, absent: 0, late: 0, halfDay: 0, overtimeHours: 0 };
-        switch (r.attendance_status) {
-          case 'Present': current.present += 1; break;
-          case 'Absent': current.absent += 1; break;
-          case 'Late': current.late += 1; break;
-          case 'Half Day': current.halfDay += 1; break;
-        }
-        current.overtimeHours += (r.overtime_hours || 0);
-        map.set(key, current);
+      // Call the new Excel endpoint
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate report');
       }
 
-      const rows = Array.from(map.values()).map(v => ({
-        'Employee ID': v.employee_id,
-        'Name': v.employee_name,
-        'Present Days': v.present,
-        'Absent Days': v.absent,
-        'Late Days': v.late,
-        'Half Days': v.halfDay,
-        'Total Overtime Hours': Math.round(v.overtimeHours * 100) / 100,
-      }));
+      // Get the filename from response headers or generate one
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `monthly_attendance_report_${selectedSiteId || 'site'}_${start.replace(/-/g, '')}_to_${end.replace(/-/g, '')}.xlsx`;
 
-      const monthName = new Date(0, parseInt(monthlyMonth, 10) - 1).toLocaleString('default', { month: 'long' });
-      const siteSuffix = selectedSiteId ? `_${selectedSiteId}` : '';
-      downloadCsv(`attendance_monthly${siteSuffix}_${monthName}_${monthlyYear}.csv`, rows);
-      toast({ title: 'Report Generated', description: 'Monthly report generated' });
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      // Download the Excel file
+      const blob = await response.blob();
+      const urlBlob = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlBlob;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(urlBlob);
+
+      toast({ title: 'Report Generated', description: 'Monthly attendance Excel report downloaded successfully' });
     } catch (error: any) {
       console.error(error);
       toast({ title: 'Error', description: error?.message || 'Failed to generate monthly report', variant: 'destructive' });
@@ -310,8 +321,8 @@ export default function AttendanceReports() {
                     </Select>
                   </div>
                 </div>
-                <Button 
-                  onClick={generateMonthlyReport} 
+                <Button
+                  onClick={generateMonthlyReport}
                   disabled={generatingMonthly}
                   className="w-full"
                 >
@@ -323,7 +334,7 @@ export default function AttendanceReports() {
                   ) : (
                     <>
                       <Download className="w-4 h-4 mr-2" />
-                      Generate Monthly Report
+                      Generate Monthly Excel Report
                     </>
                   )}
                 </Button>
