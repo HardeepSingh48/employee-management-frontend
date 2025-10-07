@@ -166,6 +166,44 @@ export const attendanceService = {
     return new Date().toISOString().split('T')[0];
   },
 
+  // Bulk upload attendance Excel file
+  bulkUploadAttendanceExcel: async (formData: FormData): Promise<any> => {
+    const response = await api.post('/attendance/bulk-mark-excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Download attendance template
+  downloadAttendanceTemplate: async (params: {
+    month: number;
+    year: number;
+    site_id?: string;
+  }): Promise<void> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('month', params.month.toString());
+    queryParams.append('year', params.year.toString());
+    if (params.site_id) {
+      queryParams.append('site_id', params.site_id);
+    }
+
+    const response = await api.get(`/attendance/template?${queryParams.toString()}`, {
+      responseType: 'blob',
+    });
+
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `attendance_template_${params.year}_${params.month}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
   // Helper function to get current month/year
   getCurrentMonthYear: (): { year: number; month: number } => {
     const now = new Date();

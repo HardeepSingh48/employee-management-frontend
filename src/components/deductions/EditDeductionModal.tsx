@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Deduction } from '@/lib/deductions-service';
 
 interface EditDeductionModalProps {
@@ -102,12 +103,20 @@ export default function EditDeductionModal({ open, onClose, deduction, onSubmit 
 
           <div className="space-y-2">
             <Label htmlFor="deduction_type">Deduction Type *</Label>
-            <Input
-              id="deduction_type"
-              placeholder="e.g., Clothes, Loan, Recovery"
+            <Select
               value={formData.deduction_type}
-              onChange={(e) => setFormData({ ...formData, deduction_type: e.target.value })}
-            />
+              onValueChange={(value) => setFormData({ ...formData, deduction_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select deduction type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Uniform">Uniform</SelectItem>
+                <SelectItem value="Loan">Loan</SelectItem>
+                <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
+                <SelectItem value="Recovery">Recovery</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

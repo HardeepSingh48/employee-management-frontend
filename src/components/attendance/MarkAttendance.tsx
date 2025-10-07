@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { attendanceService } from '@/lib/attendance-service';
+import { sitesService, type Site } from '@/lib/sites-service';
+import { employeeService } from '@/lib/employee-service';
+import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 import { Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface Employee {
@@ -43,15 +46,72 @@ export default function MarkAttendance() {
   const [remarks, setRemarks] = useState('');
   const [bulkAttendance, setBulkAttendance] = useState<BulkAttendanceData[]>([]);
   const [bulkDate, setBulkDate] = useState('');
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
+  const [allEmployees, setAllEmployees] = useState<any[]>([]);
+  const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadEmployees();
+    const loadData = async () => {
+      try {
+        // Load sites, salary codes and employees
+        const [sitesRes, salaryCodesRes, employeeData] = await Promise.all([
+          sitesService.getSites(1, 1000),
+          salaryCodesService.getSalaryCodes(),
+          employeeService.getEmployees()
+        ]);
+
+        setSites(sitesRes.data || []);
+        setSalaryCodes(salaryCodesRes);
+        setAllEmployees(employeeData);
+
+        // Load employees for the current user (role-based filtering)
+        await loadEmployees();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load data',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     setAttendanceDate(today);
     setBulkDate(today);
   }, []);
+
+  // Load employees when allEmployees data is available
+  useEffect(() => {
+    if (allEmployees.length > 0 || user?.role === 'supervisor') {
+      loadEmployees();
+    }
+  }, [allEmployees, user?.role]);
+
+  // Update bulk attendance when site changes
+  useEffect(() => {
+    if (user?.role !== 'employee' && employees.length > 0) {
+      const filteredEmployees = selectedSiteId
+        ? employees.filter((emp: any) => {
+            const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+            return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+          })
+        : employees;
+
+      const bulkData = filteredEmployees.map((emp: Employee) => ({
+        employee_id: emp.employee_id,
+        attendance_status: 'Present' as const,
+        attendance_date: bulkDate || new Date().toISOString().split('T')[0],
+        overtime_shifts: 0
+      }));
+      setBulkAttendance(bulkData);
+    }
+  }, [selectedSiteId, employees, bulkDate, user?.role, salaryCodes, sites]);
 
   // Calculate date restrictions based on user role
   const getDateRestrictions = () => {
@@ -83,28 +143,33 @@ export default function MarkAttendance() {
 
   const dateRestrictions = getDateRestrictions();
 
+  // Helper function to get salary codes for selected site
+  const getSalaryCodesForSite = (siteId: string) => {
+    const selectedSite = sites.find(s => s.site_id === siteId);
+    if (!selectedSite) return [];
+
+    return salaryCodes
+      .filter(sc => sc.site_name === selectedSite.site_name)
+      .map(sc => sc.salary_code);
+  };
+
   const loadEmployees = async () => {
     setLoading(true);
     try {
-      let data = await attendanceService.getSiteEmployees();
-      console.log('Loaded employees:', data); // Debug log
+      let data: any[] = [];
 
-      // Filter employees based on user role
-      if (user?.role === 'employee') {
-        // Employees can only see themselves
-        // Note: Assuming user.employee_id exists for employees
-        const userEmployeeId = (user as any).employee_id;
-        if (userEmployeeId) {
-          data = data.filter(emp => emp.employee_id === userEmployeeId);
-          // Auto-select the employee
-          if (data.length > 0) {
-            setSelectedEmployee(data[0].employee_id);
-          }
-        } else {
-          // If no employee_id, show empty list
-          data = [];
-        }
+      if (user?.role === 'supervisor') {
+        // Supervisors get their site employees
+        data = await attendanceService.getSiteEmployees();
+      } else if (user?.role === 'admin') {
+        // Admins get all employees
+        data = allEmployees;
+      } else if (user?.role === 'employee') {
+        // Employees get only themselves
+        data = allEmployees.filter(emp => emp.employee_id === (user as any).employee_id);
       }
+
+      console.log('Loaded employees:', data); // Debug log
 
       setEmployees(data);
 
@@ -201,13 +266,19 @@ export default function MarkAttendance() {
         description: `Successfully marked attendance for ${result.successful_count} out of ${result.total_count} employees`,
       });
 
-             // Reset bulk attendance to Present for all employees
-       const resetBulkData = employees.map((emp: Employee) => ({
-         employee_id: emp.employee_id,
-         attendance_status: 'Present' as const,
-         attendance_date: bulkDate,
-         overtime_shifts: 0
-       }));
+             // Reset bulk attendance to Present for filtered employees
+      const filteredEmployees = selectedSiteId
+        ? employees.filter((emp: any) => {
+            const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+            return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+          })
+        : employees;
+      const resetBulkData = filteredEmployees.map((emp: Employee) => ({
+        employee_id: emp.employee_id,
+        attendance_status: 'Present' as const,
+        attendance_date: bulkDate,
+        overtime_shifts: 0
+      }));
       setBulkAttendance(resetBulkData);
     } catch (error: any) {
       toast({
@@ -313,7 +384,31 @@ export default function MarkAttendance() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleIndividualSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="site">Site</Label>
+                    <select
+                      id="site"
+                      value={selectedSiteId}
+                      onChange={(e) => setSelectedSiteId(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">All Sites</option>
+                      {sites
+                        .filter(site => {
+                          if (user?.role === 'supervisor') {
+                            // Supervisors can only see their own site
+                            return site.site_id === (user as any).site_id;
+                          }
+                          return true; // Admins can see all sites
+                        })
+                        .map((site) => (
+                          <option key={site.site_id} value={site.site_id}>
+                            {site.site_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                   <div>
                     <Label htmlFor="employee">Employee</Label>
                     <select
@@ -323,14 +418,21 @@ export default function MarkAttendance() {
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="">Select employee</option>
-                      {employees.map((emp) => {
-                        const displayText = `${emp.full_name || emp.employee_id || 'Unknown'} - ${emp.designation || 'No designation'}`;
-                        return (
-                          <option key={emp.employee_id} value={emp.employee_id}>
-                            {displayText}
-                          </option>
-                        );
-                      })}
+                      {employees
+                        .filter((emp: any) => {
+                          if (!selectedSiteId) return true;
+                          const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+                          return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+                        })
+                        .map((emp) => {
+                          const employeeName = emp.full_name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || 'Unknown';
+                          const displayText = `${emp.employee_id} - ${employeeName}`;
+                          return (
+                            <option key={emp.employee_id} value={emp.employee_id}>
+                              {displayText}
+                            </option>
+                          );
+                        })}
                     </select>
                   </div>
 
@@ -407,8 +509,32 @@ export default function MarkAttendance() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleBulkSubmit} className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="bulk-site">Site</Label>
+                    <select
+                      id="bulk-site"
+                      value={selectedSiteId}
+                      onChange={(e) => setSelectedSiteId(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">All Sites</option>
+                      {sites
+                        .filter(site => {
+                          if (user?.role === 'supervisor') {
+                            // Supervisors can only see their own site
+                            return site.site_id === (user as any).site_id;
+                          }
+                          return true; // Admins can see all sites
+                        })
+                        .map((site) => (
+                          <option key={site.site_id} value={site.site_id}>
+                            {site.site_name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
                     <Label htmlFor="bulk-date">Date</Label>
                     <Input
                       id="bulk-date"
@@ -420,7 +546,8 @@ export default function MarkAttendance() {
                       required
                     />
                   </div>
-                                     <div className="flex space-x-2">
+               </div>
+               <div className="flex space-x-2">
                      <Button
                        type="button"
                        variant="outline"
@@ -446,7 +573,6 @@ export default function MarkAttendance() {
                        Clear OT
                      </Button>
                    </div>
-                </div>
 
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium mb-3">Employee Attendance</h4>
@@ -458,7 +584,9 @@ export default function MarkAttendance() {
                           <div className="flex items-center space-x-3">
                             {getStatusIcon(record.attendance_status)}
                             <div>
-                              <p className="font-medium">{employee?.full_name || employee?.employee_id}</p>
+                              <p className="font-medium">
+                                {employee?.employee_id} - {employee?.full_name || `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim() || 'Unknown'}
+                              </p>
                               <p className="text-sm text-gray-600">{employee?.designation || 'No designation'}</p>
                             </div>
                           </div>

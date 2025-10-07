@@ -25,7 +25,10 @@ export const employeeSchema = z.object({
   aadhaarNumber: z.string().regex(/^\d{12}$/, "Aadhaar number must be 12 digits"),
   panCardNumber: z
     .string()
-    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+    .optional()
+    .refine((val) => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val), {
+      message: "Invalid PAN format",
+    }),
   voterIdOrLicense: z.string().optional(),
   uanNumber: z.string().optional(),
   esicNumber: z.string().optional(),

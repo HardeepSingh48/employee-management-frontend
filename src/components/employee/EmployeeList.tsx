@@ -125,12 +125,12 @@ export default function EmployeeList() {
       if (search.trim()) {
         const searchLower = search.toLowerCase();
         filteredData = transformedData.filter(emp =>
-          emp.employee_id?.toLowerCase().includes(searchLower) ||
-          emp.first_name?.toLowerCase().includes(searchLower) ||
-          emp.last_name?.toLowerCase().includes(searchLower) ||
-          emp.email?.toLowerCase().includes(searchLower) ||
-          emp.phone_number?.toLowerCase().includes(searchLower) ||
-          emp.designation?.toLowerCase().includes(searchLower)
+          String(emp.employee_id || '').toLowerCase().includes(searchLower) ||
+          (emp.first_name || '').toLowerCase().includes(searchLower) ||
+          (emp.last_name || '').toLowerCase().includes(searchLower) ||
+          (emp.email || '').toLowerCase().includes(searchLower) ||
+          (emp.phone_number || '').toLowerCase().includes(searchLower) ||
+          (emp.designation || '').toLowerCase().includes(searchLower)
         );
       }
 

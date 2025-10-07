@@ -200,12 +200,20 @@ export default function AddDeductionModal({ open, onClose, onSubmit }: AddDeduct
 
           <div className="space-y-2">
             <Label htmlFor="deduction_type">Deduction Type *</Label>
-            <Input
-              id="deduction_type"
-              placeholder="e.g., Clothes, Loan, Recovery"
+            <Select
               value={formData.deduction_type}
-              onChange={(e) => setFormData({ ...formData, deduction_type: e.target.value })}
-            />
+              onValueChange={(value) => setFormData({ ...formData, deduction_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select deduction type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Uniform">Uniform</SelectItem>
+                <SelectItem value="Loan">Loan</SelectItem>
+                <SelectItem value="Miscellaneous">Miscellaneous</SelectItem>
+                <SelectItem value="Recovery">Recovery</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
