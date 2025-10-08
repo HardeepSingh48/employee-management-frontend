@@ -6,10 +6,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, FileSpreadsheet, Calendar, Users, AlertCircle, CheckCircle, Download } from 'lucide-react';
+import { Upload, FileSpreadsheet, Calendar, Users, AlertCircle, CheckCircle, Download, AlertTriangle, FileX, UserX, CalendarDays } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { sitesService, type Site } from '@/lib/sites-service';
+
+interface ValidationError {
+  file_errors: string[];
+  structure_errors: string[];
+  employee_errors: string[];
+  data_errors: string[];
+  warnings: string[];
+  empty_employee_ids?: Array<{row: number; error: string}>;
+}
+
+interface ValidationSummary {
+  total_errors: number;
+  total_warnings: number;
+  valid_employees: number;
+  invalid_employees: number;
+  total_rows: number;
+  total_date_columns: number;
+}
 
 interface UploadResult {
   success: boolean;
@@ -17,7 +35,244 @@ interface UploadResult {
   total_records?: number;
   total_sheets?: number;
   errors?: string[];
+  validation_errors?: ValidationError;
+  validation_summary?: ValidationSummary;
+  warnings?: string[];
+  results?: {
+    total_records: number;
+    new_records: number;
+    updated_records: number;
+    successful_employees: number;
+    failed_employees: number;
+  };
 }
+
+// Add this component for detailed error display
+const ValidationErrorDisplay = ({
+  result,
+  month,
+  year,
+  selectedSiteId,
+  downloadTemplate
+}: {
+  result: UploadResult;
+  month: string;
+  year: string;
+  selectedSiteId: string;
+  downloadTemplate: () => void;
+}) => {
+  if (!result.validation_errors) return null;
+
+  const { file_errors, structure_errors, employee_errors, data_errors, warnings, empty_employee_ids } = result.validation_errors;
+  const hasErrors = file_errors.length > 0 || structure_errors.length > 0 ||
+                    employee_errors.length > 0 || data_errors.length > 0 ||
+                    (empty_employee_ids && empty_employee_ids.length > 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Validation Summary */}
+      {result.validation_summary && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Validation Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600">Total Errors</p>
+                <p className="text-xl font-bold text-red-600">{result.validation_summary.total_errors}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Total Warnings</p>
+                <p className="text-xl font-bold text-yellow-600">{result.validation_summary.total_warnings}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Valid Employees</p>
+                <p className="text-xl font-bold text-green-600">{result.validation_summary.valid_employees}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Invalid Employees</p>
+                <p className="text-xl font-bold text-red-600">{result.validation_summary.invalid_employees}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Total Rows</p>
+                <p className="text-xl font-bold">{result.validation_summary.total_rows}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Date Columns</p>
+                <p className="text-xl font-bold">{result.validation_summary.total_date_columns}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* File Errors */}
+      {file_errors.length > 0 && (
+        <Alert variant="destructive">
+          <FileX className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-semibold mb-2">File Validation Errors:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {file_errors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Structure Errors */}
+      {structure_errors.length > 0 && (
+        <Alert variant="destructive">
+          <FileSpreadsheet className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-semibold mb-2">Excel Structure Errors:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {structure_errors.map((error, idx) => (
+                <li key={idx}>{error}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Employee Errors */}
+      {employee_errors.length > 0 && (
+        <Alert variant="destructive">
+          <UserX className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-semibold mb-2">Employee Data Errors:</p>
+            <div className="max-h-48 overflow-y-auto">
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {employee_errors.slice(0, 10).map((error, idx) => (
+                  <li key={idx}>{error}</li>
+                ))}
+                {employee_errors.length > 10 && (
+                  <li className="text-yellow-600 font-medium">
+                    ... and {employee_errors.length - 10} more employee errors
+                  </li>
+                )}
+              </ul>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => {
+                const errorText = employee_errors.join('\n');
+                const blob = new Blob([errorText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'employee_errors.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Full Error List
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Empty Employee ID Errors */}
+      {empty_employee_ids && empty_employee_ids.length > 0 && (
+        <Alert variant="destructive">
+          <UserX className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-semibold mb-2">Empty Employee ID Errors:</p>
+            <div className="max-h-48 overflow-y-auto">
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {empty_employee_ids.slice(0, 10).map((error, idx) => (
+                  <li key={idx}>{error.error}</li>
+                ))}
+                {empty_employee_ids.length > 10 && (
+                  <li className="text-yellow-600 font-medium">
+                    ... and {empty_employee_ids.length - 10} more empty ID errors
+                  </li>
+                )}
+              </ul>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Data Errors */}
+      {data_errors.length > 0 && (
+        <Alert variant="destructive">
+          <CalendarDays className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-semibold mb-2">Attendance Data Errors:</p>
+            <div className="max-h-48 overflow-y-auto">
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                {data_errors.slice(0, 10).map((error, idx) => (
+                  <li key={idx}>{error}</li>
+                ))}
+                {data_errors.length > 10 && (
+                  <li className="text-yellow-600 font-medium">
+                    ... and {data_errors.length - 10} more data errors
+                  </li>
+                )}
+              </ul>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Warnings */}
+      {warnings.length > 0 && (
+        <Alert className="border-yellow-300 bg-yellow-50">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription>
+            <p className="font-semibold mb-2 text-yellow-800">Warnings:</p>
+            <ul className="list-disc list-inside space-y-1 text-sm text-yellow-700">
+              {warnings.map((warning, idx) => (
+                <li key={idx}>{warning}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Action Buttons */}
+      {hasErrors && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-blue-900 mb-2">What to do next:</p>
+                <ul className="space-y-1 text-sm text-blue-800">
+                  <li>1. Fix the errors listed above in your Excel file</li>
+                  <li>2. Verify employee IDs match exactly with system records</li>
+                  <li>3. Ensure date columns are in DD/MM/YYYY format</li>
+                  <li>4. Check attendance status values (P, A, L, H, OFF)</li>
+                  <li>5. Re-upload the corrected file</li>
+                </ul>
+                <div className="mt-4 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadTemplate}
+                    disabled={!month || !year || !selectedSiteId}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Fresh Template
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
 
 export default function BulkAttendance() {
   const [file, setFile] = useState<File | null>(null);
@@ -285,36 +540,13 @@ export default function BulkAttendance() {
       {/* Upload Result Display */}
       {uploadResult && (
         <div className="mb-6">
-          <Alert variant={uploadResult.success ? "default" : "destructive"}>
-            {uploadResult.success ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-medium">{uploadResult.message}</p>
-                {uploadResult.success && uploadResult.total_records && (
-                  <p className="text-sm">
-                    Processed {uploadResult.total_records} records from {uploadResult.total_sheets} sheet(s).
-                  </p>
-                )}
-                {!uploadResult.success && uploadResult.errors && uploadResult.errors.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium">Errors:</p>
-                    <ul className="list-disc list-inside text-xs space-y-1 mt-1">
-                      {uploadResult.errors.slice(0, 5).map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                      {uploadResult.errors.length > 5 && (
-                        <li>... and {uploadResult.errors.length - 5} more errors</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
+          <ValidationErrorDisplay
+            result={uploadResult}
+            month={month}
+            year={year}
+            selectedSiteId={selectedSiteId}
+            downloadTemplate={downloadTemplate}
+          />
         </div>
       )}
 
