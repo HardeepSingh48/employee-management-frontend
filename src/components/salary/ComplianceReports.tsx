@@ -69,7 +69,7 @@ export default function ComplianceReports() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-gray-600">Attendance Records</div>
+            <div className="text-xs text-gray-600">EPF</div>
           </CardContent>
         </Card>
 
@@ -84,7 +84,7 @@ export default function ComplianceReports() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-gray-600">Leave & Holidays</div>
+            <div className="text-xs text-gray-600">ESIC</div>
           </CardContent>
         </Card>
       </div>
@@ -102,11 +102,11 @@ export default function ComplianceReports() {
           </TabsTrigger>
           <TabsTrigger value="formC" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Form C
+            EPF
           </TabsTrigger>
           <TabsTrigger value="formD" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            Form D
+            ESIC
           </TabsTrigger>
         </TabsList>
 
@@ -149,10 +149,10 @@ export default function ComplianceReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-purple-600" />
-                Form C - Attendance & Overtime Records
+                EPF - Employee Provident Fund
               </CardTitle>
               <CardDescription>
-                Daily attendance and overtime calculation records
+                {/* Daily attendance and overtime calculation records */}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -166,10 +166,10 @@ export default function ComplianceReports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-orange-600" />
-                Form D - Leave & Holiday Records
+                ESIC - Employee State Insurance Corporation
               </CardTitle>
               <CardDescription>
-                Employee leave applications and holiday calendar
+                {/* Employee leave applications and holiday calendar */}
               </CardDescription>
             </CardHeader>
             <CardContent>

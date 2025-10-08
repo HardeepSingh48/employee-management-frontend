@@ -79,6 +79,10 @@ export const API_ENDPOINTS = {
     BASE: '/forms',
     FORM_B: '/forms/form-b',
     FORM_B_DOWNLOAD: '/forms/form-b/download',
+    FORM_C: '/forms/form-c',
+    FORM_C_DOWNLOAD: '/forms/form-c/download',
+    FORM_D: '/forms/form-d',
+    FORM_D_DOWNLOAD: '/forms/form-d/download',
   },
 
   // File upload endpoints

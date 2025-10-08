@@ -66,6 +66,67 @@ export interface FormBRequest {
   site?: string;
 }
 
+export interface FormCEmployee {
+  slNo: number;
+  memberName: string;
+  grossWages: number;
+  epfWages: number;
+  epsWages: number;
+  edliWages: number;
+  epfContribution: number;
+  epsContribution: number;
+  epfEpsDiff: number;
+  ncpDays: number;
+  refundOfAdvance: number;
+  siteName: string;
+}
+
+export interface FormCTotals {
+  totalEmployees: number;
+  totalGrossWages: number;
+  totalEpfWages: number;
+  totalEpsWages: number;
+  totalEdliWages: number;
+  totalEpfContribution: number;
+  totalEpsContribution: number;
+  totalEpfEpsDiff: number;
+  totalNcpDays: number;
+  totalRefundOfAdvance: number;
+}
+
+export interface FormCResponse {
+  success: boolean;
+  data: FormCEmployee[];
+  totals: FormCTotals;
+  filters: FormBFilters;
+  message?: string;
+}
+
+export interface FormDEmployee {
+  slNo: number;
+  insuranceNo: string;
+  nameOfInsuredPerson: string;
+  noOfDays: number;
+  totalMonthlyWages: number;
+  ipContribution: number;
+  siteName: string;
+}
+
+export interface FormDTotals {
+  totalEmployees: number;
+  totalDays: number;
+  totalMonthlyWages: number;
+  totalIpContribution: number;
+}
+
+export interface FormDResponse {
+  success: boolean;
+  data: FormDEmployee[];
+  totals: FormDTotals;
+  filters: FormBFilters;
+  message?: string;
+}
+
 export const formsService = {
   // Get Form B data
   getFormBData: async (params: FormBRequest): Promise<FormBResponse> => {
@@ -171,5 +232,101 @@ export const formsService = {
     const monthName = formsService.getMonthName(month);
     const siteName = site || 'All';
     return `FormB_${siteName}_${monthName}_${year}.xlsx`;
+  },
+
+  // Get Form C data (EPF)
+  getFormCData: async (params: FormBRequest): Promise<FormCResponse> => {
+    try {
+      const queryParams = new URLSearchParams({
+        year: params.year.toString(),
+        month: params.month.toString(),
+      });
+
+      if (params.site) {
+        queryParams.append('site', params.site);
+      }
+
+      const response = await api.get(`${API_ENDPOINTS.FORMS.FORM_C}?${queryParams.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch Form C data');
+    }
+  },
+
+  // Download Form C Excel file
+  downloadFormCExcel: async (params: FormBRequest): Promise<Blob> => {
+    try {
+      const queryParams = new URLSearchParams({
+        year: params.year.toString(),
+        month: params.month.toString(),
+      });
+
+      if (params.site) {
+        queryParams.append('site', params.site);
+      }
+
+      const response = await api.get(`${API_ENDPOINTS.FORMS.FORM_C_DOWNLOAD}?${queryParams.toString()}`, {
+        responseType: 'blob',
+      });
+
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to download Form C Excel file');
+    }
+  },
+
+  // Get Form D data (ESIC)
+  getFormDData: async (params: FormBRequest): Promise<FormDResponse> => {
+    try {
+      const queryParams = new URLSearchParams({
+        year: params.year.toString(),
+        month: params.month.toString(),
+      });
+
+      if (params.site) {
+        queryParams.append('site', params.site);
+      }
+
+      const response = await api.get(`${API_ENDPOINTS.FORMS.FORM_D}?${queryParams.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch Form D data');
+    }
+  },
+
+  // Download Form D Excel file
+  downloadFormDExcel: async (params: FormBRequest): Promise<Blob> => {
+    try {
+      const queryParams = new URLSearchParams({
+        year: params.year.toString(),
+        month: params.month.toString(),
+      });
+
+      if (params.site) {
+        queryParams.append('site', params.site);
+      }
+
+      const response = await api.get(`${API_ENDPOINTS.FORMS.FORM_D_DOWNLOAD}?${queryParams.toString()}`, {
+        responseType: 'blob',
+      });
+
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to download Form D Excel file');
+    }
+  },
+
+  // Generate filename for Form C Excel download
+  generateFormCExcelFilename: (site: string, month: number, year: number): string => {
+    const monthName = formsService.getMonthName(month);
+    const siteName = site || 'All';
+    return `FormC_EPF_${siteName}_${monthName}_${year}.xlsx`;
+  },
+
+  // Generate filename for Form D Excel download
+  generateFormDExcelFilename: (site: string, month: number, year: number): string => {
+    const monthName = formsService.getMonthName(month);
+    const siteName = site || 'All';
+    return `FormD_ESIC_${siteName}_${monthName}_${year}.xlsx`;
   },
 };
