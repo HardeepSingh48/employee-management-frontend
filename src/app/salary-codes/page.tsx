@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import SalaryCodeForm from '@/components/salary-code/salary-code-form';
 import SalaryCodeList from '@/components/salary-code/salary-code-list';
 import SalaryCodeBulkImport from '@/components/salary-code/salary-code-bulk-import';
+import { Logo } from '@/components/layout/Logo';
 
 export default function SalaryCodesPage() {
   const [mode, setMode] = useState<'create' | 'list' | 'bulk'>('create');
@@ -11,8 +12,11 @@ export default function SalaryCodesPage() {
     <div className="min-h-screen bg-gray-50">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-800">Salary Code Management</h1>
-            
+            <div className="flex items-center space-x-4">
+              <Logo width={32} height={32} />
+              <h1 className="text-xl font-semibold text-gray-800">Salary Code Management</h1>
+            </div>
+
             <div className="flex space-x-4">
               <button
                 onClick={() => setMode('create')}

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Download, Upload, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Logo } from '@/components/layout/Logo';
 import { deductionsService, Deduction } from '@/lib/deductions-service';
 import AddDeductionModal from '@/components/deductions/AddDeductionModal';
 import BulkUploadModal from '@/components/deductions/BulkUploadModal';
@@ -197,11 +198,14 @@ export default function DeductionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Deductions Management</h1>
-          <p className="text-muted-foreground">
-            Manage employee deductions and installments
-          </p>
+        <div className="flex items-center space-x-4">
+          <Logo width={40} height={40} />
+          <div>
+            <h1 className="text-3xl font-bold">Deductions Management</h1>
+            <p className="text-muted-foreground">
+              Manage employee deductions and installments
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={downloadTemplate} variant="outline">

@@ -4,6 +4,7 @@ import EmployeeRegistrationForm from '@/components/employee/employee-form';
 import { ExcelImport } from '@/components/employee/excel-import';
 import EmployeeSkillFix from '@/components/employee/EmployeeSkillFix';
 import EmployeeList from '@/components/employee/EmployeeList';
+import { Logo } from '@/components/layout/Logo';
 
 export default function EmployeesPage() {
   const [mode, setMode] = useState<'manual' | 'excel' | 'fix' | 'list'>('manual');
@@ -12,7 +13,10 @@ export default function EmployeesPage() {
     <div className="min-h-screen bg-gray-50">
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-800">Employee Management</h1>
+            <div className="flex items-center space-x-4">
+              <Logo width={32} height={32} />
+              <h1 className="text-xl font-semibold text-gray-800">Employee Management</h1>
+            </div>
 
             <div className="flex space-x-4">
               <button

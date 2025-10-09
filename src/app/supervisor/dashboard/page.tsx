@@ -7,17 +7,18 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Clock, 
-  Calendar, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Clock,
+  Calendar,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   TrendingUp,
   Users,
   FileSpreadsheet,
   DollarSign
 } from 'lucide-react';
+import { Logo } from '@/components/layout/Logo';
 import { Sidebar } from '@/components/layout/Sidebar';
 import MarkAttendance from '@/components/attendance/MarkAttendance';
 import BulkAttendance from '@/components/attendance/BulkAttendance';
@@ -125,18 +126,21 @@ function SupervisorDashboardContent() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {user?.name || 'Supervisor'}!
-              </h1>
-              <p className="text-gray-600">
-                Site: {user?.site_id || 'Not assigned'} • {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
+            <div className="flex items-center space-x-4">
+              <Logo width={40} height={40} />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {user?.name || 'Supervisor'}!
+                </h1>
+                <p className="text-gray-600">
+                  Site: {user?.site_id || 'Not assigned'} • {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="px-3 py-1">

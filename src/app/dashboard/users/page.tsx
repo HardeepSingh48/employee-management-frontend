@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Edit, Trash2 } from 'lucide-react';
+import { Logo } from '@/components/layout/Logo';
 
 interface UserData {
     id: string;
@@ -233,7 +234,10 @@ export default function UsersPage() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">User Management</h1>
+            <div className="flex items-center space-x-4 mb-4">
+                <Logo width={40} height={40} />
+                <h1 className="text-2xl font-bold">User Management</h1>
+            </div>
             <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
                 <DialogTrigger asChild>
                     <Button>Add New User</Button>

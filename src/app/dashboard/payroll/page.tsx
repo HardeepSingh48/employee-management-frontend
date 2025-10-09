@@ -12,18 +12,19 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Download, 
-  Eye, 
-  Users, 
-  Calendar, 
-  Building2, 
+import {
+  Download,
+  Eye,
+  Users,
+  Calendar,
+  Building2,
   FileText,
   Loader2,
   Search,
   CheckSquare,
   Square
 } from 'lucide-react';
+import { Logo } from '@/components/layout/Logo';
 import PayrollService, { Employee, Site } from '@/lib/payroll-service';
 import BonusCalculation from '@/components/payroll/BonusCalculation';
 
@@ -270,9 +271,12 @@ export default function PayrollPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Payroll Management</h1>
-          <p className="text-muted-foreground">Generate payslips and calculate bonuses for employees</p>
+        <div className="flex items-center space-x-4">
+          <Logo width={40} height={40} />
+          <div>
+            <h1 className="text-3xl font-bold">Payroll Management</h1>
+            <p className="text-muted-foreground">Generate payslips and calculate bonuses for employees</p>
+          </div>
         </div>
       </div>
 

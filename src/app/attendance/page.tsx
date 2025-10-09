@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Logo } from '@/components/layout/Logo';
 import { CalendarDays, Clock, Users, TrendingUp, UserCheck, FileSpreadsheet } from 'lucide-react';
 
 // Import attendance components
@@ -26,11 +27,14 @@ export default function AttendancePage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-          <p className="text-muted-foreground">
-            Manage employee attendance, track working hours, and generate reports
-          </p>
+        <div className="flex items-center space-x-4">
+          <Logo width={40} height={40} />
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
+            <p className="text-muted-foreground">
+              Manage employee attendance, track working hours, and generate reports
+            </p>
+          </div>
         </div>
         <Badge variant="outline" className="text-sm">
           <Clock className="w-4 h-4 mr-1" />

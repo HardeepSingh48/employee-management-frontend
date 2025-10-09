@@ -8,15 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Clock, 
-  Calendar, 
+import {
+  Clock,
+  Calendar,
 
-  CheckCircle, 
-  XCircle, 
+  CheckCircle,
+  XCircle,
   AlertCircle,
   TrendingUp,
 } from 'lucide-react';
+import { Logo } from '@/components/layout/Logo';
 import { Sidebar } from '@/components/layout/Sidebar';
 import MarkAttendanceCard from '@/features/employee/components/attendance/MarkAttendanceCard';
 import AttendanceHistory from '@/features/employee/components/attendance/AttendanceHistory';
@@ -124,18 +125,21 @@ export default function EmployeeDashboard() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {user?.name || 'Employee'}!
-              </h1>
-              <p className="text-gray-600">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
+            <div className="flex items-center space-x-4">
+              <Logo width={40} height={40} />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Welcome back, {user?.name || 'Employee'}!
+                </h1>
+                <p className="text-gray-600">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="outline" className="px-3 py-1">
