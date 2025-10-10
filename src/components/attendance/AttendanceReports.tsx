@@ -92,12 +92,6 @@ export default function AttendanceReports() {
       const start = attendanceService.formatDate(startDate);
       const end = attendanceService.formatDate(endDate);
 
-      // Debug logging
-      // console.log('Monthly Report Debug:');
-      // console.log('Selected month:', monthlyMonth, 'year:', monthlyYear);
-      // console.log('monthNum:', monthNum, 'yearNum:', yearNum);
-      // console.log('startDate:', startDate, 'endDate:', endDate);
-      // console.log('start:', start, 'end:', end);
 
       // Construct the API URL
       const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -226,15 +220,13 @@ export default function AttendanceReports() {
       const filteredAttendance = (attendance || []).filter((r: AttendanceRecord) => employeeIdSet.has(String(r.employee_id)));
 
       // Aggregate similar to monthly
-      const map = new Map<string, { employee_id: string; employee_name: string; present: number; absent: number; late: number; halfDay: number; overtimeHours: number }>();
+      const map = new Map<string, { employee_id: string; employee_name: string; present: number; absent: number; overtimeHours: number }>();
       for (const r of filteredAttendance) {
         const key = r.employee_id;
-        const current = map.get(key) || { employee_id: r.employee_id, employee_name: r.employee_name || '', present: 0, absent: 0, late: 0, halfDay: 0, overtimeHours: 0 };
+        const current = map.get(key) || { employee_id: r.employee_id, employee_name: r.employee_name || '', present: 0, absent: 0, overtimeHours: 0 };
         switch (r.attendance_status) {
           case 'Present': current.present += 1; break;
           case 'Absent': current.absent += 1; break;
-          case 'Late': current.late += 1; break;
-          case 'Half Day': current.halfDay += 1; break;
         }
         current.overtimeHours += (r.overtime_hours || 0);
         map.set(key, current);
@@ -245,8 +237,6 @@ export default function AttendanceReports() {
         'Name': v.employee_name,
         'Present Days': v.present,
         'Absent Days': v.absent,
-        'Late Days': v.late,
-        'Half Days': v.halfDay,
         'Total Overtime Hours': Math.round(v.overtimeHours * 100) / 100,
       }));
 
