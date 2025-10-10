@@ -13,9 +13,10 @@ interface SidebarProps {
   activeItem: string;
   onItemClick: (item: string) => void;
   userRole?: string;
+  className?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userRole }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userRole, className = '' }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector(selectUser);
@@ -62,7 +63,7 @@ const getSidebarItems = () => {
         // Return all admin items PLUS the new User Management item
         return [
             ...adminItems,
-            { name: 'User Management', icon: Settings, path: '/dashboard/users' }
+            { name: 'User Management', icon: Settings, path: '/superadmin/users' }
         ];
       case 'admin':
       default:
@@ -96,19 +97,19 @@ const getSidebarItems = () => {
   };
 
   return (
-    <div className="group fixed left-0 top-0 h-full w-16 hover:w-48 bg-gradient-to-b from-blue-900 to-blue-800 shadow-lg z-50 transition-all duration-300 ease-in-out">
+    <div className={`group fixed left-0 top-0 h-full w-16 hover:w-48 bg-gradient-to-b from-red-900 to-red-800 shadow-lg z-50 transition-all duration-300 ease-in-out ${className}`}>
       <div className="flex flex-col h-full">
         {/* User Info */}
-        <div className="p-4 border-b border-blue-700">
+        <div className="p-4 border-b border-red-700">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
               <div className="text-white font-medium text-sm truncate">
                 {user?.name || 'Admin'}
               </div>
-              <div className="text-blue-200 text-xs truncate">
+              <div className="text-red-200 text-xs truncate">
                 {user?.role?.toUpperCase()}
               </div>
             </div>
@@ -139,12 +140,12 @@ const getSidebarItems = () => {
         </div>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-blue-700">
+        <div className="p-4 border-t border-red-700">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="w-full justify-start text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 px-3"
+            className="w-full justify-start text-red-100 hover:text-white hover:bg-white hover:bg-opacity-10 px-3"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
             <span className="ml-3 text-sm opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 whitespace-nowrap">

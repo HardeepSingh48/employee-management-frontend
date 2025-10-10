@@ -49,7 +49,7 @@ export default function EmployeesPage() {
               >
                 List Employees
               </button>
-              <button
+              {/* <button
                 onClick={() => setMode('fix')}
                 className={`px-4 py-2 rounded-lg font-medium ${
                   mode === 'fix'
@@ -58,7 +58,7 @@ export default function EmployeesPage() {
                 }`}
               >
                 Fix Skill Categories
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
