@@ -174,7 +174,7 @@ export default function EmployeeList() {
       // Fetch complete employee details for editing
       // If your employeeService has a method to get single employee with full details
       const fullEmployeeData = await employeeService.getEmployee(row.employee_id);
-      console.log('Full employee data for editing:', fullEmployeeData);
+      // console.log('Full employee data for editing:', fullEmployeeData);
       setEditing(fullEmployeeData as EmployeeRow);
     } catch (error) {
       console.error('Error fetching full employee details:', error);
@@ -271,13 +271,13 @@ export default function EmployeeList() {
 
   return (
     <div className="bg-white shadow-lg rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800">Employees</h2>
-        <p className="text-gray-600 mt-1">List of all employees</p>
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-800">Employees</h2>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">List of all employees</p>
       </div>
 
       {/* Search Bar */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -286,81 +286,90 @@ export default function EmployeeList() {
               placeholder="Search by employee ID, name, email, phone, or designation..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
   {employees.length === 0 ? (
-    <div className="text-center py-8 text-gray-500">No employees found.</div>
+    <div className="text-center py-8 text-gray-500 text-sm sm:text-base">No employees found.</div>
   ) : (
     <>
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {employees.map(emp => (
-              <tr key={emp.employee_id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{emp.employee_id}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{emp.first_name} {emp.last_name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.email || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.phone_number || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.department_id || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.designation || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      emp.employment_status === 'Active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    {emp.employment_status || 'Active'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                  <button
-                    onClick={() => openEdit(emp)}
-                    className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
-                  >
-                    Edit Details
-                  </button>
-                  <button
-                    onClick={() => handleDelete(emp.employee_id)}
-                    disabled={deleteLoading === emp.employee_id}
-                    className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {deleteLoading === emp.employee_id ? (
-                      <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Trash2 className="w-4 h-4 inline" />
-                    )}
-                  </button>
-                </td>
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {employees.map(emp => (
+                <tr key={emp.employee_id} className="hover:bg-gray-50">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{emp.employee_id}</td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div>
+                      <div className="font-medium">{emp.first_name} {emp.last_name}</div>
+                      <div className="text-gray-500 sm:hidden">{emp.email || emp.phone_number}</div>
+                    </div>
+                  </td>
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.email || '-'}</td>
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.phone_number || '-'}</td>
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.department_id || '-'}</td>
+                  <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">{emp.designation || '-'}</td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        emp.employment_status === 'Active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {emp.employment_status || 'Active'}
+                    </span>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 sm:justify-end">
+                      <button
+                        onClick={() => openEdit(emp)}
+                        className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium transition-colors"
+                      >
+                        Edit Details
+                      </button>
+                      <button
+                        onClick={() => handleDelete(emp.employee_id)}
+                        disabled={deleteLoading === emp.employee_id}
+                        className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {deleteLoading === emp.employee_id ? (
+                          <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination - Always show if there are employees */}
       {employees.length > 0 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-700">
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 sm:mt-6 gap-4">
+          <div className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
             {pagination ? (
               <>
                 Showing {((pagination.page - 1) * pagination.per_page) + 1} to{" "}
@@ -371,25 +380,25 @@ export default function EmployeeList() {
               `Showing ${employees.length} employees`
             )}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Previous */}
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-2 sm:px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-xs sm:text-sm"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-1">Previous</span>
             </button>
 
             {/* Pages */}
             {pagination && pagination.pages > 1 && (
               <div className="flex space-x-1">
                 {(() => {
-                  const visiblePages = Math.min(5, pagination.pages);
+                  const visiblePages = Math.min(3, pagination.pages); // Show fewer pages on mobile
                   const startPage = Math.max(
                     1,
-                    Math.min(currentPage - 2, pagination.pages - visiblePages + 1)
+                    Math.min(currentPage - 1, pagination.pages - visiblePages + 1)
                   );
 
                   return Array.from({ length: visiblePages }, (_, i) => {
@@ -398,7 +407,7 @@ export default function EmployeeList() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-2 rounded-md ${
+                        className={`px-2 sm:px-3 py-2 rounded-md text-xs sm:text-sm ${
                           pageNum === currentPage
                             ? "bg-blue-600 text-white"
                             : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -418,10 +427,10 @@ export default function EmployeeList() {
                 setCurrentPage(Math.min(pagination?.pages || 1, currentPage + 1))
               }
               disabled={currentPage === (pagination?.pages || 1)}
-              className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-2 sm:px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-xs sm:text-sm"
             >
-              Next
-              <ChevronRight className="w-4 h-4" />
+              <span className="hidden sm:inline mr-1">Next</span>
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>

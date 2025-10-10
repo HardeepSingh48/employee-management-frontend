@@ -22,6 +22,8 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
   const [loadingSalaryCodes, setLoadingSalaryCodes] = useState(true);
   const [activeTab, setActiveTab] = useState('personal');
+  const [tabValidationErrors, setTabValidationErrors] = useState<Record<string, string[]>>({});
+  const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
 
   // File states for document uploads
   const [chequeFile, setChequeFile] = useState<File | null>(null);
@@ -33,7 +35,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
   const [voterBack, setVoterBack] = useState<File | null>(null);
   const [passbookFront, setPassbookFront] = useState<File | null>(null);
 
-  // Fetch salary codes
+  // Fetch salary codes and handle body scroll lock
   useEffect(() => {
     const fetchSalaryCodes = async () => {
       try {
@@ -49,11 +51,24 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
 
     if (isOpen) {
       fetchSalaryCodes();
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px'; // Prevent layout shift
+    } else {
+      // Restore body scroll when modal closes
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
   }, [isOpen]);
 
   // Form initialization with employee data
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<EmployeeFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       fullName: employee ? `${employee.first_name} ${employee.last_name}` : '',
@@ -99,69 +114,123 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
   useEffect(() => {
     if (employee && isOpen) {
       // Debug: Log the employee data to see what fields are available
-      console.log('Employee data received in modal:', employee);
-      console.log('Available fields:', Object.keys(employee));
-      
-      // Helper function to safely get employee field value
-      const getEmployeeField = (fieldName: string) => {
-        const value = employee[fieldName];
-        console.log(`Field ${fieldName}:`, value);
-        return value || '';
+      // console.log('Employee data received in modal:', employee);
+      // console.log('Available fields:', Object.keys(employee));
+
+      // Helper function to safely get employee field value with multiple possible field names
+      const getEmployeeField = (fieldNames: string[]) => {
+        for (const fieldName of fieldNames) {
+          const value = employee[fieldName];
+          if (value !== undefined && value !== null && value !== '') {
+            // console.log(`Found field ${fieldName}:`, value);
+            return value;
+          }
+        }
+        // console.log(`No value found for fields:`, fieldNames);
+        return '';
+      };
+
+      // Helper function to safely get boolean field value
+      const getBooleanField = (fieldNames: string[]) => {
+        for (const fieldName of fieldNames) {
+          const value = employee[fieldName];
+          if (value !== undefined && value !== null) {
+            // console.log(`Found boolean field ${fieldName}:`, value);
+            return Boolean(value);
+          }
+        }
+        // console.log(`No boolean value found for fields:`, fieldNames);
+        return false;
+      };
+
+      // Helper function to safely get number field value
+      const getNumberField = (fieldNames: string[], defaultValue: number = 0) => {
+        for (const fieldName of fieldNames) {
+          const value = employee[fieldName];
+          if (value !== undefined && value !== null && value !== '') {
+            const numValue = Number(value);
+            if (!isNaN(numValue)) {
+              // console.log(`Found number field ${fieldName}:`, numValue);
+              return numValue;
+            }
+          }
+        }
+        // console.log(`No valid number found for fields:`, fieldNames, 'using default:', defaultValue);
+        return defaultValue;
       };
 
       const formData = {
         fullName: `${employee.first_name || ''} ${employee.last_name || ''}`.trim(),
-        dateOfBirth: getEmployeeField('date_of_birth') || getEmployeeField('dateOfBirth') || '',
-        gender: getEmployeeField('gender') || '',
-        maritalStatus: getEmployeeField('marital_status') || getEmployeeField('maritalStatus') || '',
-        nationality: getEmployeeField('nationality') || '',
-        bloodGroup: getEmployeeField('blood_group') || getEmployeeField('bloodGroup') || '',
-        permanentAddress: getEmployeeField('address') || getEmployeeField('permanentAddress') || '',
-        mobileNumber: getEmployeeField('phone_number') || getEmployeeField('mobileNumber') || '',
-        alternateContactNumber: getEmployeeField('alternate_contact_number') || getEmployeeField('alternateContactNumber') || '',
-        aadhaarNumber: getEmployeeField('adhar_number') || getEmployeeField('aadhaarNumber') || '',
-        panCardNumber: getEmployeeField('pan_card_number') || getEmployeeField('panCardNumber') || '',
-        voterIdOrLicense: getEmployeeField('voter_id_driving_license') || getEmployeeField('voterIdOrLicense') || '',
-        uanNumber: getEmployeeField('uan') || getEmployeeField('uanNumber') || '',
-        esicNumber: getEmployeeField('esic_number') || getEmployeeField('esicNumber') || '',
-        dateOfJoining: getEmployeeField('hire_date') || getEmployeeField('dateOfJoining') || '',
-        employmentType: getEmployeeField('employment_type') || getEmployeeField('employmentType') || '',
-        department: getEmployeeField('department_id') || getEmployeeField('department') || '',
-        designation: getEmployeeField('designation') || '',
-        workLocation: getEmployeeField('work_location') || getEmployeeField('workLocation') || '',
-        reportingManager: getEmployeeField('reporting_manager') || getEmployeeField('reportingManager') || '',
-        salaryCode: getEmployeeField('salary_code') || getEmployeeField('salaryCode') || '',
-        skillCategory: getEmployeeField('skill_category') || getEmployeeField('skillCategory') || '',
-        pfApplicability: getEmployeeField('pf_applicability') || getEmployeeField('pfApplicability') || false,
-        esicApplicability: getEmployeeField('esic_applicability') || getEmployeeField('esicApplicability') || false,
-        professionalTaxApplicability: getEmployeeField('professional_tax_applicability') || getEmployeeField('professionalTaxApplicability') || false,
-        salaryAdvanceOrLoan: getEmployeeField('salary_advance_loan') || getEmployeeField('salaryAdvanceOrLoan') || 0,
-        bankAccountNumber: getEmployeeField('bank_account_number') || getEmployeeField('bankAccountNumber') || '',
-        bankName: getEmployeeField('bank_name') || getEmployeeField('bankName') || '',
-        ifscCode: getEmployeeField('ifsc_code') || getEmployeeField('ifscCode') || '',
-        highestQualification: getEmployeeField('highest_qualification') || getEmployeeField('highestQualification') || '',
-        yearOfPassing: getEmployeeField('year_of_passing') || getEmployeeField('yearOfPassing') || new Date().getFullYear(),
-        additionalCertifications: getEmployeeField('additional_certifications') || getEmployeeField('additionalCertifications') || '',
-        experienceDuration: getEmployeeField('experience_duration') || getEmployeeField('experienceDuration') || 0,
-        emergencyContactName: getEmployeeField('emergency_contact_name') || getEmployeeField('emergencyContactName') || '',
-        emergencyRelationship: getEmployeeField('emergency_contact_relationship') || getEmployeeField('emergencyRelationship') || '',
-        emergencyPhoneNumber: getEmployeeField('emergency_contact_phone') || getEmployeeField('emergencyPhoneNumber') || ''
+        dateOfBirth: getEmployeeField(['date_of_birth', 'dateOfBirth']),
+        gender: getEmployeeField(['gender']),
+        maritalStatus: getEmployeeField(['marital_status', 'maritalStatus']),
+        nationality: getEmployeeField(['nationality']),
+        bloodGroup: getEmployeeField(['blood_group', 'bloodGroup']),
+        permanentAddress: getEmployeeField(['address', 'permanentAddress']),
+        mobileNumber: getEmployeeField(['phone_number', 'mobileNumber']),
+        alternateContactNumber: getEmployeeField(['alternate_contact_number', 'alternateContactNumber']),
+        aadhaarNumber: getEmployeeField(['adhar_number', 'aadhaarNumber']),
+        panCardNumber: getEmployeeField(['pan_card_number', 'panCardNumber']),
+        voterIdOrLicense: getEmployeeField(['voter_id_driving_license', 'voterIdOrLicense']),
+        uanNumber: getEmployeeField(['uan', 'uanNumber']),
+        esicNumber: getEmployeeField(['esic_number', 'esicNumber']),
+        dateOfJoining: getEmployeeField(['hire_date', 'dateOfJoining']),
+        employmentType: getEmployeeField(['employment_type', 'employmentType']) || undefined,
+        department: getEmployeeField(['department_id', 'department']),
+        designation: getEmployeeField(['designation']),
+        workLocation: getEmployeeField(['work_location', 'workLocation']),
+        reportingManager: getEmployeeField(['reporting_manager', 'reportingManager']),
+        salaryCode: getEmployeeField(['salary_code', 'salaryCode']),
+        skillCategory: getEmployeeField(['skill_category', 'skillCategory']),
+        pfApplicability: getBooleanField(['pf_applicability', 'pfApplicability']),
+        esicApplicability: getBooleanField(['esic_applicability', 'esicApplicability']),
+        professionalTaxApplicability: getBooleanField(['professional_tax_applicability', 'professionalTaxApplicability']),
+        salaryAdvanceOrLoan: getNumberField(['salary_advance_loan', 'salaryAdvanceOrLoan'], 0),
+        bankAccountNumber: getEmployeeField(['bank_account_number', 'bankAccountNumber']),
+        bankName: getEmployeeField(['bank_name', 'bankName']),
+        ifscCode: getEmployeeField(['ifsc_code', 'ifscCode']),
+        highestQualification: getEmployeeField(['highest_qualification', 'highestQualification']),
+        yearOfPassing: getNumberField(['year_of_passing', 'yearOfPassing'], new Date().getFullYear()),
+        additionalCertifications: getEmployeeField(['additional_certifications', 'additionalCertifications']),
+        experienceDuration: getNumberField(['experience_duration', 'experienceDuration'], 0),
+        emergencyContactName: getEmployeeField(['emergency_contact_name', 'emergencyContactName']),
+        emergencyRelationship: getEmployeeField(['emergency_contact_relationship', 'emergencyRelationship']),
+        emergencyPhoneNumber: getEmployeeField(['emergency_contact_phone', 'emergencyPhoneNumber'])
       };
 
-      console.log('Form data being set:', formData);
+      // console.log('Final form data being set:', formData);
       reset(formData);
+
+      // Don't validate mandatory fields on initial load - only after save attempt
+      // setTimeout(() => validateMandatoryFields(formData), 100);
     }
   }, [employee, isOpen, reset]);
 
   const onSubmit = async (data: EmployeeFormData) => {
+    setHasAttemptedSave(true);
     setIsSubmitting(true);
+
+    // Validate mandatory fields before submission
+    const isValid = validateMandatoryFields(data);
+    if (!isValid) {
+      setIsSubmitting(false);
+      // Switch to the first tab with errors
+      const firstTabWithErrors = Object.keys(tabValidationErrors)[0];
+      if (firstTabWithErrors) {
+        setActiveTab(firstTabWithErrors);
+      }
+      return;
+    }
+
     try {
       const formData = new FormData();
 
       // Field mapping (same as registration form)
       const fieldMapping: Record<string, string> = {
         dateOfBirth: 'date_of_birth',
+        gender: 'gender',
         maritalStatus: 'marital_status',
+        nationality: 'nationality',
         bloodGroup: 'blood_group',
         permanentAddress: 'address',
         mobileNumber: 'phone_number',
@@ -174,6 +243,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
         dateOfJoining: 'hire_date',
         employmentType: 'employment_type',
         department: 'department_id',
+        designation: 'designation',
         workLocation: 'work_location',
         reportingManager: 'reporting_manager',
         salaryCode: 'salary_code',
@@ -263,6 +333,16 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
     if (file) setter(file);
   };
 
+  // Define mandatory fields for each tab
+  const mandatoryFieldsByTab = {
+    personal: ['fullName', 'dateOfBirth', 'gender', 'maritalStatus', 'nationality'],
+    contact: ['permanentAddress', 'mobileNumber', 'aadhaarNumber'],
+    employment: ['dateOfJoining', 'employmentType', 'department', 'designation', 'workLocation'],
+    financial: ['salaryCode', 'bankAccountNumber', 'bankName', 'ifscCode'],
+    education: ['highestQualification', 'yearOfPassing', 'experienceDuration', 'emergencyContactName', 'emergencyRelationship', 'emergencyPhoneNumber'],
+    documents: [] // No mandatory fields for documents tab
+  };
+
   const tabs = [
     { id: 'personal', label: 'Personal Info' },
     { id: 'contact', label: 'Contact & IDs' },
@@ -272,50 +352,89 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
     { id: 'documents', label: 'Documents' }
   ];
 
+  // Function to validate mandatory fields and update tab errors
+  const validateMandatoryFields = (formData: any) => {
+    const newTabErrors: Record<string, string[]> = {};
+
+    Object.entries(mandatoryFieldsByTab).forEach(([tabId, fields]) => {
+      const missingFields: string[] = [];
+
+      fields.forEach(field => {
+        const value = formData[field];
+        if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) {
+          // Convert field name to display name
+          const displayName = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+          missingFields.push(displayName);
+        }
+      });
+
+      if (missingFields.length > 0) {
+        newTabErrors[tabId] = missingFields;
+      }
+    });
+
+    setTabValidationErrors(newTabErrors);
+    return Object.keys(newTabErrors).length === 0;
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Edit Employee: {employee?.first_name} {employee?.last_name}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-            disabled={isSubmitting}
-          >
-            ×
-          </button>
-        </div>
+    <div
+  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-2 sm:p-4 ml-14"
+>
+  <div
+    className="bg-white rounded-lg shadow-2xl w-full mx-4 sm:mx-8 md:mx-auto max-w-sm sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-7xl max-h-[95vh] sm:max-h-[92vh] md:max-h-[90vh] overflow-hidden flex flex-col"
+  >
+    <div className="flex justify-between items-center p-3 sm:p-4 md:p-6 border-b flex-shrink-0">
+      <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 truncate pr-2">
+        Edit Employee: {employee?.first_name} {employee?.last_name}
+      </h2>
+      <button
+        onClick={onClose}
+        className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl font-bold flex-shrink-0 w-8 h-8 flex items-center justify-center"
+        disabled={isSubmitting}
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
 
         {/* Tab Navigation */}
-        <div className="border-b">
-          <nav className="flex space-x-8 px-6">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        <div className="border-b flex-shrink-0">
+          <nav className="flex overflow-x-auto px-4 sm:px-6 scrollbar-hide">
+            {tabs.map(tab => {
+              const hasErrors = hasAttemptedSave && tabValidationErrors[tab.id]?.length > 0;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-3 px-2 sm:px-4 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0 relative ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : hasErrors
+                        ? 'border-red-500 text-red-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                  title={hasErrors ? `Missing: ${tabValidationErrors[tab.id].join(', ')}` : undefined}
+                >
+                  {tab.label}
+                  {hasErrors && (
+                    <span className="ml-1 inline-block w-2 h-2 bg-red-500 rounded-full" title={`Missing: ${tabValidationErrors[tab.id].join(', ')}`}></span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        <div className="overflow-y-auto max-h-[60vh]">
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+        <div className="overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6">
             {/* Personal Information Tab */}
             {activeTab === 'personal' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                     <input
@@ -394,7 +513,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Permanent Address *</label>
                       <textarea
@@ -426,7 +545,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
 
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Government IDs</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Number *</label>
                       <input
@@ -480,7 +599,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
             {activeTab === 'employment' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">Employment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date of Joining *</label>
                     <input
@@ -495,6 +614,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type *</label>
                     <select
                       {...register('employmentType')}
+                      value={watch('employmentType') || ''}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Type</option>
@@ -576,7 +696,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Salary & Benefits</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Salary Code *</label>
                       <select
@@ -638,7 +758,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
 
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Bank Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Bank Account Number *</label>
                       <input
@@ -676,7 +796,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Education</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Highest Qualification *</label>
                       <select
@@ -716,7 +836,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
 
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4">Emergency Contact</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name *</label>
                       <input
@@ -752,7 +872,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
             {activeTab === 'documents' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">Supporting Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Front</label>
                     <input
@@ -850,18 +970,18 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
         </div>
 
         {/* Footer with action buttons */}
-        <div className="flex justify-end gap-4 p-6 border-t bg-gray-50">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 p-4 sm:p-6 border-t bg-gray-50 flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+            className="px-4 sm:px-6 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 text-sm sm:text-base"
             disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm sm:text-base"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Saving...' : 'Save Changes'}

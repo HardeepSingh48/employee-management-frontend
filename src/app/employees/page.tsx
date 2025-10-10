@@ -11,17 +11,17 @@ export default function EmployeesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white shadow-sm border-b px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <Logo width={32} height={32} />
-              <h1 className="text-xl font-semibold text-gray-800">Employee Management</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-800">Employee Management</h1>
             </div>
 
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-2 sm:gap-4 w-full sm:w-auto">
               <button
                 onClick={() => setMode('manual')}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base flex-1 sm:flex-none ${
                   mode === 'manual'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -31,7 +31,7 @@ export default function EmployeesPage() {
               </button>
               <button
                 onClick={() => setMode('excel')}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base flex-1 sm:flex-none ${
                   mode === 'excel'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -41,7 +41,7 @@ export default function EmployeesPage() {
               </button>
               <button
                 onClick={() => setMode('list')}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base flex-1 sm:flex-none ${
                   mode === 'list'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -51,7 +51,7 @@ export default function EmployeesPage() {
               </button>
               {/* <button
                 onClick={() => setMode('fix')}
-                className={`px-4 py-2 rounded-lg font-medium ${
+                className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base flex-1 sm:flex-none ${
                   mode === 'fix'
                     ? 'bg-orange-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -63,7 +63,7 @@ export default function EmployeesPage() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {mode === 'manual' && <EmployeeRegistrationForm />}
           {mode === 'excel' && <ExcelImport />}
           {mode === 'fix' && <EmployeeSkillFix />}
