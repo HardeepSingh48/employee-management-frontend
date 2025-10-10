@@ -29,7 +29,7 @@ interface Employee {
 
 interface BulkAttendanceData {
   employee_id: string;
-  attendance_status: 'Present' | 'Absent' | 'Late' | 'Half Day';
+  attendance_status: 'Present' | 'Absent' | 'OFF';
   attendance_date: string;
   overtime_shifts?: number;
 }
@@ -41,7 +41,7 @@ export default function MarkAttendance() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [attendanceDate, setAttendanceDate] = useState('');
-  const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'Late' | 'Half Day'>('Present');
+  const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'OFF'>('Present');
   const [overtimeShifts, setOvertimeShifts] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [bulkAttendance, setBulkAttendance] = useState<BulkAttendanceData[]>([]);
@@ -291,7 +291,7 @@ export default function MarkAttendance() {
     }
   };
 
-  const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
+  const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'OFF') => {
     setBulkAttendance(prev => 
       prev.map(record => 
         record.employee_id === employeeId 
@@ -311,7 +311,7 @@ export default function MarkAttendance() {
     );
   };
 
-  const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
+  const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'OFF') => {
     setBulkAttendance(prev => 
       prev.map(record => ({ ...record, attendance_status: status }))
     );
@@ -327,8 +327,7 @@ export default function MarkAttendance() {
     switch (status) {
       case 'Present': return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'Absent': return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'Late': return <AlertCircle className="w-4 h-4 text-yellow-600" />;
-      case 'Half Day': return <Clock className="w-4 h-4 text-orange-600" />;
+      case 'OFF': return <Clock className="w-4 h-4 text-blue-600" />;
       default: return null;
     }
   };
@@ -337,8 +336,7 @@ export default function MarkAttendance() {
     switch (status) {
       case 'Present': return 'bg-green-100 text-green-800';
       case 'Absent': return 'bg-red-100 text-red-800';
-      case 'Late': return 'bg-yellow-100 text-yellow-800';
-      case 'Half Day': return 'bg-orange-100 text-orange-800';
+      case 'OFF': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -454,13 +452,12 @@ export default function MarkAttendance() {
                     <select
                       id="status"
                       value={attendanceStatus}
-                      onChange={(e) => setAttendanceStatus(e.target.value as 'Present' | 'Absent' | 'Late' | 'Half Day')}
+                      onChange={(e) => setAttendanceStatus(e.target.value as 'Present' | 'Absent' | 'OFF')}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="Present">Present</option>
                       <option value="Absent">Absent</option>
-                      <option value="Late">Late</option>
-                      <option value="Half Day">Half Day</option>
+                      <option value="OFF">OFF</option>
                     </select>
                   </div>
 
@@ -593,13 +590,12 @@ export default function MarkAttendance() {
                                                      <div className="flex space-x-2">
                              <select
                                value={record.attendance_status}
-                               onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'Late' | 'Half Day')}
+                               onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'OFF')}
                                className="flex h-8 w-32 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                              >
                                <option value="Present">Present</option>
                                <option value="Absent">Absent</option>
-                               <option value="Late">Late</option>
-                               <option value="Half Day">Half Day</option>
+                               <option value="OFF">OFF</option>
                              </select>
                              <Input
                                type="number"

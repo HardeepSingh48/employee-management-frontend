@@ -101,8 +101,7 @@ export default function TodayAttendance() {
     total: filteredRecords.length,
     present: filteredRecords.filter(r => r.attendance_status === 'Present').length,
     absent: filteredRecords.filter(r => r.attendance_status === 'Absent').length,
-    late: filteredRecords.filter(r => r.attendance_status === 'Late').length,
-    halfDay: filteredRecords.filter(r => r.attendance_status === 'Half Day').length,
+    off: filteredRecords.filter(r => r.attendance_status === 'OFF').length,
   };
 
   if (isLoading) {
@@ -117,7 +116,7 @@ export default function TodayAttendance() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -145,22 +144,10 @@ export default function TodayAttendance() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-yellow-600" />
-              <div>
-                <p className="text-2xl font-bold text-yellow-600">{stats.late}</p>
-                <p className="text-xs text-muted-foreground">Late</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-blue-600" />
               <div>
-                <p className="text-2xl font-bold text-blue-600">{stats.halfDay}</p>
-                <p className="text-xs text-muted-foreground">Half Day</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.off}</p>
+                <p className="text-xs text-muted-foreground">OFF</p>
               </div>
             </div>
           </CardContent>

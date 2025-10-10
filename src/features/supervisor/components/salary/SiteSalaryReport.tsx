@@ -29,8 +29,6 @@ interface SalarySummary {
   month: number;
   present_days: number;
   absent_days: number;
-  late_days: number;
-  half_days: number;
   total_overtime_shifts: number;
   total_overtime_hours: number;
   working_days: number;
@@ -167,8 +165,6 @@ export default function SiteSalaryReport() {
       'Month',
       'Present Days',
       'Absent Days',
-      'Late Days',
-      'Half Days',
       'Overtime Shifts',
       'Overtime Hours',
       'Working Days',
@@ -187,8 +183,6 @@ export default function SiteSalaryReport() {
         summary.month,
         summary.present_days,
         summary.absent_days,
-        summary.late_days,
-        summary.half_days,
         summary.total_overtime_shifts,
         summary.total_overtime_hours,
         summary.working_days,
@@ -388,8 +382,6 @@ export default function SiteSalaryReport() {
                     <th className="border border-gray-200 px-4 py-2 text-left">Employee</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Present</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Absent</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Late</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Half Days</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Overtime Shifts</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Overtime Hours</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Working Days</th>
@@ -417,12 +409,6 @@ export default function SiteSalaryReport() {
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         <Badge className="bg-red-100 text-red-800">{summary.absent_days}</Badge>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        <Badge className="bg-yellow-100 text-yellow-800">{summary.late_days}</Badge>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        <Badge className="bg-orange-100 text-orange-800">{summary.half_days}</Badge>
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
                         {summary.total_overtime_shifts} shifts
@@ -463,7 +449,7 @@ export default function SiteSalaryReport() {
                           {Object.entries(summary)
                             .filter(([key, value]) =>
                               !['employee_id', 'employee_name', 'year', 'month', 'present_days', 'absent_days',
-                                'late_days', 'half_days', 'total_overtime_shifts', 'total_overtime_hours', 'working_days', 'holiday_count',
+                                'total_overtime_shifts', 'total_overtime_hours', 'working_days', 'holiday_count',
                                 'attendance_percentage', 'basic_salary', 'calculated_salary', 'daily_wage', 'basic',
                                 'pf', 'esic', 'total_earnings', 'total_deductions', 'net_salary',
                                 // exclude overtime-related fields

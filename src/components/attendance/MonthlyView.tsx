@@ -393,22 +393,18 @@ const getStatusBadge = (status: string) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div className="text-center">
                   <p className="text-lg font-semibold text-green-600">{monthlySummary.present_days}</p>
                   <p className="text-sm text-muted-foreground">Present</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-semibold text-yellow-600">{monthlySummary.late_days}</p>
-                  <p className="text-sm text-muted-foreground">Late</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-blue-600">{monthlySummary.half_days}</p>
-                  <p className="text-sm text-muted-foreground">Half Days</p>
-                </div>
-                <div className="text-center">
                   <p className="text-lg font-semibold text-red-600">{monthlySummary.absent_days}</p>
                   <p className="text-sm text-muted-foreground">Absent</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-blue-600">{monthlySummary.total_overtime_shifts}</p>
+                  <p className="text-sm text-muted-foreground">Overtime Shifts</p>
                 </div>
               </div>
 
