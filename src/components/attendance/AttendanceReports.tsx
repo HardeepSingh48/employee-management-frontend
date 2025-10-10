@@ -92,6 +92,13 @@ export default function AttendanceReports() {
       const start = attendanceService.formatDate(startDate);
       const end = attendanceService.formatDate(endDate);
 
+      // Debug logging
+      // console.log('Monthly Report Debug:');
+      // console.log('Selected month:', monthlyMonth, 'year:', monthlyYear);
+      // console.log('monthNum:', monthNum, 'yearNum:', yearNum);
+      // console.log('startDate:', startDate, 'endDate:', endDate);
+      // console.log('start:', start, 'end:', end);
+
       // Construct the API URL
       const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const apiBase = baseURL.endsWith('/api') ? baseURL : `${baseURL}/api`;
