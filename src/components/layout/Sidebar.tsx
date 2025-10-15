@@ -63,7 +63,8 @@ const getSidebarItems = () => {
         // Return all admin items PLUS the new User Management item
         return [
             ...adminItems,
-            { name: 'User Management', icon: Settings, path: '/superadmin/users' }
+            { name: 'Sites', icon: Calendar, path: '/sites' },
+            { name: 'User Management', icon: Settings, path: '/superadmin/users' },
         ];
       case 'admin':
       default:
