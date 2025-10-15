@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Logo } from './Logo';
+import { Button } from '@/components/ui/button';
+import { Menu } from 'lucide-react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -11,6 +13,7 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarActive, setSidebarActive] = useState('Home');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
   // Check if current page is login page
@@ -53,15 +56,43 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
       )}
 
+      {/* Mobile Header */}
+      {!isLoginPage && (
+        <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-40 px-4 py-3 flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="mr-3"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <h1 className="text-lg font-semibold text-gray-900">Employee Management</h1>
+        </div>
+      )}
+
       {/* Only show sidebar if not on login page */}
       {!isLoginPage && (
-        <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} />
+        <Sidebar
+          activeItem={sidebarActive}
+          onItemClick={setSidebarActive}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Main content area with conditional left margin */}
-      <div className={isLoginPage ? '' : 'ml-16 relative z-10'}>
+      <div className={`${isLoginPage ? '' : 'md:ml-16'} ${!isLoginPage ? 'pt-16 md:pt-0' : ''} relative z-10`}>
         {children}
       </div>
+
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

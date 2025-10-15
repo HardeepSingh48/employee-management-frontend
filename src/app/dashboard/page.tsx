@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser, selectIsAuthenticated } from '@/store/auth-slice';
 import { useRouter } from 'next/navigation';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { Logo } from '@/components/layout/Logo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,9 +17,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Building2,
-  RefreshCw,
-  Menu,
-  X
+  RefreshCw
 } from 'lucide-react';
 
 // Types for dashboard data
@@ -51,8 +48,6 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
-  const [sidebarActive, setSidebarActive] = useState('Home');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,9 +134,7 @@ export default function AdminDashboard() {
   if (loading && !dashboardData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole={user?.role} />
-
-        <div className="ml-16">
+        <div className="">
           {/* Header Skeleton */}
           <div className="bg-white shadow-sm border-b px-6 py-4">
             <div className="flex items-center justify-between">
@@ -234,9 +227,7 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole={user?.role} />
-
-        <div className="ml-16">
+        <div className="">
           <div className="bg-white shadow-sm border-b px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -285,38 +276,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <Sidebar activeItem={sidebarActive} onItemClick={setSidebarActive} userRole={user?.role} />
-      </div>
-
       {/* Main Content */}
-      <div className="lg:ml-64">
+      <div className="">
         {/* Header */}
         <div className="bg-white shadow-sm border-b px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-
               <Logo width={32} height={32} className="sm:w-10 sm:h-10" />
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">

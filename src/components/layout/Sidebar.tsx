@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, selectUser } from '@/store/auth-slice';
 import {
   Home, Users, Calendar, Clock, TrendingUp,
-  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield, Settings
+  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield, Settings, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
@@ -14,9 +14,11 @@ interface SidebarProps {
   onItemClick: (item: string) => void;
   userRole?: string;
   className?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userRole, className = '' }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userRole, className = '', isOpen = true, onClose }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector(selectUser);
@@ -98,15 +100,29 @@ const getSidebarItems = () => {
   };
 
   return (
-    <div className={`group fixed left-0 top-0 h-full w-16 hover:w-48 bg-gradient-to-b from-red-900 to-red-800 shadow-lg z-50 transition-all duration-300 ease-in-out ${className}`}>
+    <div className={`group fixed left-0 top-0 h-full bg-gradient-to-b from-red-900 to-red-800 shadow-lg z-50 transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'translate-x-0 w-64' : 'translate-x-[-100%] w-64'} md:translate-x-0 md:w-16 md:hover:w-48 ${className}`}>
       <div className="flex flex-col h-full">
+        {/* Close Button for Mobile */}
+        {isOpen && (
+          <div className="md:hidden p-2 border-b border-red-700">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="w-full justify-center text-white hover:bg-red-700"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        )}
+
         {/* User Info */}
         <div className="p-4 border-b border-red-700">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
-            <div className="opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+            <div className={`opacity-0 translate-x-[-10px] transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : ''} md:opacity-0 md:translate-x-[-10px] md:group-hover:opacity-100 md:group-hover:translate-x-0`}>
               <div className="text-white font-medium text-sm truncate">
                 {user?.name || 'Admin'}
               </div>
@@ -118,7 +134,7 @@ const getSidebarItems = () => {
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 py-4 space-y-2">
+        <div className="flex-1 py-4 space-y-2 overflow-y-auto overflow-x-hidden">
           {sidebarItems.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -132,7 +148,7 @@ const getSidebarItems = () => {
                 onClick={() => handleItemClick(item)}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 whitespace-nowrap">
+                <span className={`text-sm font-medium opacity-0 translate-x-[-10px] transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 translate-x-0' : ''} md:opacity-0 md:translate-x-[-10px] md:group-hover:opacity-100 md:group-hover:translate-x-0`}>
                   {item.name}
                 </span>
               </div>
@@ -149,7 +165,7 @@ const getSidebarItems = () => {
             className="w-full justify-start text-red-100 hover:text-white hover:bg-white hover:bg-opacity-10 px-3"
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span className="ml-3 text-sm opacity-0 translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 whitespace-nowrap">
+            <span className={`ml-3 text-sm opacity-0 translate-x-[-10px] transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 translate-x-0' : ''} md:opacity-0 md:translate-x-[-10px] md:group-hover:opacity-100 md:group-hover:translate-x-0`}>
               Logout
             </span>
           </Button>
