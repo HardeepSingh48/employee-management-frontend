@@ -6,9 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, RefreshCw, Clock, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { Loader2, Search, RefreshCw, Clock, UserCheck, UserX, AlertCircle, Filter } from 'lucide-react';
 import { attendanceService } from '@/lib/attendance-service';
+import { sitesService, type Site } from '@/lib/sites-service';
 import type { Attendance } from '@/types/attendance';
 
 export default function TodayAttendance() {
@@ -17,13 +20,54 @@ export default function TodayAttendance() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentDate, setCurrentDate] = useState('');
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
 
   const loadTodayAttendance = async () => {
     setIsLoading(true);
     try {
-      const data = await attendanceService.getTodayAttendance();
-      setAttendanceRecords(data);
-      setFilteredRecords(data);
+      let data: Attendance[];
+
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+
+      // If a specific site is selected, get site-specific attendance for today
+      if (selectedSiteId && selectedSiteId !== 'all') {
+        // For large sites, we need to fetch all pages or increase the limit
+        let allData: Attendance[] = [];
+        let page = 1;
+        const perPage = 500; // Increase limit to get more records
+
+        while (true) {
+          const response = await attendanceService.getSiteAttendance(today, today, undefined, selectedSiteId, page, perPage);
+          if (response && response.length > 0) {
+            allData = allData.concat(response);
+            if (response.length < perPage) break; // Last page
+            page++;
+          } else {
+            break;
+          }
+        }
+        data = allData;
+      } else {
+        // Get all attendance for today
+        data = await attendanceService.getTodayAttendance();
+      }
+
+      // Sort records by employee_id in ascending order
+      const sortedData = data.sort((a, b) => {
+        // Convert both employee_ids to strings for consistent comparison
+        const aId = a.employee_id ? String(a.employee_id) : '';
+        const bId = b.employee_id ? String(b.employee_id) : '';
+
+        if (aId && bId) {
+          return aId.localeCompare(bId);
+        }
+        return 0;
+      });
+
+      setAttendanceRecords(sortedData);
+      setFilteredRecords(sortedData);
     } catch (error) {
       console.error('Error loading today\'s attendance:', error);
       toast({
@@ -36,22 +80,48 @@ export default function TodayAttendance() {
     }
   };
 
+  const loadSites = async () => {
+    try {
+      const response = await sitesService.getSites(1, 1000);
+      setSites(response.data || []);
+    } catch (error: any) {
+      console.error('Failed to load sites:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load sites',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
     loadTodayAttendance();
+    loadSites();
     setCurrentDate(new Date().toLocaleDateString());
-  }, []);
+  }, [selectedSiteId]);
 
-  // Filter records based on search term
+  // Filter records based on search term (site filtering is now done at API level)
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredRecords(attendanceRecords);
-    } else {
-      const filtered = attendanceRecords.filter(record =>
-        record.employee_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (record.employee_name && record.employee_name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredRecords(filtered);
+    let filtered = attendanceRecords;
+
+    // Filter by search term
+    if (searchTerm && searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(record => {
+        // Search in employee_id - convert to string first to handle numeric IDs
+        const employeeIdStr = record.employee_id ? String(record.employee_id).toLowerCase() : '';
+        const employeeIdMatch = employeeIdStr.includes(searchLower);
+
+        // Search in employee_name
+        const employeeNameMatch = record.employee_name &&
+          typeof record.employee_name === 'string' &&
+          record.employee_name.toLowerCase().includes(searchLower);
+
+        return employeeIdMatch || employeeNameMatch;
+      });
     }
+
+    setFilteredRecords(filtered);
   }, [searchTerm, attendanceRecords]);
 
   const getStatusBadge = (status: string) => {
@@ -167,16 +237,41 @@ export default function TodayAttendance() {
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by employee ID or name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64"
-          />
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          {/* Site Filter */}
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="site-filter" className="text-sm font-medium">Site:</Label>
+            <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Sites" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sites</SelectItem>
+                {sites
+                  .filter(site => site.site_id && site.site_id.trim() !== '')
+                  .map((site) => (
+                    <SelectItem key={site.site_id} value={site.site_id}>
+                      {site.site_name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Search */}
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by employee ID or name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-64"
+            />
+          </div>
         </div>
+
         <Button onClick={loadTodayAttendance} variant="outline" size="sm">
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
@@ -189,6 +284,11 @@ export default function TodayAttendance() {
           <CardTitle>Today's Attendance - {currentDate}</CardTitle>
           <CardDescription>
             {filteredRecords.length} records found
+            {selectedSiteId && selectedSiteId !== 'all' && (
+              <span className="ml-2 text-blue-600">
+                (Filtered by site: {sites.find(s => s.site_id === selectedSiteId)?.site_name})
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
