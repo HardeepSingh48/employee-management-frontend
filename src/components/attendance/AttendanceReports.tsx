@@ -41,6 +41,7 @@ export default function AttendanceReports() {
 
   // Daily report state
   const [dailyDate, setDailyDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [dailySiteId, setDailySiteId] = useState<string>('');
 
   // Employee report state
   const [employeeId, setEmployeeId] = useState<string>('');
@@ -96,7 +97,7 @@ export default function AttendanceReports() {
       // Construct the API URL
       const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const apiBase = baseURL.endsWith('/api') ? baseURL : `${baseURL}/api`;
-      const url = `${apiBase}/attendance/monthly-report-excel?start_date=${start}&end_date=${end}${selectedSiteId ? `&site_id=${selectedSiteId}` : ''}`;
+      const url = `${apiBase}/attendance/monthly-report-excel?start_date=${start}&end_date=${end}${selectedSiteId && selectedSiteId !== 'all' ? `&site_id=${selectedSiteId}` : ''}`;
 
       // Call the new Excel endpoint
       const response = await fetch(url, {
@@ -113,7 +114,8 @@ export default function AttendanceReports() {
 
       // Get the filename from response headers or generate one
       const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `monthly_attendance_report_${selectedSiteId || 'site'}_${start.replace(/-/g, '')}_to_${end.replace(/-/g, '')}.xlsx`;
+      const siteSuffix = selectedSiteId === 'all' ? 'all_sites' : (selectedSiteId || 'site');
+      let filename = `monthly_attendance_report_${siteSuffix}_${start.replace(/-/g, '')}_to_${end.replace(/-/g, '')}.xlsx`;
 
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -149,8 +151,14 @@ export default function AttendanceReports() {
     }
     setGeneratingDaily(true);
     try {
-      const records = await attendanceService.getAttendanceByDate(dailyDate);
-      const rows = (records || []).map((r: AttendanceRecord) => ({
+      const records = await attendanceService.getSiteAttendance(dailyDate, dailyDate, undefined, dailySiteId === 'all' ? undefined : dailySiteId);
+
+      if (!records || records.length === 0) {
+        toast({ title: 'No Attendance Found', description: 'No attendance records found for the selected date and site', variant: 'destructive' });
+        return;
+      }
+
+      const rows = records.map((r: AttendanceRecord) => ({
         'Employee ID': r.employee_id,
         'Employee Name': r.employee_name || '',
         'Status': r.attendance_status,
@@ -158,8 +166,9 @@ export default function AttendanceReports() {
         'Check-out Time': r.check_out_time || '',
         'Remarks': r.remarks || ''
       }));
-      downloadCsv(`attendance_daily_${dailyDate}.csv`, rows);
-      toast({ title: 'Report Generated', description: 'Daily report generated' });
+      const siteSuffix = dailySiteId && dailySiteId !== 'all' ? `_${dailySiteId}` : '';
+      downloadCsv(`attendance_daily_${dailyDate}${siteSuffix}.csv`, rows);
+      toast({ title: 'Report Generated', description: 'Daily report generated successfully' });
     } catch (error: any) {
       console.error(error);
       toast({ title: 'Error', description: error?.message || 'Failed to generate daily report', variant: 'destructive' });
@@ -280,6 +289,7 @@ export default function AttendanceReports() {
                       <SelectValue placeholder="Select site" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All Sites</SelectItem>
                       {sites.map((s) => (
                         <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
                       ))}
@@ -351,15 +361,29 @@ export default function AttendanceReports() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label>Site Name</Label>
+                  <Select value={dailySiteId} onValueChange={setDailySiteId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select site" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sites</SelectItem>
+                      {sites.map((s) => (
+                        <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label>Select Date</Label>
-                  <Input 
-                    type="date" 
+                  <Input
+                    type="date"
                     value={dailyDate}
                     onChange={(e) => setDailyDate(e.target.value)}
                   />
                 </div>
-                <Button 
-                  onClick={generateDailyReport} 
+                <Button
+                  onClick={generateDailyReport}
                   disabled={generatingDaily}
                   className="w-full"
                 >

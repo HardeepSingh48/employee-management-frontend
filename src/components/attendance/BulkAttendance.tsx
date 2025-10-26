@@ -259,7 +259,7 @@ const ValidationErrorDisplay = ({
                     variant="outline"
                     size="sm"
                     onClick={downloadTemplate}
-                    disabled={!month || !year || !selectedSiteId}
+                    disabled={!month || !year}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Fresh Template
@@ -375,7 +375,7 @@ export default function BulkAttendance() {
       formData.append('file', file);
       formData.append('month', month);
       formData.append('year', year);
-      if (selectedSiteId) {
+      if (selectedSiteId && selectedSiteId !== 'all') {
         formData.append('site_id', selectedSiteId);
       }
 
@@ -459,10 +459,10 @@ export default function BulkAttendance() {
         return;
       }
 
-      if (!month || !year || !selectedSiteId) {
+      if (!month || !year) {
         toast({
           title: 'Missing information',
-          description: 'Please select month, year, and site to download the template.',
+          description: 'Please select month and year to download the template.',
           variant: 'destructive',
         });
         return;
@@ -474,9 +474,9 @@ export default function BulkAttendance() {
         description: "Please wait while we prepare your template file.",
       });
 
-      const selectedSite = sites.find(s => s.site_id === selectedSiteId);
+      const selectedSite = selectedSiteId && selectedSiteId !== 'all' ? sites.find(s => s.site_id === selectedSiteId) : null;
       const params = new URLSearchParams({ month, year });
-      if (selectedSiteId) {
+      if (selectedSiteId && selectedSiteId !== 'all') {
         params.append('site_id', selectedSiteId);
       }
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
@@ -502,7 +502,7 @@ export default function BulkAttendance() {
       const monthNum = parseInt(month, 10);
       const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       const monthName = monthNum >= 1 && monthNum <= 12 ? monthNames[monthNum - 1] : 'Month';
-      const safeSite = (selectedSite?.site_name || 'site').replace(/[^a-zA-Z0-9_-]+/g, '_');
+      const safeSite = selectedSiteId === 'all' ? 'all_sites' : (selectedSite?.site_name || 'site').replace(/[^a-zA-Z0-9_-]+/g, '_');
       link.download = `attendance_template_${safeSite}_${monthName}_${year}.xlsx`;
 
       // Trigger download
@@ -630,6 +630,7 @@ export default function BulkAttendance() {
                     <SelectValue placeholder="Select site" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Sites</SelectItem>
                     {sites.map((siteItem) => (
                       <SelectItem key={siteItem.site_id} value={siteItem.site_id}>
                         {siteItem.site_name}
@@ -693,7 +694,7 @@ export default function BulkAttendance() {
                     variant="outline"
                     className="w-full"
                     onClick={downloadTemplate}
-                    disabled={loading || !month || !year || !selectedSiteId}
+                    disabled={loading || !month || !year}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Template
@@ -732,8 +733,8 @@ export default function BulkAttendance() {
                   <ul className="text-xs text-gray-600 mt-1 space-y-1">
                     <li>• P = Present</li>
                     <li>• A = Absent</li>
-                    <li>• L = Late</li>
-                    <li>• H = Half Day</li>
+                    {/* <li>• L = Late</li>
+                    <li>• H = Half Day</li> */}
                   </ul>
                 </div>
               </div>
