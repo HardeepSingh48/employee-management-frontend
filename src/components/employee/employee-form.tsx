@@ -136,7 +136,7 @@ const EmployeeRegistrationForm: React.FC = () => {
       });
 
       // Log the form data for debugging
-      console.log('Form data being sent:');
+      // console.log('Form data being sent:');
       for (let [key, value] of formData.entries()) {
         console.log(`${key}: ${value}`);
       }
@@ -151,7 +151,7 @@ const EmployeeRegistrationForm: React.FC = () => {
       if (voterBack) formData.append('voter_back', voterBack);
       if (passbookFront) formData.append('passbook_front', passbookFront);
 
-      console.log('Submitting employee data:', data);
+      // console.log('Submitting employee data:', data);
       console.log('Cheque file:', chequeFile);
 
       // Submit to backend API

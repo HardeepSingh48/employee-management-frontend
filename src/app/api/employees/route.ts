@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
     };
     
     // Replace with actual database insert
-    console.log('Creating employee:', newEmployee);
+    // console.log('Creating employee:', newEmployee);
     
     // In a real application, you would save to database here
     // await database.employees.create(newEmployee);

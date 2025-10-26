@@ -169,7 +169,7 @@ export default function MarkAttendance() {
         data = allEmployees.filter(emp => emp.employee_id === (user as any).employee_id);
       }
 
-      console.log('Loaded employees:', data); // Debug log
+      // console.log('Loaded employees:', data); // Debug log
 
       setEmployees(data);
 

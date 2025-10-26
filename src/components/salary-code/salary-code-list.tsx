@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 import { EditModal } from '@/components/ui/CustomModal';
 import * as XLSX from 'xlsx';
-import { Download } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 const SalaryCodeList: React.FC = () => {
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
+  const [filteredCodes, setFilteredCodes] = useState<SalaryCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<SalaryCode | null>(null);
   const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchSalaryCodes = async () => {
@@ -17,6 +22,7 @@ const SalaryCodeList: React.FC = () => {
         setLoading(true);
         const codes = await salaryCodesService.getSalaryCodes();
         setSalaryCodes(codes);
+        setFilteredCodes(codes);
       } catch (err: any) {
         console.error('Error fetching salary codes:', err);
         setError(err.message || 'Failed to fetch salary codes');
@@ -27,6 +33,18 @@ const SalaryCodeList: React.FC = () => {
 
     fetchSalaryCodes();
   }, []);
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredCodes(salaryCodes);
+    } else {
+      const filtered = salaryCodes.filter(code =>
+        code.salary_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        code.site_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCodes(filtered);
+    }
+  }, [searchTerm, salaryCodes]);
 
   const openEdit = (code: SalaryCode) => {
     setEditing(code);
@@ -45,14 +63,23 @@ const SalaryCodeList: React.FC = () => {
       const updated = await salaryCodesService.updateSalaryCode(editing.salary_code, editValues);
       setSalaryCodes(prev => prev.map(c => (c.id === updated.id ? { ...c, ...updated } : c)));
       setEditing(null);
-    } catch (e) {
+      toast({
+        title: 'Success',
+        description: 'Salary code updated successfully',
+      });
+    } catch (e: any) {
       console.error('Failed to update salary code', e);
+      toast({
+        title: 'Error',
+        description: e?.response?.data?.message || 'Failed to update salary code',
+        variant: 'destructive',
+      });
     }
   };
 
   const downloadExcel = () => {
     // Prepare data for Excel export
-    const exportData = salaryCodes.map(code => ({
+    const exportData = filteredCodes.map(code => ({
       'Site Name': code.site_name,
       'Rank': code.rank,
       'State': code.state,
@@ -107,7 +134,7 @@ const SalaryCodeList: React.FC = () => {
           <button
             onClick={downloadExcel}
             className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            disabled={salaryCodes.length === 0}
+            disabled={filteredCodes.length === 0}
           >
             <Download className="w-4 h-4 mr-2" />
             Download Excel
@@ -115,11 +142,33 @@ const SalaryCodeList: React.FC = () => {
         </div>
       </div>
 
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search by salary code or site name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="text-sm text-gray-500">
+            {filteredCodes.length} of {salaryCodes.length} codes
+          </div>
+        </div>
+      </div>
+
       <div className="p-6">
-        {salaryCodes.length === 0 ? (
+        {filteredCodes.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No salary codes found.</p>
-            <p className="text-sm text-gray-400 mt-1">Create your first salary code using the form.</p>
+            <p className="text-gray-500">
+              {searchTerm ? 'No salary codes match your search.' : 'No salary codes found.'}
+            </p>
+            <p className="text-sm text-gray-400 mt-1">
+              {searchTerm ? 'Try a different search term.' : 'Create your first salary code using the form.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -148,7 +197,7 @@ const SalaryCodeList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {salaryCodes.map((code) => (
+                {filteredCodes.map((code) => (
                   <tr key={code.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {code.salary_code}
@@ -167,8 +216,8 @@ const SalaryCodeList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        code.is_active 
-                          ? 'bg-green-100 text-green-800' 
+                        code.is_active
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
                         {code.is_active ? 'Active' : 'Inactive'}
