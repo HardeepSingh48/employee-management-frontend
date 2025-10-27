@@ -103,12 +103,17 @@ export default function MarkAttendance() {
           })
         : employees;
 
-      const bulkData = filteredEmployees.map((emp: Employee) => ({
-        employee_id: emp.employee_id,
-        attendance_status: 'Present' as const,
-        attendance_date: bulkDate || new Date().toISOString().split('T')[0],
-        overtime_shifts: 0
-      }));
+      const bulkData = filteredEmployees.map((emp: Employee) => {
+        const selectedDate = bulkDate || new Date().toISOString().split('T')[0];
+        const isSunday = new Date(selectedDate).getDay() === 0; // 0 = Sunday
+
+        return {
+          employee_id: emp.employee_id,
+          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+          attendance_date: selectedDate,
+          overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
+        };
+      });
       setBulkAttendance(bulkData);
     }
   }, [selectedSiteId, employees, bulkDate, user?.role, salaryCodes, sites]);
@@ -175,11 +180,14 @@ export default function MarkAttendance() {
 
       // Initialize bulk attendance with all employees as Present (only for supervisors and admins)
       if (user?.role !== 'employee') {
+        const selectedDate = bulkDate || new Date().toISOString().split('T')[0];
+        const isSunday = new Date(selectedDate).getDay() === 0; // 0 = Sunday
+
         const bulkData = data.map((emp: Employee) => ({
           employee_id: emp.employee_id,
-          attendance_status: 'Present' as const,
-          attendance_date: bulkDate || new Date().toISOString().split('T')[0],
-          overtime_shifts: 0
+          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+          attendance_date: selectedDate,
+          overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
         }));
         setBulkAttendance(bulkData);
       }
@@ -208,11 +216,26 @@ export default function MarkAttendance() {
 
     setSubmitting(true);
     try {
+      // Check if the selected date is a Sunday
+      const selectedDate = new Date(attendanceDate);
+      const isSunday = selectedDate.getDay() === 0; // 0 = Sunday
+
+      // For Sundays, force overtime status and prevent regular present marking
+      const finalAttendanceStatus = isSunday ? 'OFF' : attendanceStatus;
+      const finalOvertimeShifts = isSunday ? Math.max(overtimeShifts, 1) : overtimeShifts;
+
+      if (isSunday && attendanceStatus === 'Present') {
+        toast({
+          title: 'Sunday Work',
+          description: 'Sunday work is automatically treated as overtime. Status set to OFF with overtime shifts.',
+        });
+      }
+
       const attendanceData = {
         employee_id: selectedEmployee,
         attendance_date: attendanceDate,
-        attendance_status: attendanceStatus,
-        overtime_shifts: overtimeShifts,
+        attendance_status: finalAttendanceStatus,
+        overtime_shifts: finalOvertimeShifts,
         remarks: remarks
       };
 
@@ -220,7 +243,7 @@ export default function MarkAttendance() {
 
       toast({
         title: 'Success',
-        description: 'Attendance marked successfully',
+        description: `Attendance marked successfully${isSunday ? ' (Sunday overtime recorded)' : ''}`,
       });
 
       // Reset form
@@ -267,19 +290,21 @@ export default function MarkAttendance() {
       });
 
              // Reset bulk attendance to Present for filtered employees
-      const filteredEmployees = selectedSiteId
-        ? employees.filter((emp: any) => {
-            const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
-            return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
-          })
-        : employees;
-      const resetBulkData = filteredEmployees.map((emp: Employee) => ({
-        employee_id: emp.employee_id,
-        attendance_status: 'Present' as const,
-        attendance_date: bulkDate,
-        overtime_shifts: 0
-      }));
-      setBulkAttendance(resetBulkData);
+             const filteredEmployees = selectedSiteId
+               ? employees.filter((emp: any) => {
+                   const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+                   return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+                 })
+               : employees;
+       
+             const isSunday = new Date(bulkDate).getDay() === 0; // 0 = Sunday
+             const resetBulkData = filteredEmployees.map((emp: Employee) => ({
+               employee_id: emp.employee_id,
+               attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+               attendance_date: bulkDate,
+               overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
+             }));
+             setBulkAttendance(resetBulkData);
     } catch (error: any) {
       toast({
         title: 'Error',

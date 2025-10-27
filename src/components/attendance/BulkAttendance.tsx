@@ -479,6 +479,9 @@ export default function BulkAttendance() {
       if (selectedSiteId && selectedSiteId !== 'all') {
         params.append('site_id', selectedSiteId);
       }
+
+      // For "all sites", we don't pass site_id parameter to get all employees
+      // Also handle Sunday logic for bulk uploads
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {
