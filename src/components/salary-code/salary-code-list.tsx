@@ -12,7 +12,7 @@ const SalaryCodeList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<SalaryCode | null>(null);
-  const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '' });
+  const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '', sspl_wages: undefined as number | undefined });
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
@@ -53,7 +53,8 @@ const SalaryCodeList: React.FC = () => {
       rank: code.rank,
       state: code.state,
       base_wage: code.base_wage,
-      skill_level: code.skill_level || ''
+      skill_level: code.skill_level || '',
+      sspl_wages: code.sspl_wages || undefined
     });
   };
 
@@ -84,6 +85,7 @@ const SalaryCodeList: React.FC = () => {
       'Rank': code.rank,
       'State': code.state,
       'Base Wage': code.base_wage,
+      'SSPL Wages': code.sspl_wages || '',
       'Salary Code': code.salary_code
     }));
 
@@ -191,6 +193,9 @@ const SalaryCodeList: React.FC = () => {
                     Base Wage
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    SSPL Wages
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3"></th>
@@ -213,6 +218,9 @@ const SalaryCodeList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ₹{code.base_wage.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {code.sspl_wages ? `₹${code.sspl_wages.toLocaleString()}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -244,6 +252,7 @@ const SalaryCodeList: React.FC = () => {
           { name: 'rank', label: 'Rank', type: 'text' },
           { name: 'state', label: 'State', type: 'text' },
           { name: 'base_wage', label: 'Base Wage', type: 'number' },
+          { name: 'sspl_wages', label: 'SSPL Wages', type: 'number' },
         ]}
         onChange={setEditValues}
         onSave={saveEdit}

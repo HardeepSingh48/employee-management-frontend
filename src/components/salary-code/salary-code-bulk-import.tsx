@@ -9,9 +9,11 @@ type ParsedRow = {
   rank: string;
   state: string;
   base_wage: number;
+  sspl_wages?: number;
 };
 
 const REQUIRED_HEADERS = ['Site name', 'Rank', 'State Name', 'Wages'];
+const OPTIONAL_HEADERS = ['SSPL Wages'];
 
 function normalizeHeader(header: string): string {
   return header.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
@@ -27,9 +29,9 @@ export default function SalaryCodeBulkImport() {
 
   const handleDownloadTemplate = useCallback(() => {
     const worksheet = XLSX.utils.aoa_to_sheet([
-      REQUIRED_HEADERS,
-      ['Acme Plant', 'Security Guard', 'Karnataka', 15000],
-      ['Contoso Mall', 'Supervisor', 'Maharashtra', 22000]
+      [...REQUIRED_HEADERS, ...OPTIONAL_HEADERS],
+      ['Acme Plant', 'Security Guard', 'Karnataka', 15000, 5000],
+      ['Contoso Mall', 'Supervisor', 'Maharashtra', 22000, '']
     ]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Salary Codes');
@@ -89,6 +91,12 @@ export default function SalaryCodeBulkImport() {
           const wageRaw = r[headerMap[normalizeHeader('Wages')]];
           const wage = typeof wageRaw === 'number' ? wageRaw : parseFloat(String(wageRaw).toString().replace(/,/g, ''));
 
+          // Parse SSPL Wages (optional)
+          const ssplWageRaw = r[headerMap[normalizeHeader('SSPL Wages')]];
+          const ssplWage = ssplWageRaw !== undefined && ssplWageRaw !== '' && ssplWageRaw !== null
+            ? (typeof ssplWageRaw === 'number' ? ssplWageRaw : parseFloat(String(ssplWageRaw).toString().replace(/,/g, '')))
+            : undefined;
+
           if (!site && !rank && !state && (wage === undefined || wage === null || Number.isNaN(wage))) {
             continue; // skip empty rows
           }
@@ -98,6 +106,7 @@ export default function SalaryCodeBulkImport() {
           if (!rank) missingFields.push('Rank');
           if (!state) missingFields.push('State Name');
           if (Number.isNaN(wage) || wage <= 0) missingFields.push('Wages');
+          if (ssplWage !== undefined && (Number.isNaN(ssplWage) || ssplWage < 0)) missingFields.push('SSPL Wages (must be >= 0)');
 
           if (missingFields.length) {
             rowErrors.push(`Row ${i + 2}: Missing/invalid ${missingFields.join(', ')}`);
@@ -109,6 +118,7 @@ export default function SalaryCodeBulkImport() {
             rank,
             state,
             base_wage: wage,
+            sspl_wages: ssplWage,
           });
         }
 
@@ -149,7 +159,7 @@ export default function SalaryCodeBulkImport() {
     <div className="bg-white shadow-lg rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-gray-800">Bulk Import Salary Codes</h2>
-        <p className="text-gray-600 mt-1">Upload an Excel file with columns: <strong>Site name, Rank, State Name, Wages</strong>.</p>
+        <p className="text-gray-600 mt-1">Upload an Excel file with columns: <strong>Site name, Rank, State Name, Wages</strong> (SSPL Wages is optional).</p>
       </div>
 
       <div className="p-6 space-y-4">
@@ -197,6 +207,7 @@ export default function SalaryCodeBulkImport() {
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rank</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">State</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Base Wage</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">SSPL Wages</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -206,6 +217,7 @@ export default function SalaryCodeBulkImport() {
                     <td className="px-4 py-2 whitespace-nowrap">{r.rank}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{r.state}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{r.base_wage}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{r.sspl_wages !== undefined ? r.sspl_wages : '-'}</td>
                   </tr>
                 ))}
               </tbody>

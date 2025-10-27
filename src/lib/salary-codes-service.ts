@@ -8,6 +8,7 @@ export interface SalaryCode {
   state: string;
   base_wage: number;
   skill_level: string;
+  sspl_wages: number | null;
   is_active: boolean;
   created_at: string | null;
   display_name: string;
@@ -45,6 +46,7 @@ export const salaryCodesService = {
     rank: string;
     state: string;
     base_wage: number;
+    sspl_wages?: number;
     created_by?: string;
   }): Promise<SalaryCode> => {
     try {
@@ -64,6 +66,7 @@ export const salaryCodesService = {
     rank: string;
     state: string;
     base_wage: number;
+    sspl_wages?: number;
     created_by?: string;
   }>): Promise<BulkCreateSalaryCodesResponse> => {
     const response = await api.post('/salary-codes/bulk', { salary_codes: salaryCodesData });
@@ -79,6 +82,7 @@ export const salaryCodesService = {
       state: string;
       base_wage: number;
       skill_level?: string;
+      sspl_wages?: number;
     }
   ): Promise<SalaryCode> => {
     const response = await api.put(`/salary-codes/${encodeURIComponent(salaryCode)}`, data);

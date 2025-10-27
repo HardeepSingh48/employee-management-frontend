@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { salaryCodeSchema, SalaryCodeFormSchema } from '@/lib/validations/salary-code';
-import { STATES, RANKS } from '@/types/salary-code';
+import { STATES, RANKS, STATE_NAMES } from '@/types/salary-code';
 import { salaryCodesService } from '@/lib/salary-codes-service';
 // import { testBackendConnection, addTestButton } from '@/utils/test-backend';
 
@@ -16,29 +16,22 @@ const SalaryCodeForm: React.FC = () => {
   // }, []);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<SalaryCodeFormSchema>({
-    resolver: zodResolver(salaryCodeSchema),
-    defaultValues: {
-      siteName: '',
-      rank: '',
-      stateName: '',
-      wages: 0
-    }
-  });
+   resolver: zodResolver(salaryCodeSchema),
+   defaultValues: {
+     siteName: '',
+     rank: '',
+     stateName: '',
+     wages: 0,
+     ssplWages: undefined
+   }
+ });
 
   const onSubmit = async (data: SalaryCodeFormSchema) => {
     setIsSubmitting(true);
     setSubmitMessage(null);
 
     try {
-      // console.log('🚀 Submitting salary code data:', data);
-
-      // First test backend connection
-      // console.log('🧪 Testing backend connection before submission...');
-      // const connectionTest = await testBackendConnection();
-
-      // if (!connectionTest) {
-      //   throw new Error('Backend connection test failed. Please make sure the backend server is running on http://localhost:5000');
-      // }
+      
 
       // Transform data to match backend API
       const salaryCodeData = {
@@ -46,39 +39,13 @@ const SalaryCodeForm: React.FC = () => {
         rank: data.rank,
         state: data.stateName,
         base_wage: data.wages,
+        sspl_wages: data.ssplWages,
         created_by: 'admin' // Default value, could be from auth context
       };
 
       // console.log('📤 Sending data to backend:', salaryCodeData);
 
-      // Try direct fetch first to see if it works
-      // console.log('🧪 Testing direct fetch...');
-      // try {
-      //   const directResponse = await fetch('http://localhost:5000/api/salary-codes', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify(salaryCodeData)
-      //   });
-      //   console.log('Direct fetch status:', directResponse.status);
-      //   if (directResponse.ok) {
-      //     const directData = await directResponse.json();
-      //     console.log('Direct fetch success:', directData);
-      //
-      //     setSubmitMessage({
-      //       type: 'success',
-      //       message: `Salary code created successfully! Code: ${directData.data.salary_code}`
-      //     });
-      //     reset();
-      //     return;
-      //   } else {
-      //     const errorText = await directResponse.text();
-      //     console.log('Direct fetch error:', errorText);
-      //   }
-      // } catch (directError) {
-      //   console.error('Direct fetch failed:', directError);
-      // }
+      
 
       // Create salary code using service
       const result = await salaryCodesService.createSalaryCode(salaryCodeData);
@@ -181,7 +148,7 @@ const SalaryCodeForm: React.FC = () => {
                 >
                   <option value="">Select State</option>
                   {STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
+                    <option key={state} value={state}>{STATE_NAMES[state] || state}</option>
                   ))}
                 </select>
                 {errors.stateName && (
@@ -204,6 +171,24 @@ const SalaryCodeForm: React.FC = () => {
                 />
                 {errors.wages && (
                   <p className="text-red-500 text-xs mt-1">{errors.wages.message}</p>
+                )}
+              </div>
+
+              {/* SSPL Wages */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  SSPL Wages (₹)
+                </label>
+                <input
+                  {...register('ssplWages', { valueAsNumber: true })}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter SSPL wages amount (optional)"
+                />
+                {errors.ssplWages && (
+                  <p className="text-red-500 text-xs mt-1">{errors.ssplWages.message}</p>
                 )}
               </div>
 
