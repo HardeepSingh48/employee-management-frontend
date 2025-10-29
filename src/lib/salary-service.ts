@@ -11,16 +11,19 @@ export interface SalaryCalculationData {
   'DA': number;
   'HRA': number;
   'Overtime': number;
+  'Overtime Allowance': number;
   'Others': number;
   'Total Earnings': number;
   'PF': number;
   'ESIC': number;
+  'Other Deduction'?: number;
   'Society': number;
   'Income Tax': number;
   'Insurance': number;
   'Others Recoveries': number;
   'Total Deductions': number;
   'Net Salary': number;
+  [key: string]: any; // Allow dynamic deduction types
 }
 
 export interface SalaryAdjustments {
@@ -71,6 +74,12 @@ export const salaryService = {
   // Calculate monthly salary for all employees using database records
   calculateMonthlySalary: async (data: MonthlySalaryRequest): Promise<SalaryCalculationData[]> => {
     const response = await api.post('/salary/calculate-monthly', data);
+    return response.data.data;
+  },
+
+  // Calculate SSPL monthly salary for all employees using database records
+  calculateMonthlySalarySspl: async (data: MonthlySalaryRequest): Promise<SalaryCalculationData[]> => {
+    const response = await api.post('/salary/calculate-monthly-sspl', data);
     return response.data.data;
   },
 
