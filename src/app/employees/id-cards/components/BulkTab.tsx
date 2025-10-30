@@ -63,8 +63,9 @@ export default function BulkTab() {
   }, []);
 
   const filteredEmployees = useMemo(() => {
-    if (mode === 'site' && siteId) {
-      // Filter employees by salary codes for the selected site (like MarkAttendance.tsx)
+    // For site mode, don't filter on frontend - let backend handle it for preview consistency
+    // For custom mode, apply site filtering if a site is selected
+    if (mode === 'custom' && siteId) {
       const siteSalaryCodes = getSalaryCodesForSite(siteId);
       return employees.filter((e: any) =>
         siteSalaryCodes.includes(e.salary_code || e.salaryCode)
@@ -73,10 +74,10 @@ export default function BulkTab() {
     return employees;
   }, [employees, mode, siteId, sites, salaryCodes]);
 
-  // Update preview when site changes (for site mode)
+  // Update preview when site changes (for both site and custom modes)
   useEffect(() => {
-    if (mode === 'site') {
-      // Auto-preview when site mode is active (both with and without site selection)
+    if (mode === 'site' || mode === 'custom') {
+      // Auto-preview when site mode or custom mode is active
       handlePreview();
     }
   }, [siteId, mode]);
@@ -169,35 +170,54 @@ export default function BulkTab() {
 
         {mode === 'custom' && (
           <div className="space-y-2 md:col-span-3">
-            <label className="text-sm font-medium">Select Employees</label>
-            <div className="border rounded-md p-4 bg-gray-50">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
-                {filteredEmployees.map((e: any) => {
-                  const id = String(e.employee_id ?? e.id);
-                  const name = e.name || `${e.first_name || ''} ${e.last_name || ''}`.trim();
-                  const designation = e.designation || e.job_title || '';
-                  return (
-                    <label key={id} className="flex items-start gap-3 p-3 bg-white rounded border hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(id)}
-                        onChange={() => handleToggle(id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{name}</div>
-                        <div className="text-xs text-gray-600">ID: {id}</div>
-                        {designation && <div className="text-xs text-gray-500 truncate">{designation}</div>}
-                      </div>
-                    </label>
-                  );
-                })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Filter by Site (Optional)</label>
+                <select
+                  value={siteId}
+                  onChange={(e) => setSiteId(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">All Sites</option>
+                  {sites.map((s) => (
+                    <option key={s.site_id} value={s.site_id}>
+                      {s.site_name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {filteredEmployees.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No employees found
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-sm font-medium">Select Employees</label>
+                <div className="border rounded-md p-4 bg-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+                    {filteredEmployees.map((e: any) => {
+                      const id = String(e.employee_id ?? e.id);
+                      const name = e.name || `${e.first_name || ''} ${e.last_name || ''}`.trim();
+                      const designation = e.designation || e.job_title || '';
+                      return (
+                        <label key={id} className="flex items-start gap-3 p-3 bg-white rounded border hover:bg-gray-50 cursor-pointer transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(id)}
+                            onChange={() => handleToggle(id)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{name}</div>
+                            <div className="text-xs text-gray-600">ID: {id}</div>
+                            {designation && <div className="text-xs text-gray-500 truncate">{designation}</div>}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {filteredEmployees.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No employees found
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -215,7 +235,7 @@ export default function BulkTab() {
       {previewEmployees.length > 0 && (
         <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border">
           <h3 className="text-base sm:text-lg font-semibold mb-4">
-            Preview (Showing {previewEmployees.length} of {employees.length})
+            Preview 
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {previewEmployees.map((emp) => (
