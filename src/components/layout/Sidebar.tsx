@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearAuth, selectUser } from '@/store/auth-slice';
 import {
   Home, Users, Calendar, Clock, TrendingUp,
-  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield, Settings, X
+  MoreHorizontal, Briefcase, User, DollarSign, Calculator, LogOut, Receipt, Shield, Settings, X, CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppDispatch } from '@/store';
@@ -28,10 +28,11 @@ const getSidebarItems = () => {
     const role = userRole || user?.role;
 
     // Define the base items for an admin
-    const adminItems = [
+const adminItems = [
       { name: 'Home', icon: Home, path: '/dashboard' },
       { name: 'Attendance', icon: Users, path: '/attendance' },
       { name: 'Employees', icon: User, path: '/employees' },
+      { name: 'ID Cards', icon: CreditCard, path: '/employees/id-cards' },
       { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
       { name: 'Salary Calc', icon: Calculator, path: '/salary' },
       { name: 'Compliance', icon: Shield, path: '/compliance' },

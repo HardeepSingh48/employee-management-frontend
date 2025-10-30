@@ -34,3 +34,21 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## ID Cards Feature (Admin/Superadmin)
+
+- Route: `/employees/id-cards`
+- Roles: Admin, Superadmin
+- Preview endpoints:
+  - `GET /api/id-cards/preview/<employee_id>`
+  - `GET /api/id-cards/preview/bulk?site_id=X&employee_ids[]=Y`
+- Generation endpoints:
+  - `POST /api/id-cards/generate/individual` with `{ employee_id }`
+  - `POST /api/id-cards/generate/bulk` with `{ mode: 'all'|'site'|'custom', site_id?, employee_ids? }`
+
+PDF spec:
+- CR80 card: 85.6mm × 53.98mm
+- 2 cards per A4 landscape page, 300 DPI
+- Styling: red header (#dc2626), blue border (#1e40af), gray photo box (#f3f4f6), Helvetica
+- Logo path: `backend/static/sspl_logo.png` (fallback text if missing)
+
