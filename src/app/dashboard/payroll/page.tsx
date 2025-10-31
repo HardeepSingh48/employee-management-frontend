@@ -51,7 +51,6 @@ export default function PayrollPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
-  const [activeWageTab, setActiveWageTab] = useState<'regular'|'special'>('regular');
   const [ssplPreviewHtml, setSsplPreviewHtml] = useState<string>('');
   const [ssplPreviewLoading, setSsplPreviewLoading] = useState(false);
   const [ssplGenerateLoading, setSsplGenerateLoading] = useState(false);
@@ -352,7 +351,7 @@ export default function PayrollPage() {
         </TabsList>
 
         <TabsContent value="payroll" className="space-y-6">
-      <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Payroll Generation</h2>
               <p className="text-muted-foreground">Generate and download payslips for employees</p>
@@ -598,87 +597,31 @@ export default function PayrollPage() {
           </Card>
         </div>
 
-        {/* Preview Panel */}
+        {/* Preview Panel - SIMPLIFIED */}
         <div className="lg:col-span-2">
           <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Payslip Preview
-                </CardTitle>
-              </CardHeader>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Payslip Preview
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              {activeWageTab === 'regular' ? (
-                previewHtml ? (
-                  <div className="border rounded-lg overflow-hidden">
-                    <iframe
-                      srcDoc={previewHtml}
-                      className="w-full h-96 border-0"
-                      title="Payslip Preview"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-96 text-muted-foreground">
-                    <div className="text-center">
-                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Click "Preview" to see payslip layout</p>
-                      <p className="text-sm">Preview shows first 3 selected employees</p>
-                    </div>
-                  </div>
-                )
+              {previewHtml ? (
+                <div className="border rounded-lg overflow-hidden">
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-96 border-0"
+                    title="Payslip Preview"
+                  />
+                </div>
               ) : (
-                <div className="overflow-x-auto border rounded-lg">
-                  <table className="w-full text-sm">
-                    <thead className="bg-blue-50">
-                      <tr>
-                        <th className="border p-2 text-center">Employee ID</th>
-                        <th className="border p-2 text-left">Name</th>
-                        <th className="border p-2 text-center">Skill Level</th>
-                        <th className="border p-2 text-center">Present Days</th>
-                        <th className="border p-2 text-right">Daily Wage</th>
-                        <th className="border p-2 text-right">Basic</th>
-                        <th className="border p-2 text-right">Total Earnings</th>
-                        <th className="border p-2 text-right">PF</th>
-                        <th className="border p-2 text-right">ESIC</th>
-                        <th className="border p-2 text-right">Other Deduction</th>
-                        <th className="border p-2 text-right">Total Deductions</th>
-                        <th className="border p-2 text-right">Net Salary</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ssplPreviewLoading ? (
-                        <tr>
-                          <td colSpan={12} className="border p-8 text-center">
-                            <div className="flex items-center justify-center">
-                              <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                              Loading SSPL preview...
-                            </div>
-                          </td>
-                        </tr>
-                      ) : Object.keys(ssplPreview).length === 0 ? (
-                        <tr>
-                          <td colSpan={12} className="border p-8 text-center text-muted-foreground">Click "Preview Special Wages"</td>
-                        </tr>
-                      ) : (
-                        Object.values(ssplPreview).map((r: any, idx) => (
-                          <tr key={`ssplprev-${idx}`}>
-                            <td className="border p-2 text-center">{r['Employee ID']}</td>
-                            <td className="border p-2">{r['Employee Name']}</td>
-                            <td className="border p-2 text-center">{r['Skill Level']}</td>
-                            <td className="border p-2 text-center">{r['Present Days']}</td>
-                            <td className="border p-2 text-right">{Number(r['Daily Wage']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['Basic']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['Total Earnings']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['PF']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['ESIC']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['Other Deduction']).toFixed(2)}</td>
-                            <td className="border p-2 text-right">{Number(r['Total Deductions']).toFixed(2)}</td>
-                            <td className="border p-2 text-right font-semibold text-green-600">{Number(r['Net Salary']).toFixed(2)}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                <div className="flex items-center justify-center h-96 text-muted-foreground">
+                  <div className="text-center">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Click "Preview" to see payslip layout</p>
+                    <p className="text-sm">Preview shows first 3 selected employees</p>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -835,10 +778,38 @@ export default function PayrollPage() {
 
                       <TabsContent value="multi" className="space-y-2">
                         {/* Reuse the same multi-select block as regular tab */}
+                        <div className="flex items-center justify-between">
+                          <Label>Select Multiple Employees</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSelectAll}
+                            className="text-xs"
+                          >
+                            {filteredEmployees.every(emp => filters.selectedEmployeeIds.includes(emp.employee_id)) ? (
+                              <>
+                                <Square className="h-3 w-3 mr-1" />
+                                Deselect All
+                              </>
+                            ) : (
+                              <>
+                                <CheckSquare className="h-3 w-3 mr-1" />
+                                Select All
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
                         <div className="relative">
                           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="Search employees..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8" />
+                          <Input
+                            placeholder="Search employees..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-8"
+                          />
                         </div>
+
                         <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
                           {loading ? (
                             <div className="flex items-center justify-center py-4">
@@ -847,10 +818,15 @@ export default function PayrollPage() {
                           ) : (
                             filteredEmployees.map(emp => (
                               <div key={emp.employee_id} className="flex items-center space-x-2">
-                                <Checkbox checked={filters.selectedEmployeeIds.includes(emp.employee_id)} onCheckedChange={() => handleEmployeeToggle(emp.employee_id)} />
+                                <Checkbox
+                                  checked={filters.selectedEmployeeIds.includes(emp.employee_id)}
+                                  onCheckedChange={() => handleEmployeeToggle(emp.employee_id)}
+                                />
                                 <div className="flex-1 text-sm">
                                   <div className="font-medium">{emp.name}</div>
-                                  <div className="text-xs text-muted-foreground">ID: {emp.employee_id} | {emp.department} | {emp.skill_level}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    ID: {emp.employee_id} | {emp.department} | {emp.skill_level}
+                                  </div>
                                 </div>
                               </div>
                             ))
