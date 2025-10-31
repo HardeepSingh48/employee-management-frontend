@@ -33,9 +33,22 @@ export default function IDCardPreview({ data, showSite = false }: IDCardPreviewP
         <div className="absolute top-0 left-0 right-0 bg-red-600 flex items-center justify-center"
              style={{ height: '28%' }}>
 
-          {/* Logo placeholder - top-left */}
-          <div className="absolute left-1 sm:left-2 top-1 sm:top-2 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded flex items-center justify-center">
-            <span className="text-[8px] sm:text-xs font-bold text-red-600">SSPL</span>
+          {/* Logo - top-left */}
+          <div className="absolute left-1 sm:left-2 top-1 sm:top-2 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded overflow-hidden flex items-center justify-center">
+            <img
+              src="/assets/SSPL.png"
+              alt="SSPL Logo"
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback to text if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = '<span class="text-[8px] sm:text-xs font-bold text-red-600">SSPL</span>';
+                }
+              }}
+            />
           </div>
 
           {/* Company name - centered */}
