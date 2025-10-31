@@ -153,6 +153,27 @@ export class PayrollService {
   }
 
   /**
+   * Preview SSPL payroll (first 3 employees)
+   */
+  static async previewPayrollSspl(request: PayrollPreviewRequest): Promise<PayrollPreviewResponse> {
+    try {
+      const params = new URLSearchParams({
+        employee_ids: request.employee_ids.join(','),
+        year: request.year.toString(),
+        month: request.month.toString(),
+      });
+
+      const response = await api.get(`${this.baseUrl}/preview-sspl?${params.toString()}`);
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to generate SSPL preview',
+      };
+    }
+  }
+
+  /**
    * Generate and download payroll PDF
    */
   static async generatePayroll(request: PayrollGenerateRequest): Promise<Blob | PayrollResponse> {
@@ -195,6 +216,50 @@ export class PayrollService {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to generate payroll PDF',
+      };
+    }
+  }
+
+  /**
+   * Generate and download SSPL payroll PDF
+   */
+  static async generatePayrollSspl(request: PayrollGenerateRequest): Promise<Blob | PayrollResponse> {
+    try {
+      const response = await api.post(`${this.baseUrl}/generate-sspl`, request, {
+        responseType: 'blob',
+      });
+
+      if (response.data instanceof Blob && response.data.type === 'application/pdf') {
+        return response.data;
+      } else {
+        const text = await response.data.text();
+        try {
+          const errorData = JSON.parse(text);
+          return errorData;
+        } catch {
+          return {
+            success: false,
+            message: 'Failed to generate SSPL payroll PDF',
+          };
+        }
+      }
+    } catch (error: any) {
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const errorData = JSON.parse(text);
+          return errorData;
+        } catch {
+          return {
+            success: false,
+            message: 'Failed to generate SSPL payroll PDF',
+          };
+        }
+      }
+
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to generate SSPL payroll PDF',
       };
     }
   }

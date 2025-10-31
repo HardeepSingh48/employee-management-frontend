@@ -52,8 +52,9 @@ export default function PayrollPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [activeWageTab, setActiveWageTab] = useState<'regular'|'special'>('regular');
-  const [ssplPreview, setSsplPreview] = useState<Record<string, any>>({});
+  const [ssplPreviewHtml, setSsplPreviewHtml] = useState<string>('');
   const [ssplPreviewLoading, setSsplPreviewLoading] = useState(false);
+  const [ssplGenerateLoading, setSsplGenerateLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   // OPTIMIZATION: Debounce search input to prevent excessive filtering
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -236,21 +237,52 @@ export default function PayrollPage() {
     setError(null);
     try {
       const selectedIds = getSelectedEmployeeIds();
-      const response = await salaryService.generatePayrollSspl({
-        employee_ids: selectedIds.map(String),
+      const response = await PayrollService.previewPayrollSspl({
+        employee_ids: selectedIds,
         year: parseInt(filters.year),
         month: parseInt(filters.month),
       });
       if (response.success && response.data) {
-        setSsplPreview(response.data);
-        setSuccess(`SSPL preview ready for ${Object.keys(response.data).length} employees`);
+        setSsplPreviewHtml(response.data.preview_html);
+        setSuccess(`SSPL preview generated for ${response.data.preview_count} of ${response.data.total_employees} employees`);
       } else {
-        setError(response.message || 'Failed to generate SSPL preview');
+        setError(response.message);
       }
     } catch (err: any) {
       setError('Failed to generate SSPL preview');
     }
     setSsplPreviewLoading(false);
+  };
+
+  const handleGenerateSspl = async () => {
+    const validationError = validateSelection();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSsplGenerateLoading(true);
+    setError(null);
+    try {
+      const selectedIds = getSelectedEmployeeIds();
+      const month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const filename = `Payslips_Special_Wages_${month_names[parseInt(filters.month)]}_${filters.year}.pdf`;
+      const response = await PayrollService.generatePayrollSspl({
+        employee_ids: selectedIds,
+        year: parseInt(filters.year),
+        month: parseInt(filters.month),
+        filename,
+      });
+      if (response instanceof Blob) {
+        PayrollService.downloadBlob(response, filename);
+        setSuccess(`SSPL Payroll PDF generated and downloaded successfully for ${selectedIds.length} employees`);
+      } else {
+        setError(response.message);
+      }
+    } catch (err: any) {
+      setError('Failed to generate SSPL payroll PDF');
+    }
+    setSsplGenerateLoading(false);
   };
 
   const handleGenerate = async () => {
@@ -313,8 +345,9 @@ export default function PayrollPage() {
       </div>
 
       <Tabs defaultValue="payroll" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          <TabsTrigger value="payroll-special">Payroll Special Wages</TabsTrigger>
           <TabsTrigger value="bonus">Bonus</TabsTrigger>
         </TabsList>
 
@@ -535,63 +568,31 @@ export default function PayrollPage() {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <Tabs value={activeWageTab} onValueChange={(v) => setActiveWageTab(v as 'regular'|'special')}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="regular">Regular Wages</TabsTrigger>
-                    <TabsTrigger value="special">Special Wages</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-
-                {activeWageTab === 'regular' ? (
-                  <>
-                    <Button
-                      onClick={handlePreview}
-                      disabled={previewLoading}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      {previewLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Eye className="h-4 w-4 mr-2" />
-                      )}
-                      Preview (First 3)
-                    </Button>
-                    <Button
-                      onClick={handleGenerate}
-                      disabled={generateLoading}
-                      className="w-full"
-                    >
-                      {generateLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Download className="h-4 w-4 mr-2" />
-                      )}
-                      Generate PDF
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      onClick={handlePreviewSspl}
-                      disabled={ssplPreviewLoading}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      {ssplPreviewLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Eye className="h-4 w-4 mr-2" />
-                      )}
-                      Preview Special Wages
-                    </Button>
-                    {/* Placeholder for SSPL PDF generate; to be wired to backend route */}
-                    <Button disabled className="w-full" title="Coming soon">
-                      <Download className="h-4 w-4 mr-2" />
-                      Generate SSPL PDF
-                    </Button>
-                  </>
-                )}
+                <Button
+                  onClick={handlePreview}
+                  disabled={previewLoading}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {previewLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Eye className="h-4 w-4 mr-2" />
+                  )}
+                  Preview (First 3)
+                </Button>
+                <Button
+                  onClick={handleGenerate}
+                  disabled={generateLoading}
+                  className="w-full"
+                >
+                  {generateLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  Generate PDF
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -600,12 +601,12 @@ export default function PayrollPage() {
         {/* Preview Panel */}
         <div className="lg:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {activeWageTab === 'regular' ? 'Payslip Preview' : 'Special Wages Preview'}
-              </CardTitle>
-            </CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Payslip Preview
+                </CardTitle>
+              </CardHeader>
             <CardContent>
               {activeWageTab === 'regular' ? (
                 previewHtml ? (
@@ -685,6 +686,224 @@ export default function PayrollPage() {
         </div>
       </div>
 
+        </TabsContent>
+
+        <TabsContent value="payroll-special" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Payroll Special Wages</h2>
+              <p className="text-muted-foreground">Generate and download SSPL payslips for employees</p>
+            </div>
+            <Badge variant="outline" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {selectedIds.length} Selected
+            </Badge>
+          </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert>
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Filters Panel (shared) */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Filters & Selection
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Reuse existing filters UI */}
+                  {/* Site Filter */}
+                  {sites.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Site Filter</Label>
+                      {sites.length === 1 ? (
+                        <div className="p-2 bg-muted rounded-md text-sm">
+                          <strong>Site:</strong> {sites[0].site_name || 'Unnamed Site'}
+                        </div>
+                      ) : (
+                        <Select value={filters.siteId || "all"} onValueChange={(value) => handleFilterChange('siteId', value === "all" ? "" : value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a site" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Sites</SelectItem>
+                            {sites.map(site => (
+                              <SelectItem key={site.site_id} value={site.site_id}>
+                                {site.site_name || 'Unnamed Site'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Month and Year Selection */}
+                  <div className="space-y-2">
+                    <Label>Pay Period</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Year</Label>
+                        <Select value={filters.year} onValueChange={(value) => handleFilterChange('year', value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 5 }, (_, i) => {
+                              const year = new Date().getFullYear() - 2 + i;
+                              return (
+                                <SelectItem key={year} value={year.toString()}>
+                                  {year}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Month</Label>
+                        <Select value={filters.month} onValueChange={(value) => handleFilterChange('month', value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Selection Mode (reuse) */}
+                  <div className="space-y-2">
+                    <Label>Selection Mode</Label>
+                    <Tabs value={filters.selectionMode} onValueChange={(value) => handleFilterChange('selectionMode', value as SelectionMode)}>
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="single">Single</TabsTrigger>
+                        <TabsTrigger value="range">Range</TabsTrigger>
+                        <TabsTrigger value="multi">Multi</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="single" className="space-y-2">
+                        <Label>Select Employee</Label>
+                        <Select value={filters.selectedEmployeeId?.toString() || 'none'} onValueChange={(value) => handleFilterChange('selectedEmployeeId', value !== 'none' ? parseInt(value) : null)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose an employee" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Select an employee</SelectItem>
+                            {employees.map(emp => (
+                              <SelectItem key={emp.employee_id} value={emp.employee_id.toString()}>
+                                {emp.employee_id} - {emp.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TabsContent>
+
+                      <TabsContent value="range" className="space-y-2">
+                        <Label>Employee ID Range</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">From ID</Label>
+                            <Input type="number" placeholder="From" value={filters.rangeFrom || ''} onChange={(e) => handleFilterChange('rangeFrom', e.target.value ? parseInt(e.target.value) : null)} />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">To ID</Label>
+                            <Input type="number" placeholder="To" value={filters.rangeTo || ''} onChange={(e) => handleFilterChange('rangeTo', e.target.value ? parseInt(e.target.value) : null)} />
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="multi" className="space-y-2">
+                        {/* Reuse the same multi-select block as regular tab */}
+                        <div className="relative">
+                          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="Search employees..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8" />
+                        </div>
+                        <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
+                          {loading ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            </div>
+                          ) : (
+                            filteredEmployees.map(emp => (
+                              <div key={emp.employee_id} className="flex items-center space-x-2">
+                                <Checkbox checked={filters.selectedEmployeeIds.includes(emp.employee_id)} onCheckedChange={() => handleEmployeeToggle(emp.employee_id)} />
+                                <div className="flex-1 text-sm">
+                                  <div className="font-medium">{emp.name}</div>
+                                  <div className="text-xs text-muted-foreground">ID: {emp.employee_id} | {emp.department} | {emp.skill_level}</div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+
+                  <Separator />
+
+                  {/* Action Buttons (SSPL) */}
+                  <div className="space-y-2">
+                    <Button onClick={handlePreviewSspl} disabled={ssplPreviewLoading} variant="outline" className="w-full">
+                      {ssplPreviewLoading ? (<Loader2 className="h-4 w-4 animate-spin mr-2" />) : (<Eye className="h-4 w-4 mr-2" />)}
+                      Preview Special Wages (First 3)
+                    </Button>
+                    <Button onClick={handleGenerateSspl} disabled={ssplGenerateLoading} className="w-full">
+                      {ssplGenerateLoading ? (<Loader2 className="h-4 w-4 animate-spin mr-2" />) : (<Download className="h-4 w-4 mr-2" />)}
+                      Generate SSPL PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Preview Panel (SSPL) */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Special Wages Payslip Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {ssplPreviewHtml ? (
+                    <div className="border rounded-lg overflow-hidden">
+                      <iframe srcDoc={ssplPreviewHtml} className="w-full h-96 border-0" title="SSPL Payslip Preview" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-96 text-muted-foreground">
+                      <div className="text-center">
+                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Click "Preview Special Wages" to see SSPL payslip layout</p>
+                        <p className="text-sm">Preview shows first 3 selected employees</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="bonus" className="space-y-6">
