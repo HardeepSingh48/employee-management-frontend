@@ -27,6 +27,7 @@ import {
 import { Logo } from '@/components/layout/Logo';
 import PayrollService, { Employee, Site } from '@/lib/payroll-service';
 import BonusCalculation from '@/components/payroll/BonusCalculation';
+import { salaryService } from '@/lib/salary-service';
 
 type SelectionMode = 'single' | 'range' | 'multi';
 
@@ -50,6 +51,9 @@ export default function PayrollPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [activeWageTab, setActiveWageTab] = useState<'regular'|'special'>('regular');
+  const [ssplPreview, setSsplPreview] = useState<Record<string, any>>({});
+  const [ssplPreviewLoading, setSsplPreviewLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   // OPTIMIZATION: Debounce search input to prevent excessive filtering
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -221,6 +225,34 @@ export default function PayrollPage() {
     setPreviewLoading(false);
   };
 
+  const handlePreviewSspl = async () => {
+    const validationError = validateSelection();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setSsplPreviewLoading(true);
+    setError(null);
+    try {
+      const selectedIds = getSelectedEmployeeIds();
+      const response = await salaryService.generatePayrollSspl({
+        employee_ids: selectedIds.map(String),
+        year: parseInt(filters.year),
+        month: parseInt(filters.month),
+      });
+      if (response.success && response.data) {
+        setSsplPreview(response.data);
+        setSuccess(`SSPL preview ready for ${Object.keys(response.data).length} employees`);
+      } else {
+        setError(response.message || 'Failed to generate SSPL preview');
+      }
+    } catch (err: any) {
+      setError('Failed to generate SSPL preview');
+    }
+    setSsplPreviewLoading(false);
+  };
+
   const handleGenerate = async () => {
     const validationError = validateSelection();
     if (validationError) {
@@ -287,7 +319,7 @@ export default function PayrollPage() {
         </TabsList>
 
         <TabsContent value="payroll" className="space-y-6">
-          <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Payroll Generation</h2>
               <p className="text-muted-foreground">Generate and download payslips for employees</p>
@@ -502,33 +534,64 @@ export default function PayrollPage() {
               <Separator />
 
               {/* Action Buttons */}
-              <div className="space-y-2">
-                <Button
-                  onClick={handlePreview}
-                  disabled={previewLoading}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {previewLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Eye className="h-4 w-4 mr-2" />
-                  )}
-                  Preview (First 3)
-                </Button>
+              <div className="space-y-3">
+                <Tabs value={activeWageTab} onValueChange={(v) => setActiveWageTab(v as 'regular'|'special')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="regular">Regular Wages</TabsTrigger>
+                    <TabsTrigger value="special">Special Wages</TabsTrigger>
+                  </TabsList>
+                </Tabs>
 
-                <Button
-                  onClick={handleGenerate}
-                  disabled={generateLoading}
-                  className="w-full"
-                >
-                  {generateLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-2" />
-                  )}
-                  Generate PDF
-                </Button>
+                {activeWageTab === 'regular' ? (
+                  <>
+                    <Button
+                      onClick={handlePreview}
+                      disabled={previewLoading}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {previewLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Eye className="h-4 w-4 mr-2" />
+                      )}
+                      Preview (First 3)
+                    </Button>
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={generateLoading}
+                      className="w-full"
+                    >
+                      {generateLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Download className="h-4 w-4 mr-2" />
+                      )}
+                      Generate PDF
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handlePreviewSspl}
+                      disabled={ssplPreviewLoading}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {ssplPreviewLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Eye className="h-4 w-4 mr-2" />
+                      )}
+                      Preview Special Wages
+                    </Button>
+                    {/* Placeholder for SSPL PDF generate; to be wired to backend route */}
+                    <Button disabled className="w-full" title="Coming soon">
+                      <Download className="h-4 w-4 mr-2" />
+                      Generate SSPL PDF
+                    </Button>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -540,25 +603,81 @@ export default function PayrollPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Payslip Preview
+                {activeWageTab === 'regular' ? 'Payslip Preview' : 'Special Wages Preview'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {previewHtml ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <iframe
-                    srcDoc={previewHtml}
-                    className="w-full h-96 border-0"
-                    title="Payslip Preview"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-96 text-muted-foreground">
-                  <div className="text-center">
-                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Click "Preview" to see payslip layout</p>
-                    <p className="text-sm">Preview shows first 3 selected employees</p>
+              {activeWageTab === 'regular' ? (
+                previewHtml ? (
+                  <div className="border rounded-lg overflow-hidden">
+                    <iframe
+                      srcDoc={previewHtml}
+                      className="w-full h-96 border-0"
+                      title="Payslip Preview"
+                    />
                   </div>
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-muted-foreground">
+                    <div className="text-center">
+                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Click "Preview" to see payslip layout</p>
+                      <p className="text-sm">Preview shows first 3 selected employees</p>
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-sm">
+                    <thead className="bg-blue-50">
+                      <tr>
+                        <th className="border p-2 text-center">Employee ID</th>
+                        <th className="border p-2 text-left">Name</th>
+                        <th className="border p-2 text-center">Skill Level</th>
+                        <th className="border p-2 text-center">Present Days</th>
+                        <th className="border p-2 text-right">Daily Wage</th>
+                        <th className="border p-2 text-right">Basic</th>
+                        <th className="border p-2 text-right">Total Earnings</th>
+                        <th className="border p-2 text-right">PF</th>
+                        <th className="border p-2 text-right">ESIC</th>
+                        <th className="border p-2 text-right">Other Deduction</th>
+                        <th className="border p-2 text-right">Total Deductions</th>
+                        <th className="border p-2 text-right">Net Salary</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ssplPreviewLoading ? (
+                        <tr>
+                          <td colSpan={12} className="border p-8 text-center">
+                            <div className="flex items-center justify-center">
+                              <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                              Loading SSPL preview...
+                            </div>
+                          </td>
+                        </tr>
+                      ) : Object.keys(ssplPreview).length === 0 ? (
+                        <tr>
+                          <td colSpan={12} className="border p-8 text-center text-muted-foreground">Click "Preview Special Wages"</td>
+                        </tr>
+                      ) : (
+                        Object.values(ssplPreview).map((r: any, idx) => (
+                          <tr key={`ssplprev-${idx}`}>
+                            <td className="border p-2 text-center">{r['Employee ID']}</td>
+                            <td className="border p-2">{r['Employee Name']}</td>
+                            <td className="border p-2 text-center">{r['Skill Level']}</td>
+                            <td className="border p-2 text-center">{r['Present Days']}</td>
+                            <td className="border p-2 text-right">{Number(r['Daily Wage']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['Basic']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['Total Earnings']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['PF']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['ESIC']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['Other Deduction']).toFixed(2)}</td>
+                            <td className="border p-2 text-right">{Number(r['Total Deductions']).toFixed(2)}</td>
+                            <td className="border p-2 text-right font-semibold text-green-600">{Number(r['Net Salary']).toFixed(2)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>

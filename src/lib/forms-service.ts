@@ -28,6 +28,7 @@ export interface FormBEmployee {
     cit: number;
     ptax: number;
     adv: number;
+    otherDeduction?: number;
     otherRecoveries: number;
     total: number;
   };
@@ -41,6 +42,7 @@ export interface FormBTotals {
   totalOvertime: number;
   totalEarnings: number;
   totalDeductions: number;
+  totalOtherDeduction?: number;
   totalOtherRecoveries: number;
   totalNetPayable: number;
 }
@@ -145,6 +147,12 @@ export const formsService = {
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to fetch Form B data');
     }
+  },
+
+  // Get Form B data (Special Wages - SSPL) in exact Form B structure with otherDeduction
+  getFormBSpecialWages: async (params: FormBRequest): Promise<FormBResponse> => {
+    const response = await api.post('/forms/form-b-special-wages', params);
+    return response.data as FormBResponse;
   },
 
   // Download Form B Excel file

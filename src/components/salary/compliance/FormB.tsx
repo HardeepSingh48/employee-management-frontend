@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formsService, FormBEmployee, FormBTotals } from '@/lib/forms-service';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 
@@ -18,6 +19,10 @@ export default function FormB() {
   const [availableSites, setAvailableSites] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'regular' | 'special'>('regular');
+  const [formBDataSspl, setFormBDataSspl] = useState<FormBEmployee[]>([]);
+  const [totalsSspl, setTotalsSspl] = useState<FormBTotals | null>(null);
+  const [isLoadingSspl, setIsLoadingSspl] = useState(false);
   const { toast } = useToast();
 
   const months = [
@@ -90,6 +95,51 @@ export default function FormB() {
       setTotals(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load SSPL Form B data when Special Wages tab is active
+  useEffect(() => {
+    if (activeTab === 'special' && selectedMonth && selectedYear) {
+      loadFormBDataSspl();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedMonth, selectedYear, selectedSite]);
+
+  const loadFormBDataSspl = async () => {
+    if (!selectedMonth || !selectedYear) return;
+
+    setIsLoadingSspl(true);
+    try {
+      const response = await formsService.getFormBSpecialWages({
+        year: parseInt(selectedYear),
+        month: parseInt(selectedMonth),
+        site: selectedSite && selectedSite !== 'all' ? selectedSite : undefined,
+      });
+
+      if (response.success) {
+        setFormBDataSspl(response.data);
+        setTotalsSspl(response.totals);
+      } else {
+        toast({
+          title: 'Error',
+          description: response.message || 'Failed to load Form B Special Wages data',
+          variant: 'destructive',
+        });
+        setFormBDataSspl([]);
+        setTotalsSspl(null);
+      }
+    } catch (error: any) {
+      console.error('Failed to load Form B Special Wages:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to load Form B Special Wages data',
+        variant: 'destructive',
+      });
+      setFormBDataSspl([]);
+      setTotalsSspl(null);
+    } finally {
+      setIsLoadingSspl(false);
     }
   };
 
@@ -201,9 +251,16 @@ export default function FormB() {
         </div>
       </div>
 
-      {/* Form B Table */}
-      <div className="overflow-x-auto border rounded-lg">
-        <table className="w-full text-sm">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'regular'|'special')}>
+        <TabsList className="mb-2">
+          <TabsTrigger value="regular">Regular Wages</TabsTrigger>
+          <TabsTrigger value="special">Special Wages</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="regular">
+          {/* Form B Table (Regular) */}
+          <div className="overflow-x-auto border rounded-lg">
+            <table className="w-full text-sm">
           <thead className="bg-blue-50">
             <tr>
               <th rowSpan={3} className="border p-2 text-center">Sl.No</th>
@@ -317,8 +374,134 @@ export default function FormB() {
               </>
             )}
           </tbody>
-        </table>
-      </div>
+            </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="special">
+          {/* EXACT same table structure as Regular, with one additional column */}
+          <div className="overflow-x-auto border rounded-lg">
+            <table className="w-full text-sm">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th rowSpan={3} className="border p-2 text-center">Sl.No</th>
+                  <th rowSpan={3} className="border p-2 text-center">Employee Code</th>
+                  <th rowSpan={3} className="border p-2 text-center">Employee Name</th>
+                  <th rowSpan={3} className="border p-2 text-center">Designation</th>
+                  <th colSpan={2} className="border p-2 text-center">Rate of Wage</th>
+                  <th rowSpan={3} className="border p-2 text-center">Days Worked</th>
+                  <th rowSpan={3} className="border p-2 text-center">Overtime</th>
+                  <th rowSpan={3} className="border p-2 text-center">Total Days</th>
+                  <th colSpan={6} className="border p-2 text-center">Gross Earnings</th>
+                  <th rowSpan={3} className="border p-2 text-center">Total Earnings</th>
+                  <th colSpan={7} className="border p-2 text-center">Deductions</th>
+                  <th rowSpan={3} className="border p-2 text-center">Total Deductions</th>
+                  <th rowSpan={3} className="border p-2 text-center">Net Payable</th>
+                </tr>
+                <tr>
+                  <th className="border p-1 text-center">BS</th>
+                  <th className="border p-1 text-center">DA</th>
+                  <th className="border p-1 text-center">BS</th>
+                  <th className="border p-1 text-center">DA</th>
+                  <th className="border p-1 text-center">HRA</th>
+                  <th className="border p-1 text-center">COV</th>
+                  <th className="border p-1 text-center">OTA</th>
+                  <th className="border p-1 text-center">AE</th>
+                  <th className="border p-1 text-center">PF</th>
+                  <th className="border p-1 text-center">ESI</th>
+                  <th className="border p-1 text-center">CIT</th>
+                  <th className="border p-1 text-center">PTAX</th>
+                  <th className="border p-1 text-center">ADV</th>
+                  <th className="border p-1 text-center">Other Deduction</th>
+                  <th className="border p-1 text-center">Other Recoveries</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoadingSspl ? (
+                  <tr>
+                    <td colSpan={24} className="border p-8 text-center">
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                        Loading Form B Special Wages data...
+                      </div>
+                    </td>
+                  </tr>
+                ) : formBDataSspl.length === 0 ? (
+                  <tr>
+                    <td colSpan={24} className="border p-8 text-center text-gray-500">
+                      {selectedMonth && selectedYear
+                        ? 'No data found for the selected criteria'
+                        : 'Please select month and year to view data'
+                      }
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {formBDataSspl.map((row, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="border p-2 text-center">{row.slNo}</td>
+                        <td className="border p-2 text-center">{row.employeeCode}</td>
+                        <td className="border p-2">{row.employeeName}</td>
+                        <td className="border p-2 text-center">{row.designation}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.rateOfWage.bs)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.rateOfWage.da)}</td>
+                        <td className="border p-2 text-center">{row.daysWorked}</td>
+                        <td className="border p-2 text-center">{row.overtime}</td>
+                        <td className="border p-2 text-center">{row.totalDays.toFixed(1)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.bs)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.da)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.hra)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.cov)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.ota)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.ae)}</td>
+                        <td className="border p-2 text-right font-semibold">{formsService.formatNumber(row.totalEarnings)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.pf)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.esi)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.cit)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.ptax)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.adv)}</td>
+                        <td className="border p-2 text-right font-medium text-orange-600">{formsService.formatNumber(row.deductions.otherDeduction || 0)}</td>
+                        <td className="border p-2 text-right font-medium text-blue-600">{formsService.formatNumber(row.deductions.otherRecoveries || 0)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.deductions.total)}</td>
+                        <td className="border p-2 text-right font-semibold text-green-600">{formsService.formatNumber(row.netPayable)}</td>
+                      </tr>
+                    ))}
+                    {totalsSspl && (
+                      <tr className="bg-gray-100 font-semibold">
+                        <td className="border p-2 text-center">-</td>
+                        <td className="border p-2 text-center">-</td>
+                        <td className="border p-2">TOTAL</td>
+                        <td className="border p-2 text-center">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-center">{totalsSspl.totalDaysWorked}</td>
+                        <td className="border p-2 text-center">{totalsSspl.totalOvertime.toFixed(1)}</td>
+                        <td className="border p-2 text-center">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(totalsSspl.totalEarnings)}</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right">-</td>
+                        <td className="border p-2 text-right font-medium text-orange-600">{formsService.formatNumber(totalsSspl.totalOtherDeduction || 0)}</td>
+                        <td className="border p-2 text-right font-medium text-blue-600">{formsService.formatNumber(totalsSspl.totalOtherRecoveries || 0)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(totalsSspl.totalDeductions)}</td>
+                        <td className="border p-2 text-right text-green-600">{formsService.formatNumber(totalsSspl.totalNetPayable)}</td>
+                      </tr>
+                    )}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

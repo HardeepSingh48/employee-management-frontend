@@ -83,6 +83,26 @@ export const salaryService = {
     return response.data.data;
   },
 
+  // Generate Form B SSPL data for selected employees
+  generateFormBSspl: async (params: {
+    employee_ids: string[];
+    year: number;
+    month: number;
+  }): Promise<any> => {
+    const response = await api.post('/salary/form-b-sspl', params);
+    return response.data;
+  },
+
+  // Generate Payroll SSPL preview for selected employees
+  generatePayrollSspl: async (params: {
+    employee_ids: string[];
+    year: number;
+    month: number;
+  }): Promise<any> => {
+    const response = await api.post('/salary/payroll-sspl', params);
+    return response.data;
+  },
+
   // Calculate salary for individual employee
   calculateIndividualSalary: async (data: IndividualSalaryRequest): Promise<SalaryCalculationData> => {
     const response = await api.post('/salary/calculate-individual', data);
