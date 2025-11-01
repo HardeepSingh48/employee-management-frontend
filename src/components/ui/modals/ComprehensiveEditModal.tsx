@@ -24,6 +24,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
   const [activeTab, setActiveTab] = useState('personal');
   const [tabValidationErrors, setTabValidationErrors] = useState<Record<string, string[]>>({});
   const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
+  const [showTabErrorDots, setShowTabErrorDots] = useState(false);
 
   // File states for document uploads
   const [chequeFile, setChequeFile] = useState<File | null>(null);
@@ -66,6 +67,30 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
       document.body.style.paddingRight = '';
     };
   }, [isOpen]);
+
+  // Interval-based validation for real-time feedback
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Run validation immediately on open
+    const formData = watch();
+    const isValid = validateMandatoryFields(formData);
+    if (!isValid) {
+      setShowTabErrorDots(true);
+    }
+
+    // Set up interval to run validation every 5 seconds
+    const intervalId = setInterval(() => {
+      const currentFormData = watch();
+      const currentIsValid = validateMandatoryFields(currentFormData);
+      setShowTabErrorDots(!currentIsValid);
+    }, 1000); // 1 seconds
+
+    // Cleanup interval on unmount or modal close
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isOpen]); // Only depend on isOpen, not on watch or formData
 
   // Form initialization with employee data
   const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormData>({
@@ -264,18 +289,18 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
         emergencyPhoneNumber: 'emergency_contact_phone'
       };
 
-      // Department mapping
+      // Department mapping - use the correct department IDs from the database
       const departmentMapping: Record<string, string> = {
         'HR': 'HR',
         'IT': 'IT',
-        'Finance': 'FIN',
-        'Marketing': 'MKT',
-        'Operations': 'OPS',
-        'Sales': 'SAL',
-        'Engineering': 'ENG',
-        'Customer Support': 'CS',
-        'Legal': 'LEG',
-        'Administration': 'ADM'
+        'Finance': 'Finance',
+        'Marketing': 'Marketing',
+        'Operations': 'Operations',
+        'Sales': 'Sales',
+        'Engineering': 'Engineering',
+        'Customer Support': 'Customer Support',
+        'Legal': 'Legal',
+        'Administration': 'Administration'
       };
 
       // Split fullName into first_name and last_name
@@ -319,10 +344,42 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
       if (passbookFront) formData.append('passbook_front', passbookFront);
 
       await onSave(formData);
+      setShowTabErrorDots(false); // Clear error dots on successful save
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating employee:', error);
-      alert('Error updating employee. Please try again.');
+
+      // Enhanced error handling with specific field validation feedback
+      let errorMessage = 'Error updating employee. Please try again.';
+
+      if (error?.response?.data) {
+        const errorData = error.response.data;
+
+        // Check for validation errors from backend
+        if (errorData.message && errorData.message.includes('Validation failed')) {
+          errorMessage = errorData.message;
+          if (errorData.error_details) {
+            console.error('Backend validation details:', errorData.error_details);
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      }
+
+      // Show specific error message
+      alert(errorMessage);
+
+      // If it's a validation error, re-validate and show field errors
+      if (errorMessage.includes('Validation failed') || errorMessage.includes('required')) {
+        // Re-run validation to highlight fields
+        validateMandatoryFields(data);
+        setShowTabErrorDots(true); // Show error dots for backend validation errors too
+        // Switch to first tab with errors
+        const firstTabWithErrors = Object.keys(tabValidationErrors)[0];
+        if (firstTabWithErrors) {
+          setActiveTab(firstTabWithErrors);
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -404,7 +461,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
         <div className="border-b flex-shrink-0">
           <nav className="flex overflow-x-auto px-4 sm:px-6 scrollbar-hide">
             {tabs.map(tab => {
-              const hasErrors = hasAttemptedSave && tabValidationErrors[tab.id]?.length > 0;
+              const hasErrors = showTabErrorDots && tabValidationErrors[tab.id]?.length > 0;
               return (
                 <button
                   key={tab.id}
@@ -420,7 +477,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
                 >
                   {tab.label}
                   {hasErrors && (
-                    <span className="ml-1 inline-block w-2 h-2 bg-red-500 rounded-full" title={`Missing: ${tabValidationErrors[tab.id].join(', ')}`}></span>
+                    <span className="ml-1 inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" title={`Missing: ${tabValidationErrors[tab.id].join(', ')}`}></span>
                   )}
                 </button>
               );

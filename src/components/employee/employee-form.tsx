@@ -92,14 +92,14 @@ const EmployeeRegistrationForm: React.FC = () => {
       const departmentMapping: Record<string, string> = {
         'HR': 'HR',
         'IT': 'IT',
-        'Finance': 'FIN',
-        'Marketing': 'MKT',
-        'Operations': 'OPS',
-        'Sales': 'SAL',
-        'Engineering': 'ENG',
-        'Customer Support': 'CS',
-        'Legal': 'LEG',
-        'Administration': 'ADM'
+        'Finance': 'Finance',
+        'Marketing': 'Marketing',
+        'Operations': 'Operations',
+        'Sales': 'Sales',
+        'Engineering': 'Engineering',
+        'Customer Support': 'Customer Support',
+        'Legal': 'Legal',
+        'Administration': 'Administration'
       };
 
       // Split fullName into first_name and last_name
