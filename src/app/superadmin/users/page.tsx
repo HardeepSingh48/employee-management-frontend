@@ -40,7 +40,8 @@ import { Logo } from '@/components/layout/Logo';
 interface UserData {
     id: string;
     name: string;
-    email: string;
+    email?: string;
+    username?: string;
     role: string;
     site_id?: string;
     site?: {
@@ -123,6 +124,16 @@ export default function UsersPage() {
         const formData = new FormData(event.currentTarget);
         const newUser = Object.fromEntries(formData.entries());
 
+        // Validate that either username or email is provided
+        if (!newUser.username && !newUser.email) {
+            toast({
+                title: 'Error',
+                description: 'Either username or email is required.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         // Validate supervisor role has site_id
         if (newUser.role === 'supervisor' && !newUser.site_id) {
             toast({
@@ -179,6 +190,16 @@ export default function UsersPage() {
 
         const formData = new FormData(event.currentTarget);
         const userData = Object.fromEntries(formData.entries());
+
+        // Validate that either username or email is provided
+        if (!userData.username && !userData.email) {
+            toast({
+                title: 'Error',
+                description: 'Either username or email is required.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         // Validate supervisor role has site_id
         if (userData.role === 'supervisor' && !userData.site_id) {
@@ -256,8 +277,12 @@ export default function UsersPage() {
                                 <Input id="name" name="name" className="col-span-3" required />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="username" className="text-right">Username</Label>
+                                <Input id="username" name="username" className="col-span-3" placeholder="Optional" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="email" className="text-right">Email</Label>
-                                <Input id="email" name="email" type="email" className="col-span-3" required />
+                                <Input id="email" name="email" type="email" className="col-span-3" placeholder="Optional" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="password" className="text-right">Password</Label>
@@ -324,6 +349,16 @@ export default function UsersPage() {
                                 />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="edit-username" className="text-right">Username</Label>
+                                <Input
+                                    id="edit-username"
+                                    name="username"
+                                    className="col-span-3"
+                                    defaultValue={editingUser?.username || ''}
+                                    placeholder="Optional"
+                                />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="edit-email" className="text-right">Email</Label>
                                 <Input
                                     id="edit-email"
@@ -331,7 +366,7 @@ export default function UsersPage() {
                                     type="email"
                                     className="col-span-3"
                                     defaultValue={editingUser?.email || ''}
-                                    required
+                                    placeholder="Optional"
                                 />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
@@ -388,6 +423,7 @@ export default function UsersPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
+                            <TableHead>Username</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Role</TableHead>
                             <TableHead>Site</TableHead>
@@ -398,7 +434,8 @@ export default function UsersPage() {
                         {users.map((user: UserData) => (
                             <TableRow key={user.id}>
                                 <TableCell>{user.name}</TableCell>
-                                <TableCell>{user.email}</TableCell>
+                                <TableCell>{user.username || '-'}</TableCell>
+                                <TableCell>{user.email || '-'}</TableCell>
                                 <TableCell>
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                         user.role === 'admin'

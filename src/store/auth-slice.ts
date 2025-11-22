@@ -6,7 +6,8 @@ import api from '@/lib/api';
 export interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  username?: string;
   role: 'admin' |'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
   department?: string;
   profileImage?: string;
@@ -15,7 +16,7 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  email: string;
+  identifier: string;
   password: string;
 }
 

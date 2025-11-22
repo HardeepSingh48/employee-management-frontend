@@ -14,7 +14,7 @@ import { AppDispatch } from '@/store';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   
@@ -37,13 +37,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
+
+    if (!identifier || !password) {
       return;
     }
 
     try {
-      const result = await dispatch(loginUser({ email, password }));
+      const result = await dispatch(loginUser({ identifier, password }));
       
       if (loginUser.fulfilled.match(result)) {
         // Login successful - redirect based on role
@@ -96,15 +96,15 @@ export default function LoginPage() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="identifier">Username or Email</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="identifier"
+                    type="text"
+                    placeholder="Enter your username or email"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     className="pl-10"
                     required
                     disabled={isLoading}
@@ -146,7 +146,7 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading || !email || !password}
+                disabled={isLoading || !identifier || !password}
               >
                 {isLoading ? (
                   <>
