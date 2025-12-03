@@ -33,7 +33,7 @@ const adminItems = [
       { name: 'Attendance', icon: Users, path: '/attendance' },
       { name: 'Employees', icon: User, path: '/employees' },
       { name: 'ID Cards', icon: CreditCard, path: '/employees/id-cards' },
-      // { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
+      { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
       { name: 'Salary Calc', icon: Calculator, path: '/salary' },
       { name: 'Compliance', icon: Shield, path: '/compliance' },
       { name: 'Payroll', icon: Receipt, path: '/dashboard/payroll' },

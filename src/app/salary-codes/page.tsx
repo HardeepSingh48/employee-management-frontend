@@ -4,9 +4,13 @@ import SalaryCodeForm from '@/components/salary-code/salary-code-form';
 import SalaryCodeList from '@/components/salary-code/salary-code-list';
 import SalaryCodeBulkImport from '@/components/salary-code/salary-code-bulk-import';
 import { Logo } from '@/components/layout/Logo';
+import { useSelector } from 'react-redux';
+import { selectUser } from '@/store/auth-slice';
 
 export default function SalaryCodesPage() {
-  const [mode, setMode] = useState<'create' | 'list' | 'bulk'>('create');
+  const user = useSelector(selectUser);
+  const role = user?.role;
+  const [mode, setMode] = useState<'create' | 'list' | 'bulk'>(role === 'admin' ? 'list' : 'create');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -18,6 +22,10 @@ export default function SalaryCodesPage() {
             </div>
 
             <div className="flex space-x-4">
+
+              {
+                role === 'superadmin' && (
+
               <button
                 onClick={() => setMode('create')}
                 className={`px-4 py-2 rounded-lg font-medium ${
@@ -28,6 +36,8 @@ export default function SalaryCodesPage() {
               >
                 Create Salary Code
               </button>
+                )
+              }
               <button
                 onClick={() => setMode('list')}
                 className={`px-4 py-2 rounded-lg font-medium ${
@@ -38,6 +48,9 @@ export default function SalaryCodesPage() {
               >
                 View Salary Codes
               </button>
+
+              {role === 'superadmin' && (
+
               <button
                 onClick={() => setMode('bulk')}
                 className={`px-4 py-2 rounded-lg font-medium ${
@@ -48,14 +61,16 @@ export default function SalaryCodesPage() {
               >
                 Bulk Import
               </button>
+
+              )}
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          {mode === 'create' && <SalaryCodeForm />}
+          {mode === 'create' && role === 'superadmin' && <SalaryCodeForm />}
           {mode === 'list' && <SalaryCodeList />}
-          {mode === 'bulk' && <SalaryCodeBulkImport />}
+          {mode === 'bulk'&& role === 'superadmin' && <SalaryCodeBulkImport />}
         </div>
     </div>
   );

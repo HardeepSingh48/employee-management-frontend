@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import {useSelector} from 'react-redux';
+import {selectUser} from '@/store/auth-slice';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 import { EditModal } from '@/components/ui/CustomModal';
 import * as XLSX from 'xlsx';
@@ -7,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 
 const SalaryCodeList: React.FC = () => {
+  const user = useSelector(selectUser)
+  const role = user?.role
   const [salaryCodes, setSalaryCodes] = useState<SalaryCode[]>([]);
   const [filteredCodes, setFilteredCodes] = useState<SalaryCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +19,9 @@ const SalaryCodeList: React.FC = () => {
   const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '', sspl_wages: undefined as number | undefined });
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+
+  //only allow  editing for superadmin
+  const canEdit = role === 'superadmin';
 
   useEffect(() => {
     const fetchSalaryCodes = async () => {
@@ -232,7 +239,9 @@ const SalaryCodeList: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {canEdit && (
                       <button onClick={() => openEdit(code)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm">Edit</button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -241,6 +250,9 @@ const SalaryCodeList: React.FC = () => {
           </div>
         )}
       </div>
+{
+  canEdit && (
+
 
       <EditModal
         isOpen={!!editing}
@@ -258,6 +270,7 @@ const SalaryCodeList: React.FC = () => {
         onSave={saveEdit}
         saveLabel="Save Changes"
       />
+  )}
     </div>
   );
 };
