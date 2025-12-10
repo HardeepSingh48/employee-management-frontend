@@ -1,19 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Prevent "fs" from being bundled in client-side code
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    return config;
+  turbopack: {
+    // Empty config is fine - Turbopack handles most things automatically
   },
-    eslint: {
-    ignoreDuringBuilds: true, // ✅ lets build succeed even if ESLint has errors
-  },
+  // Remove eslint config - it's deprecated in next.config.ts
+  // Use next lint command or .eslintrc instead
 };
 
 export default nextConfig;
