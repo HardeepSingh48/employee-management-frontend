@@ -171,16 +171,6 @@ export const attendanceService = {
     return new Date().toISOString().split('T')[0];
   },
 
-  // Bulk upload attendance Excel file
-  bulkUploadAttendanceExcel: async (formData: FormData): Promise<any> => {
-    const response = await api.post('/attendance/bulk-mark-excel', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
   // Download attendance template
   downloadAttendanceTemplate: async (params: {
     month: number;
@@ -194,7 +184,8 @@ export const attendanceService = {
       queryParams.append('site_id', params.site_id);
     }
 
-    const response = await api.get(`/attendance/template?${queryParams.toString()}`, {
+    // Ensure /api prefix is included in the path
+    const response = await api.get(`/api/attendance/template?${queryParams.toString()}`, {
       responseType: 'blob',
     });
 
@@ -207,6 +198,16 @@ export const attendanceService = {
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
+  },
+
+  // Bulk upload attendance Excel file
+  bulkUploadAttendanceExcel: async (formData: FormData): Promise<any> => {
+    const response = await api.post('/api/attendance/bulk-mark-excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   },
 
   // Helper function to get current month/year
