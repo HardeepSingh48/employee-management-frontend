@@ -482,7 +482,7 @@ export default function BulkAttendance() {
 
       // For "all sites", we don't pass site_id parameter to get all employees
       // Also handle Sunday logic for bulk uploads
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/api/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
