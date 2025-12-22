@@ -35,9 +35,9 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
     try {
       const token = localStorage.getItem('token');
       const today = new Date().toISOString().split('T')[0];
-      
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/attendance/history?page=1&per_page=1`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/attendance/history?page=1&per_page=1`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -61,7 +61,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
   const setCurrentTime = () => {
     const now = new Date();
     const timeString = now.toTimeString().slice(0, 5); // HH:MM format
-    
+
     if (!formData.check_in_time) {
       setFormData(prev => ({ ...prev, check_in_time: timeString }));
     }
@@ -82,7 +82,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/attendance/mark`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/attendance/mark`,
         {
           method: 'POST',
           headers: {
@@ -100,7 +100,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
           title: 'Success',
           description: 'Attendance marked successfully',
         });
-        
+
         // Reset form and refresh data
         setFormData({
           attendance_status: 'Present',
@@ -109,7 +109,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
           overtime_hours: '0',
           remarks: ''
         });
-        
+
         checkTodayAttendance();
         onAttendanceMarked?.();
       } else {
@@ -160,7 +160,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
               {todayAttendance.attendance_status}
             </Badge>
           </div>
-          
+
           {todayAttendance.check_in_time && (
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Check In:</span>
@@ -172,7 +172,7 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
               </span>
             </div>
           )}
-          
+
           {todayAttendance.check_out_time && (
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Check Out:</span>
@@ -184,14 +184,14 @@ export default function MarkAttendanceCard({ onAttendanceMarked }: MarkAttendanc
               </span>
             </div>
           )}
-          
+
           {todayAttendance.total_hours_worked && (
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Hours Worked:</span>
               <span className="text-sm">{todayAttendance.total_hours_worked} hours</span>
             </div>
           )}
-          
+
           {todayAttendance.remarks && (
             <div>
               <span className="text-sm font-medium">Remarks:</span>

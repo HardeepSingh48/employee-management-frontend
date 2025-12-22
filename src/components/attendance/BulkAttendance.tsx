@@ -17,7 +17,7 @@ interface ValidationError {
   employee_errors: string[];
   data_errors: string[];
   warnings: string[];
-  empty_employee_ids?: Array<{row: number; error: string}>;
+  empty_employee_ids?: Array<{ row: number; error: string }>;
 }
 
 interface ValidationSummary {
@@ -65,8 +65,8 @@ const ValidationErrorDisplay = ({
 
   const { file_errors, structure_errors, employee_errors, data_errors, warnings, empty_employee_ids } = result.validation_errors;
   const hasErrors = file_errors.length > 0 || structure_errors.length > 0 ||
-                    employee_errors.length > 0 || data_errors.length > 0 ||
-                    (empty_employee_ids && empty_employee_ids.length > 0);
+    employee_errors.length > 0 || data_errors.length > 0 ||
+    (empty_employee_ids && empty_employee_ids.length > 0);
 
   return (
     <div className="space-y-4">
@@ -482,7 +482,7 @@ export default function BulkAttendance() {
 
       // For "all sites", we don't pass site_id parameter to get all employees
       // Also handle Sunday logic for bulk uploads
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/api/attendance/template?${params.toString()}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/attendance/template?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -503,7 +503,7 @@ export default function BulkAttendance() {
       const link = document.createElement('a');
       link.href = url;
       const monthNum = parseInt(month, 10);
-      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       const monthName = monthNum >= 1 && monthNum <= 12 ? monthNames[monthNum - 1] : 'Month';
       const safeSite = selectedSiteId === 'all' ? 'all_sites' : (selectedSite?.site_name || 'site').replace(/[^a-zA-Z0-9_-]+/g, '_');
       link.download = `attendance_template_${safeSite}_${monthName}_${year}.xlsx`;
@@ -645,12 +645,12 @@ export default function BulkAttendance() {
 
               {/* Submit Button */}
               <div className="space-y-2">
-              {loading ? (
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
-                  Processing Excel file... This may take a few minutes for large files.
-                </div>
-              ) : (
+                {loading ? (
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                    Processing Excel file... This may take a few minutes for large files.
+                  </div>
+                ) : (
                   <Button
                     type="submit"
                     className="w-full"
@@ -669,7 +669,7 @@ export default function BulkAttendance() {
                     )}
                   </Button>
                 )}
-                  {/* Add this button temporarily in your form for debugging
+                {/* Add this button temporarily in your form for debugging
                 <Button
                   type="button"
                   variant="secondary"
@@ -692,17 +692,17 @@ export default function BulkAttendance() {
                   Debug Columns
                 </Button> */}
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={downloadTemplate}
-                    disabled={loading || !month || !year}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Template
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={downloadTemplate}
+                  disabled={loading || !month || !year}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Template
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>

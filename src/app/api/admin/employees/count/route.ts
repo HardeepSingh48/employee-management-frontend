@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Fetch from backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    // Normalize backend URL to include '/api' exactly once
+    const rawBackendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backendUrl = rawBackendUrl.endsWith('/api') ? rawBackendUrl : `${rawBackendUrl}/api`;
     const response = await fetch(`${backendUrl}/employees/all`, {
       headers: {
         'Content-Type': 'application/json',

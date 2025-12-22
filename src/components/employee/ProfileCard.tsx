@@ -56,7 +56,7 @@ export default function ProfileCard() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/profile`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/profile`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -170,7 +170,7 @@ export default function ProfileCard() {
               <p className="text-sm">{profile.employee_info.blood_group || 'Not specified'}</p>
             </div>
           </div>
-          
+
           {profile.employee_info.address && (
             <div>
               <label className="text-sm font-medium text-gray-600">Address</label>

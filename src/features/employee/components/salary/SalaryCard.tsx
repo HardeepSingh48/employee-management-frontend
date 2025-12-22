@@ -50,7 +50,7 @@ export default function SalaryCard() {
       });
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/salary/current?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/salary/current?${params}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

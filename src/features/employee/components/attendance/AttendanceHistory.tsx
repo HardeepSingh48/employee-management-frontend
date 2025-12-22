@@ -59,7 +59,7 @@ export default function AttendanceHistory() {
       });
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/employee/attendance/history?${params}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/employee/attendance/history?${params}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
