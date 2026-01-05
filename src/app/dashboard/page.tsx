@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
-    if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'superadmin')) {
+    if (!isAuthenticated || !['admin', 'admin1', 'admin2', 'superadmin'].includes(user?.role || '')) {
       return;
     }
 
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+    if (!['admin', 'admin1', 'admin2', 'superadmin'].includes(user?.role || '')) {
       router.push('/employee/dashboard');
       return;
     }
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, [isAuthenticated, user, router, fetchDashboardData]);
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'superadmin')) {
+  if (!isAuthenticated || !['admin', 'admin1', 'admin2', 'superadmin'].includes(user?.role || '')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

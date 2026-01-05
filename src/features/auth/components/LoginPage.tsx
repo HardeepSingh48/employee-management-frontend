@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { isLoading, error, isAuthenticated, user } = useSelector(selectAuth);
@@ -25,7 +25,7 @@ export default function LoginPage() {
   useEffect(() => {
     // This block handles redirection for already authenticated users
     if (isAuthenticated && user) {
-      if (user.role === 'admin' || user.role === 'superadmin') {
+      if (user.role === 'admin' || user.role === 'admin1' || user.role === 'admin2' || user.role === 'superadmin') {
         router.push('/dashboard');
       } else if (user.role === 'supervisor') {
         router.push('/supervisor/dashboard');
@@ -44,11 +44,11 @@ export default function LoginPage() {
 
     try {
       const result = await dispatch(loginUser({ identifier, password }));
-      
+
       if (loginUser.fulfilled.match(result)) {
         // Login successful - redirect based on role
         const userRole = result.payload.user.role;
-        if (userRole === 'admin' || userRole === 'superadmin') {
+        if (userRole === 'admin' || userRole === 'admin1' || userRole === 'admin2' || userRole === 'superadmin') {
           router.push('/dashboard');
         } else if (userRole === 'supervisor') {
           router.push('/supervisor/dashboard');
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="identifier">Username or Email</Label>
@@ -111,7 +111,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -143,9 +143,9 @@ export default function LoginPage() {
                 </Label>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isLoading || !identifier || !password}
               >
                 {isLoading ? (
@@ -162,10 +162,10 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <button 
+                <button
                   type="button"
                   className="text-blue-600 hover:text-blue-500 font-medium"
-                  onClick={() => {/* Handle registration or contact admin */}}
+                  onClick={() => {/* Handle registration or contact admin */ }}
                 >
                   Contact your administrator
                 </button>

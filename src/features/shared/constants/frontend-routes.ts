@@ -27,7 +27,7 @@ export const FRONTEND_ROUTES = {
   ADMIN: {
     // Dashboard
     DASHBOARD: '/dashboard',
-    
+
     // Employee Management
     EMPLOYEES: {
       BASE: '/employees',
@@ -144,7 +144,7 @@ export const FRONTEND_ROUTES = {
   EMPLOYEE: {
     // Dashboard
     DASHBOARD: '/employee/dashboard',
-    
+
     // Profile Management
     PROFILE: {
       BASE: '/employee/profile',
@@ -251,21 +251,21 @@ export const ROUTE_GROUPS = {
 export const RouteHelpers = {
   // Check if route is public
   isPublicRoute: (pathname: string): boolean => {
-  return (ROUTE_GROUPS.PUBLIC as string[]).includes(pathname);
-},
+    return (ROUTE_GROUPS.PUBLIC as string[]).includes(pathname);
+  },
 
   // Check if route is admin route
   isAdminRoute: (pathname: string): boolean => {
-    return pathname.startsWith('/dashboard') || 
-           pathname.startsWith('/employees') || 
-           pathname.startsWith('/departments') ||
-           pathname.startsWith('/attendance') || 
-           pathname.startsWith('/salary-codes') || 
-           pathname.startsWith('/salary') ||
-           pathname.startsWith('/leave') ||
-           pathname.startsWith('/reports') ||
-           pathname.startsWith('/settings') ||
-           pathname.startsWith('/users');
+    return pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/employees') ||
+      pathname.startsWith('/departments') ||
+      pathname.startsWith('/attendance') ||
+      pathname.startsWith('/salary-codes') ||
+      pathname.startsWith('/salary') ||
+      pathname.startsWith('/leave') ||
+      pathname.startsWith('/reports') ||
+      pathname.startsWith('/settings') ||
+      pathname.startsWith('/users');
   },
 
   // Check if route is employee route
@@ -273,10 +273,11 @@ export const RouteHelpers = {
     return pathname.startsWith('/employee');
   },
 
-  // Get default route for user role
   getDefaultRouteForRole: (role: string): string => {
     switch (role) {
       case 'admin':
+      case 'admin1':
+      case 'admin2':
       case 'superadmin':
       case 'hr':
       case 'manager':
@@ -294,21 +295,20 @@ export const RouteHelpers = {
   getBreadcrumb: (pathname: string): string[] => {
     const segments = pathname.split('/').filter(Boolean);
     const breadcrumb: string[] = [];
-    
+
     segments.forEach((segment, index) => {
       const path = '/' + segments.slice(0, index + 1).join('/');
       breadcrumb.push(path);
     });
-    
+
     return breadcrumb;
   },
 
-  // Check if user has access to route
   hasAccessToRoute: (pathname: string, userRole: string): boolean => {
     if (RouteHelpers.isPublicRoute(pathname)) return true;
 
     if (RouteHelpers.isAdminRoute(pathname)) {
-      return ['admin', 'superadmin', 'hr', 'manager'].includes(userRole);
+      return ['admin', 'admin1', 'admin2', 'superadmin', 'hr', 'manager', 'supervisor'].includes(userRole);
     }
 
     if (RouteHelpers.isEmployeeRoute(pathname)) {

@@ -295,12 +295,14 @@ export default function UsersPage() {
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="admin">Admin</SelectItem>
+                                        <SelectItem value="admin">Admin (Legacy)</SelectItem>
+                                        <SelectItem value="admin1">Admin1 (Full Access)</SelectItem>
+                                        <SelectItem value="admin2">Admin2 (Restricted Salary Codes)</SelectItem>
                                         <SelectItem value="supervisor">Supervisor</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                            
+
                             {/* Conditional Site Selection for Supervisor */}
                             {selectedRole === 'supervisor' && (
                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -386,12 +388,14 @@ export default function UsersPage() {
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="admin">Admin</SelectItem>
+                                        <SelectItem value="admin">Admin (Legacy)</SelectItem>
+                                        <SelectItem value="admin1">Admin1 (Full Access)</SelectItem>
+                                        <SelectItem value="admin2">Admin2 (Restricted Salary Codes)</SelectItem>
                                         <SelectItem value="supervisor">Supervisor</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-                            
+
                             {/* Conditional Site Selection for Supervisor */}
                             {editSelectedRole === 'supervisor' && (
                                 <div className="grid grid-cols-4 items-center gap-4">
@@ -437,11 +441,10 @@ export default function UsersPage() {
                                 <TableCell>{user.username || '-'}</TableCell>
                                 <TableCell>{user.email || '-'}</TableCell>
                                 <TableCell>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        user.role === 'admin'
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin' || user.role === 'admin1' || user.role === 'admin2'
                                             ? 'bg-blue-100 text-blue-800'
                                             : 'bg-green-100 text-green-800'
-                                    }`}>
+                                        }`}>
                                         {user.role}
                                     </span>
                                 </TableCell>

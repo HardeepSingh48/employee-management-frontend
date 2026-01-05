@@ -8,7 +8,7 @@ export interface User {
   name: string;
   email?: string;
   username?: string;
-  role: 'admin' |'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
+  role: 'admin' | 'admin1' | 'admin2' | 'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
   department?: string;
   profileImage?: string;
   permissions: string[];
@@ -56,12 +56,12 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await api.post('/auth/login', credentials);
       const { user, token } = response.data.data;
-      
+
       // Store token in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('lastLoginTime', new Date().toISOString());
-      
+
       return { user, token };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed';
@@ -76,11 +76,11 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await api.post('/auth/register', userData);
       const { user, token } = response.data.data;
-      
+
       // Store token in localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user, token };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Registration failed';
@@ -94,19 +94,19 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await api.post('/auth/logout');
-      
+
       // Clear localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('lastLoginTime');
-      
+
       return null;
     } catch (error: any) {
       // Even if logout fails on server, clear local storage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('lastLoginTime');
-      
+
       const message = error.response?.data?.message || 'Logout failed';
       return rejectWithValue(message);
     }
@@ -119,9 +119,9 @@ export const refreshToken = createAsyncThunk(
     try {
       const response = await api.post('/auth/refresh');
       const { token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
-      
+
       return { token };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Token refresh failed';
@@ -136,9 +136,9 @@ export const getCurrentUser = createAsyncThunk(
     try {
       const response = await api.get('/auth/me');
       const user = response.data.data;
-      
+
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to get user info';
@@ -153,9 +153,9 @@ export const updateProfile = createAsyncThunk(
     try {
       const response = await api.put('/auth/profile', profileData);
       const user = response.data.data;
-      
+
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Profile update failed';
@@ -175,7 +175,7 @@ export const changePassword = createAsyncThunk(
         currentPassword,
         newPassword,
       });
-      
+
       return { success: true };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Password change failed';
@@ -192,18 +192,18 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    
+
     resetLoginAttempts: (state) => {
       state.loginAttempts = 0;
     },
-    
+
     initializeAuth: (state) => {
       // Initialize auth from localStorage on app startup
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token');
         const userString = localStorage.getItem('user');
         const lastLoginTime = localStorage.getItem('lastLoginTime');
-        
+
         if (token && userString) {
           try {
             const user = JSON.parse(userString);
@@ -220,7 +220,7 @@ const authSlice = createSlice({
         }
       }
     },
-    
+
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
@@ -228,14 +228,14 @@ const authSlice = createSlice({
       state.error = null;
       state.loginAttempts = 0;
       state.lastLoginTime = null;
-      
+
       // Clear localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('lastLoginTime');
     },
   },
-  
+
   extraReducers: (builder) => {
     // Login User
     builder
@@ -321,7 +321,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.error = action.payload as string;
-        
+
         // Clear localStorage on refresh failure
         localStorage.removeItem('token');
         localStorage.removeItem('user');

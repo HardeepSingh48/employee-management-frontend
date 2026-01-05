@@ -56,12 +56,12 @@ export const ROUTES = {
 
 // Helper function to check if route is admin route
 export const isAdminRoute = (pathname: string): boolean => {
-  return pathname.startsWith('/dashboard') || 
-         pathname.startsWith('/employees') || 
-         pathname.startsWith('/attendance') || 
-         pathname.startsWith('/salary-codes') || 
-         pathname.startsWith('/salary') ||
-         pathname.startsWith('/reports');
+  return pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/employees') ||
+    pathname.startsWith('/attendance') ||
+    pathname.startsWith('/salary-codes') ||
+    pathname.startsWith('/salary') ||
+    pathname.startsWith('/reports');
 };
 
 // Helper function to check if route is employee route
@@ -76,11 +76,15 @@ export const isPublicRoute = (pathname: string): boolean => {
 };
 
 
-// Helper function to get redirect route based on user role
 export const getDefaultRouteForRole = (role: string): string => {
   switch (role) {
     case 'admin':
+    case 'admin1':
+    case 'admin2':
+    case 'superadmin':
       return ROUTES.ADMIN.DASHBOARD;
+    case 'supervisor':
+      return ROUTES.ADMIN.DASHBOARD; // Supervisors also get admin dashboard
     case 'employee':
       return ROUTES.EMPLOYEE.DASHBOARD;
     default:

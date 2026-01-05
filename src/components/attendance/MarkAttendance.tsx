@@ -98,9 +98,9 @@ export default function MarkAttendance() {
     if (user?.role !== 'employee' && employees.length > 0) {
       const filteredEmployees = selectedSiteId
         ? employees.filter((emp: any) => {
-            const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
-            return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
-          })
+          const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+          return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+        })
         : employees;
 
       const bulkData = filteredEmployees.map((emp: Employee) => {
@@ -123,7 +123,7 @@ export default function MarkAttendance() {
     const today = new Date();
     const userRole = user?.role;
 
-    if (userRole === 'admin') {
+    if (['admin', 'admin1', 'admin2', 'superadmin'].includes(userRole || '')) {
       // Admin: no restrictions
       return {
         min: undefined,
@@ -166,7 +166,7 @@ export default function MarkAttendance() {
       if (user?.role === 'supervisor') {
         // Supervisors get their site employees
         data = await attendanceService.getSiteEmployees();
-      } else if (user?.role === 'admin') {
+      } else if (['admin', 'admin1', 'admin2', 'superadmin'].includes(user?.role || '')) {
         // Admins get all employees
         data = allEmployees;
       } else if (user?.role === 'employee') {
@@ -289,22 +289,22 @@ export default function MarkAttendance() {
         description: `Successfully marked attendance for ${result.successful_count} out of ${result.total_count} employees`,
       });
 
-             // Reset bulk attendance to Present for filtered employees
-             const filteredEmployees = selectedSiteId
-               ? employees.filter((emp: any) => {
-                   const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
-                   return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
-                 })
-               : employees;
-       
-             const isSunday = new Date(bulkDate).getDay() === 0; // 0 = Sunday
-             const resetBulkData = filteredEmployees.map((emp: Employee) => ({
-               employee_id: emp.employee_id,
-               attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
-               attendance_date: bulkDate,
-               overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
-             }));
-             setBulkAttendance(resetBulkData);
+      // Reset bulk attendance to Present for filtered employees
+      const filteredEmployees = selectedSiteId
+        ? employees.filter((emp: any) => {
+          const siteSalaryCodes = getSalaryCodesForSite(selectedSiteId);
+          return siteSalaryCodes.includes(emp.salary_code || emp.salaryCode);
+        })
+        : employees;
+
+      const isSunday = new Date(bulkDate).getDay() === 0; // 0 = Sunday
+      const resetBulkData = filteredEmployees.map((emp: Employee) => ({
+        employee_id: emp.employee_id,
+        attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+        attendance_date: bulkDate,
+        overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
+      }));
+      setBulkAttendance(resetBulkData);
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -317,9 +317,9 @@ export default function MarkAttendance() {
   };
 
   const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'OFF') => {
-    setBulkAttendance(prev => 
-      prev.map(record => 
-        record.employee_id === employeeId 
+    setBulkAttendance(prev =>
+      prev.map(record =>
+        record.employee_id === employeeId
           ? { ...record, attendance_status: status }
           : record
       )
@@ -327,9 +327,9 @@ export default function MarkAttendance() {
   };
 
   const updateBulkOvertime = (employeeId: string, overtimeShifts: number) => {
-    setBulkAttendance(prev => 
-      prev.map(record => 
-        record.employee_id === employeeId 
+    setBulkAttendance(prev =>
+      prev.map(record =>
+        record.employee_id === employeeId
           ? { ...record, overtime_shifts: overtimeShifts }
           : record
       )
@@ -337,13 +337,13 @@ export default function MarkAttendance() {
   };
 
   const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'OFF') => {
-    setBulkAttendance(prev => 
+    setBulkAttendance(prev =>
       prev.map(record => ({ ...record, attendance_status: status }))
     );
   };
 
   const setAllBulkOvertime = (overtimeShifts: number) => {
-    setBulkAttendance(prev => 
+    setBulkAttendance(prev =>
       prev.map(record => ({ ...record, overtime_shifts: overtimeShifts }))
     );
   };
@@ -486,30 +486,30 @@ export default function MarkAttendance() {
                     </select>
                   </div>
 
-                                     <div>
-                     <Label htmlFor="overtime">Overtime (Shifts)</Label>
-                     <Input
-                       id="overtime"
-                       type="number"
-                       min="0"
-                       step="0.5"
-                       max="3"
-                       value={overtimeShifts}
-                       onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
-                       placeholder="0.0"
-                     />
-                     <p className="text-xs text-gray-500 mt-1">1 shift = 8 hours; 0.5 = 4 hours</p>
-                   </div>
+                  <div>
+                    <Label htmlFor="overtime">Overtime (Shifts)</Label>
+                    <Input
+                      id="overtime"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      max="3"
+                      value={overtimeShifts}
+                      onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
+                      placeholder="0.0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">1 shift = 8 hours; 0.5 = 4 hours</p>
+                  </div>
 
-                   <div>
-                     <Label htmlFor="remarks">Remarks (Optional)</Label>
-                     <Input
-                       id="remarks"
-                       value={remarks}
-                       onChange={(e) => setRemarks(e.target.value)}
-                       placeholder="Add any remarks..."
-                     />
-                   </div>
+                  <div>
+                    <Label htmlFor="remarks">Remarks (Optional)</Label>
+                    <Input
+                      id="remarks"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder="Add any remarks..."
+                    />
+                  </div>
                 </div>
 
                 <Button type="submit" disabled={submitting} className="w-full">
@@ -522,129 +522,129 @@ export default function MarkAttendance() {
 
         {user?.role !== 'employee' && (
           <TabsContent value="bulk" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bulk Mark Attendance for Today</CardTitle>
-              <p className="text-sm text-gray-600">
-                Mark attendance for all employees at once. Default status is "Present".
-              </p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleBulkSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="bulk-site">Site</Label>
-                    <select
-                      id="bulk-site"
-                      value={selectedSiteId}
-                      onChange={(e) => setSelectedSiteId(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            <Card>
+              <CardHeader>
+                <CardTitle>Bulk Mark Attendance for Today</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Mark attendance for all employees at once. Default status is "Present".
+                </p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleBulkSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="bulk-site">Site</Label>
+                      <select
+                        id="bulk-site"
+                        value={selectedSiteId}
+                        onChange={(e) => setSelectedSiteId(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">All Sites</option>
+                        {sites
+                          .filter(site => {
+                            if (user?.role === 'supervisor') {
+                              // Supervisors can only see their own site
+                              return site.site_id === (user as any).site_id;
+                            }
+                            return true; // Admins can see all sites
+                          })
+                          .map((site) => (
+                            <option key={site.site_id} value={site.site_id}>
+                              {site.site_name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="bulk-date">Date</Label>
+                      <Input
+                        id="bulk-date"
+                        type="date"
+                        value={bulkDate}
+                        onChange={(e) => setBulkDate(e.target.value)}
+                        min={dateRestrictions.min}
+                        max={dateRestrictions.max}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAllBulkAttendance('Present')}
+                      className="text-green-600"
                     >
-                      <option value="">All Sites</option>
-                      {sites
-                        .filter(site => {
-                          if (user?.role === 'supervisor') {
-                            // Supervisors can only see their own site
-                            return site.site_id === (user as any).site_id;
-                          }
-                          return true; // Admins can see all sites
-                        })
-                        .map((site) => (
-                          <option key={site.site_id} value={site.site_id}>
-                            {site.site_name}
-                          </option>
-                        ))}
-                    </select>
+                      All Present
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAllBulkAttendance('Absent')}
+                      className="text-red-600"
+                    >
+                      All Absent
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAllBulkOvertime(0)}
+                      className="text-blue-600"
+                    >
+                      Clear OT
+                    </Button>
                   </div>
-                  <div>
-                    <Label htmlFor="bulk-date">Date</Label>
-                    <Input
-                      id="bulk-date"
-                      type="date"
-                      value={bulkDate}
-                      onChange={(e) => setBulkDate(e.target.value)}
-                      min={dateRestrictions.min}
-                      max={dateRestrictions.max}
-                      required
-                    />
-                  </div>
-               </div>
-               <div className="flex space-x-2">
-                     <Button
-                       type="button"
-                       variant="outline"
-                       onClick={() => setAllBulkAttendance('Present')}
-                       className="text-green-600"
-                     >
-                       All Present
-                     </Button>
-                     <Button
-                       type="button"
-                       variant="outline"
-                       onClick={() => setAllBulkAttendance('Absent')}
-                       className="text-red-600"
-                     >
-                       All Absent
-                     </Button>
-                     <Button
-                       type="button"
-                       variant="outline"
-                       onClick={() => setAllBulkOvertime(0)}
-                       className="text-blue-600"
-                     >
-                       Clear OT
-                     </Button>
-                   </div>
 
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-3">Employee Attendance</h4>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {bulkAttendance.map((record) => {
-                      const employee = employees.find(emp => emp.employee_id === record.employee_id);
-                      return (
-                        <div key={record.employee_id} className="flex items-center justify-between p-2 border rounded">
-                          <div className="flex items-center space-x-3">
-                            {getStatusIcon(record.attendance_status)}
-                            <div>
-                              <p className="font-medium">
-                                {employee?.employee_id} - {employee?.full_name || `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim() || 'Unknown'}
-                              </p>
-                              <p className="text-sm text-gray-600">{employee?.designation || 'No designation'}</p>
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-3">Employee Attendance</h4>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {bulkAttendance.map((record) => {
+                        const employee = employees.find(emp => emp.employee_id === record.employee_id);
+                        return (
+                          <div key={record.employee_id} className="flex items-center justify-between p-2 border rounded">
+                            <div className="flex items-center space-x-3">
+                              {getStatusIcon(record.attendance_status)}
+                              <div>
+                                <p className="font-medium">
+                                  {employee?.employee_id} - {employee?.full_name || `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim() || 'Unknown'}
+                                </p>
+                                <p className="text-sm text-gray-600">{employee?.designation || 'No designation'}</p>
+                              </div>
+                            </div>
+                            <div className="flex space-x-2">
+                              <select
+                                value={record.attendance_status}
+                                onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'OFF')}
+                                className="flex h-8 w-32 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                                <option value="OFF">OFF</option>
+                              </select>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                max="3"
+                                placeholder="OT"
+                                className="w-20"
+                                value={record.overtime_shifts || 0}
+                                onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
+                              />
                             </div>
                           </div>
-                                                     <div className="flex space-x-2">
-                             <select
-                               value={record.attendance_status}
-                               onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'OFF')}
-                               className="flex h-8 w-32 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                             >
-                               <option value="Present">Present</option>
-                               <option value="Absent">Absent</option>
-                               <option value="OFF">OFF</option>
-                             </select>
-                             <Input
-                               type="number"
-                               min="0"
-                               step="0.5"
-                               max="3"
-                               placeholder="OT"
-                               className="w-20"
-                               value={record.overtime_shifts || 0}
-                               onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
-                             />
-                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
 
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting ? 'Marking Bulk Attendance...' : `Mark Attendance for ${bulkAttendance.length} Employees`}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  <Button type="submit" disabled={submitting} className="w-full">
+                    {submitting ? 'Marking Bulk Attendance...' : `Mark Attendance for ${bulkAttendance.length} Employees`}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </TabsContent>
         )}
       </Tabs>

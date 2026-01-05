@@ -47,7 +47,7 @@ export default function EmployeeDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const router = useRouter();
@@ -58,7 +58,7 @@ export default function EmployeeDashboard() {
       return;
     }
 
-    if (user?.role === 'admin') {
+    if (['admin', 'admin1', 'admin2', 'superadmin'].includes(user?.role || '')) {
       router.push('/dashboard');
       return;
     }
@@ -120,7 +120,7 @@ export default function EmployeeDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar activeItem={activeTab} onItemClick={setActiveTab} userRole="employee" />
-      
+
       <div className="ml-16">
         {/* Header */}
         <div className="bg-white shadow-sm border-b px-6 py-4">

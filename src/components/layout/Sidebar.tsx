@@ -24,11 +24,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
   const user = useSelector(selectUser);
 
   // Role-based sidebar items
-const getSidebarItems = () => {
+  const getSidebarItems = () => {
     const role = userRole || user?.role;
 
     // Define the base items for an admin
-const adminItems = [
+    const adminItems = [
       { name: 'Home', icon: Home, path: '/dashboard' },
       { name: 'Attendance', icon: Users, path: '/attendance' },
       { name: 'Employees', icon: User, path: '/employees' },
@@ -41,7 +41,7 @@ const adminItems = [
       { name: 'Deductions', icon: DollarSign, path: '/dashboard/deductions' },
       // { name: 'Reports', icon: Briefcase, path: '/reports' },
     ];
-    
+
     switch (role) {
       case 'supervisor':
         return [
@@ -63,13 +63,22 @@ const adminItems = [
           { name: 'Salary', icon: DollarSign, path: '/employee/salary' }
         ];
       case 'superadmin':
-        // Return all admin items PLUS the new User Management item
+        // Return all admin items PLUS Sites, Salary Codes, and User Management
         return [
-            ...adminItems,
-            { name: 'Sites', icon: Calendar, path: '/sites' },
-            { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
-            { name: 'User Management', icon: Settings, path: '/superadmin/users' },
+          ...adminItems,
+          { name: 'Sites', icon: Calendar, path: '/sites' },
+          { name: 'Salary Codes', icon: DollarSign, path: '/salary-codes' },
+          { name: 'User Management', icon: Settings, path: '/superadmin/users' },
         ];
+      case 'admin1':
+        // Admin1: Full admin access including Sites
+        return [
+          ...adminItems,
+          { name: 'Sites', icon: Calendar, path: '/sites' },
+        ];
+      case 'admin2':
+        // Admin2: Admin access but NO Sites management
+        return adminItems;
       case 'admin':
       default:
         // Default case just returns the admin items
@@ -81,7 +90,7 @@ const adminItems = [
 
   const handleItemClick = (item: { name: string; path: string }) => {
     onItemClick(item.name);
-    
+
     // For supervisor, handle tab navigation within the dashboard
     if (userRole === 'supervisor' && item.path.includes('?tab=')) {
       const tab = item.path.split('?tab=')[1];
@@ -142,11 +151,10 @@ const adminItems = [
             return (
               <div
                 key={index}
-                className={`mx-2 flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer transition-colors ${
-                  activeItem === item.name
-                    ? 'bg-white bg-opacity-20 text-white'
-                    : 'text-blue-100 hover:bg-white hover:bg-opacity-10 hover:text-white'
-                }`}
+                className={`mx-2 flex items-center space-x-3 px-3 py-3 rounded-lg cursor-pointer transition-colors ${activeItem === item.name
+                  ? 'bg-white bg-opacity-20 text-white'
+                  : 'text-blue-100 hover:bg-white hover:bg-opacity-10 hover:text-white'
+                  }`}
                 onClick={() => handleItemClick(item)}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />

@@ -125,7 +125,7 @@ export interface LoadingState {
 }
 
 // User roles and permissions
-export type UserRole = 'admin' | 'hr' | 'manager' | 'employee';
+export type UserRole = 'admin' | 'admin1' | 'admin2' | 'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
 
 export interface Permission {
   resource: string;
