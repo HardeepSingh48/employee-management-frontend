@@ -87,5 +87,10 @@ export const salaryCodesService = {
   ): Promise<SalaryCode> => {
     const response = await api.put(`/salary-codes/${encodeURIComponent(salaryCode)}`, data);
     return response.data.data as SalaryCode;
+  },
+
+  // Delete a salary code by code
+  deleteSalaryCode: async (salaryCode: string): Promise<void> => {
+    await api.delete(`/salary-codes/${encodeURIComponent(salaryCode)}`);
   }
 };

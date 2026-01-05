@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {useSelector} from 'react-redux';
-import {selectUser} from '@/store/auth-slice';
+import { useSelector } from 'react-redux';
+import { selectUser } from '@/store/auth-slice';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
 import { EditModal } from '@/components/ui/CustomModal';
 import * as XLSX from 'xlsx';
@@ -18,10 +18,11 @@ const SalaryCodeList: React.FC = () => {
   const [editing, setEditing] = useState<SalaryCode | null>(null);
   const [editValues, setEditValues] = useState({ site_name: '', rank: '', state: '', base_wage: 0, skill_level: '', sspl_wages: undefined as number | undefined });
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingCode, setDeletingCode] = useState<SalaryCode | null>(null);
   const { toast } = useToast();
 
-  //only allow  editing for superadmin
-  const canEdit = role === 'superadmin';
+  // Only allow editing for superadmin and admin1 (admin2 is read-only)
+  const canEdit = role === 'superadmin' || role === 'admin1';
 
   useEffect(() => {
     const fetchSalaryCodes = async () => {
@@ -80,6 +81,30 @@ const SalaryCodeList: React.FC = () => {
       toast({
         title: 'Error',
         description: e?.response?.data?.message || 'Failed to update salary code',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const confirmDelete = (code: SalaryCode) => {
+    setDeletingCode(code);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingCode) return;
+    try {
+      await salaryCodesService.deleteSalaryCode(deletingCode.salary_code);
+      setSalaryCodes(prev => prev.filter(c => c.id !== deletingCode.id));
+      setDeletingCode(null);
+      toast({
+        title: 'Success',
+        description: `Salary code ${deletingCode.salary_code} deleted successfully`,
+      });
+    } catch (e: any) {
+      console.error('Failed to delete salary code', e);
+      toast({
+        title: 'Error',
+        description: e?.response?.data?.message || 'Failed to delete salary code',
         variant: 'destructive',
       });
     }
@@ -230,17 +255,29 @@ const SalaryCodeList: React.FC = () => {
                       {code.sspl_wages ? `₹${code.sspl_wages.toLocaleString()}` : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        code.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${code.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                        }`}>
                         {code.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       {canEdit && (
-                      <button onClick={() => openEdit(code)} className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm">Edit</button>
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => openEdit(code)}
+                            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(code)}
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -250,27 +287,55 @@ const SalaryCodeList: React.FC = () => {
           </div>
         )}
       </div>
-{
-  canEdit && (
+      {/* Edit Modal */}
+      {canEdit && (
+        <EditModal
+          isOpen={!!editing}
+          onClose={() => setEditing(null)}
+          title={editing ? `Edit Salary Code: ${editing.salary_code}` : 'Edit Salary Code'}
+          values={editValues}
+          fields={[
+            { name: 'site_name', label: 'Site Name', type: 'text' },
+            { name: 'rank', label: 'Rank', type: 'text' },
+            { name: 'state', label: 'State', type: 'text' },
+            { name: 'base_wage', label: 'Base Wage', type: 'number' },
+            { name: 'sspl_wages', label: 'SSPL Wages', type: 'number' },
+          ]}
+          onChange={setEditValues}
+          onSave={saveEdit}
+          saveLabel="Save Changes"
+        />
+      )}
 
-
-      <EditModal
-        isOpen={!!editing}
-        onClose={() => setEditing(null)}
-        title={editing ? `Edit Salary Code: ${editing.salary_code}` : 'Edit Salary Code'}
-        values={editValues}
-        fields={[
-          { name: 'site_name', label: 'Site Name', type: 'text' },
-          { name: 'rank', label: 'Rank', type: 'text' },
-          { name: 'state', label: 'State', type: 'text' },
-          { name: 'base_wage', label: 'Base Wage', type: 'number' },
-          { name: 'sspl_wages', label: 'SSPL Wages', type: 'number' },
-        ]}
-        onChange={setEditValues}
-        onSave={saveEdit}
-        saveLabel="Save Changes"
-      />
-  )}
+      {/* Delete Confirmation Modal */}
+      {deletingCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete salary code <strong>{deletingCode.salary_code}</strong>?
+              <br />
+              <span className="text-sm text-gray-500 mt-2 block">
+                Site: {deletingCode.site_name}, Rank: {deletingCode.rank}
+              </span>
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeletingCode(null)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
