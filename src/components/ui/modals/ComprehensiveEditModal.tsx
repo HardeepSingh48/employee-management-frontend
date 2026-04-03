@@ -396,7 +396,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
     contact: ['permanentAddress', 'mobileNumber', 'aadhaarNumber'],
     employment: ['dateOfJoining', 'employmentType', 'department', 'designation', 'workLocation'],
     financial: ['salaryCode', 'bankAccountNumber', 'bankName', 'ifscCode'],
-    education: ['highestQualification', 'yearOfPassing', 'experienceDuration', 'emergencyContactName', 'emergencyRelationship', 'emergencyPhoneNumber'],
+    education: ['highestQualification', 'experienceDuration', 'emergencyContactName', 'emergencyRelationship', 'emergencyPhoneNumber'],
     documents: [] // No mandatory fields for documents tab
   };
 
@@ -869,10 +869,10 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Year of Passing *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Year of Passing</label>
                       <input
                         type="number"
-                        {...register('yearOfPassing', { valueAsNumber: true })}
+                        {...register('yearOfPassing', { setValueAs: (v) => v === '' || v === undefined ? undefined : Number(v) })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         min="1900"
                         max={new Date().getFullYear()}

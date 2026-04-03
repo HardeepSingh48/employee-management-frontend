@@ -220,7 +220,11 @@ export default function EmployeeList() {
   };
 
   const handleDelete = async (employeeId: string) => {
-    if (!confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
+    if (!confirm(
+      'Are you sure you want to deactivate this employee?\n\n' +
+      'Their personal records, employment history, and any ongoing deductions will be preserved. ' +
+      'If they re-join the company, they can be re-registered and will retain the same Employee ID and continue their deductions.'
+    )) {
       return;
     }
 
@@ -239,7 +243,7 @@ export default function EmployeeList() {
         void loadEmployees(currentPage, searchTerm);
       }
 
-      alert('Employee deleted successfully!');
+      alert('Employee deactivated successfully! Their records and deductions have been preserved.');
     } catch (e: any) {
       console.error('Failed to delete employee', e);
       alert(`Error deleting employee: ${e.message || 'Unknown error'}`);
@@ -349,12 +353,15 @@ export default function EmployeeList() {
                       <button
                         onClick={() => handleDelete(emp.employee_id)}
                         disabled={deleteLoading === emp.employee_id}
-                        className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="px-3 py-2 rounded bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                       >
                         {deleteLoading === emp.employee_id ? (
                           <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <>
+                            <Trash2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">Deactivate</span>
+                          </>
                         )}
                       </button>
                     </div>

@@ -57,7 +57,7 @@ export interface Employee {
 
   // Education
   highestQualification: string;
-  yearOfPassing: number;
+  yearOfPassing?: number;
   additionalCertifications?: string;
   experienceDuration: number;
 
@@ -72,6 +72,9 @@ export interface Employee {
 
   // System fields
   status?: "active" | "inactive";
+  is_deleted?: boolean;
+  left_on?: string;       // last working date (ISO date string)
+  deleted_at?: string;    // timestamp when deactivated
   profileImage?: string;
   createdAt: string;
   updatedAt: string;
@@ -124,6 +127,8 @@ export const EMPLOYMENT_TYPES = [
 export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
 export const QUALIFICATIONS = [
+  "Non Metric",
+  "Metric",
   "High School",
   "Intermediate",
   "Diploma",

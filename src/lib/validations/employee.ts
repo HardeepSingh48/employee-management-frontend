@@ -61,7 +61,7 @@ export const employeeSchema = z.object({
 
   // Education
   highestQualification: z.string().min(1, "Highest qualification is required"),
-  yearOfPassing: z.number().min(1900).max(new Date().getFullYear()),
+  yearOfPassing: z.number().min(1900).max(new Date().getFullYear()).optional(),
   additionalCertifications: z.string().optional(),
   experienceDuration: z.number().min(0, "Experience duration must be positive"),
 

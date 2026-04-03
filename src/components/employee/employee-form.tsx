@@ -164,7 +164,13 @@ const EmployeeRegistrationForm: React.FC = () => {
       const result = await response.json();
 
       if (result.success) {
-        alert('Employee registered successfully!');
+        const msg = result.reactivated
+          ? `✅ Employee Re-activated!\n\n` +
+            `Employee ID: ${result.data.employee_id}\n` +
+            `${result.data.first_name} ${result.data.last_name} has been re-activated with their existing Employee ID.\n\n` +
+            `Any pending deductions will continue from where they left off.`
+          : `✅ Employee Registered Successfully!\n\nEmployee ID: ${result.data.employee_id}`;
+        alert(msg);
         reset();
         setChequeFile(null);
         setAadhaarFront(null);
@@ -592,10 +598,10 @@ const EmployeeRegistrationForm: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Year of Passing *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Year of Passing</label>
                 <input
                   type="number"
-                  {...register('yearOfPassing', { valueAsNumber: true })}
+                  {...register('yearOfPassing', { setValueAs: (v) => v === '' || v === undefined ? undefined : Number(v) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="YYYY"
                   min="1900"
