@@ -229,7 +229,8 @@ export const ExcelImport: React.FC = () => {
                 <h4 className="font-medium text-yellow-800 mb-2 text-sm">Important Notes:</h4>
                 <ul className="text-xs text-yellow-700 space-y-1">
                   <li>• <strong>Full Name</strong> required (will be split into first/last name)</li>
-                  <li>• <strong>Department:</strong> HR, IT, Finance, Marketing, Operations, Sales, Engineering, Customer Support, Legal, Administration</li>
+                  <li>• <strong>Aadhaar Number</strong> required (12-digit unique number)</li>
+                  <li>• <strong>Department:</strong> Case-insensitive (e.g., HR, IT, Operations...)</li>
                   <li>• <strong>Employment Type:</strong> Full-time, Part-time, Contract, Intern</li>
                   <li>• <strong>Boolean fields:</strong> TRUE or FALSE (PF, ESIC, Professional Tax)</li>
                   <li>• <strong>Dates:</strong> YYYY-MM-DD format (e.g., 2023-01-15)</li>
@@ -326,18 +327,28 @@ export const ExcelImport: React.FC = () => {
         {importResult && (
           <div className="mt-6">
             <div className={`p-4 rounded-lg ${
-              importResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+              importResult.success 
+                ? (importResult.summary && importResult.summary.failed > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200') 
+                : 'bg-red-50 border border-red-200'
             }`}>
               <div className="flex items-center mb-3">
                 {importResult.success ? (
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+                  importResult.summary && importResult.summary.failed > 0 ? (
+                    <AlertCircle className="w-6 h-6 text-amber-600 mr-2" />
+                  ) : (
+                    <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+                  )
                 ) : (
                   <XCircle className="w-6 h-6 text-red-600 mr-2" />
                 )}
                 <h4 className={`font-semibold text-lg ${
-                  importResult.success ? 'text-green-800' : 'text-red-800'
+                  importResult.success 
+                    ? (importResult.summary && importResult.summary.failed > 0 ? 'text-amber-800' : 'text-green-800') 
+                    : 'text-red-800'
                 }`}>
-                  Import {importResult.success ? 'Completed' : 'Failed'}
+                  {importResult.success 
+                    ? (importResult.summary && importResult.summary.failed > 0 ? 'Imported with Some Errors' : 'Import Completed Successfully') 
+                    : 'Import Failed'}
                 </h4>
               </div>
 
@@ -359,17 +370,31 @@ export const ExcelImport: React.FC = () => {
                   </div>
 
                   {importResult.summary.errors && importResult.summary.errors.length > 0 && (
-                    <div>
-                      <p className="text-sm text-red-700 font-medium mb-2">
-                        Errors (showing first {Math.min(importResult.summary.errors.length, 50)}):
+                    <div className="mt-4">
+                      <p className={`text-sm font-medium mb-2 ${importResult.success ? 'text-amber-700' : 'text-red-700'}`}>
+                        Validation Errors ({importResult.summary.errors.length} rows failed):
                       </p>
-                      <div className="max-h-60 overflow-y-auto space-y-1">
-                        {importResult.summary.errors.map((error, index) => (
-                          <div key={index} className="text-xs text-red-600 bg-red-100 p-2 rounded">
-                            <strong>Row {error.row}:</strong> {error.error}
-                          </div>
-                        ))}
+                      <div className="max-h-60 overflow-y-auto border rounded-md bg-white/50">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50/50">
+                            <tr>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Row</th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Details</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {importResult.summary.errors.map((error, index) => (
+                              <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-3 py-2 whitespace-nowrap text-xs font-semibold text-gray-700">#{error.row}</td>
+                                <td className="px-3 py-2 text-xs text-red-600 font-medium">{error.error}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
+                      <p className="text-[10px] text-gray-400 mt-2 italic">
+                        Note: Rows with errors were skipped. Please fix these in your Excel file and upload again.
+                      </p>
                     </div>
                   )}
                 </div>
