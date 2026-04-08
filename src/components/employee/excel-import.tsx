@@ -8,6 +8,7 @@ interface ImportResult {
   summary?: {
     total: number;
     inserted: number;
+    reactivated: number;
     failed: number;
     errors: Array<{
       row: number;
@@ -138,9 +139,9 @@ export const ExcelImport: React.FC = () => {
       setImportResult(result);
 
       if (result.success && result.summary) {
-        const { inserted, failed, total } = result.summary;
-        if (inserted > 0) {
-          alert(`✅ Successfully imported ${inserted} out of ${total} employees!${failed > 0 ? `\n⚠️ ${failed} failed` : ''}`);
+        const { inserted, reactivated, failed, total } = result.summary;
+        if (inserted > 0 || reactivated > 0) {
+          alert(`✅ Successfully processed ${inserted + reactivated} out of ${total} employees!\n- ${inserted} new imports\n- ${reactivated} reactivations${failed > 0 ? `\n⚠️ ${failed} failed` : ''}`);
         } else {
           alert(`❌ Import failed. Please check the error details.`);
         }
@@ -354,14 +355,18 @@ export const ExcelImport: React.FC = () => {
 
               {importResult.summary && (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white p-3 rounded">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-3 rounded border border-gray-100">
                       <p className="text-sm text-gray-600">Total</p>
                       <p className="text-2xl font-bold text-gray-800">{importResult.summary.total}</p>
                     </div>
                     <div className="bg-green-100 p-3 rounded">
                       <p className="text-sm text-green-700">Imported</p>
                       <p className="text-2xl font-bold text-green-800">{importResult.summary.inserted}</p>
+                    </div>
+                    <div className="bg-blue-100 p-3 rounded">
+                      <p className="text-sm text-blue-700">Reactivated</p>
+                      <p className="text-2xl font-bold text-blue-800">{importResult.summary.reactivated}</p>
                     </div>
                     <div className="bg-red-100 p-3 rounded">
                       <p className="text-sm text-red-700">Failed</p>
