@@ -161,6 +161,61 @@ export const ExcelImport: React.FC = () => {
     }
   };
 
+  const downloadErrorsList = () => {
+    if (!file || !importResult?.summary?.errors) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const workbook = XLSX.read(event.target?.result, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        // Convert to array of arrays
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        if (rawData.length === 0) return;
+
+        const headers = rawData[0] as string[];
+        const newHeaders = [...headers, 'Error Reason'];
+        const errorRowsData: any[][] = [newHeaders];
+
+        // Create a map of row to error message for quick lookup
+        const errorMap = new Map();
+        for (const error of importResult.summary!.errors) {
+          errorMap.set(error.row, error.error);
+        }
+
+        // Iterate through errors to build the new data
+        for (const error of importResult.summary!.errors) {
+          const rowIndex = error.row - 1; // Backend idx+2 = Excel Row; rawData index 1 = Excel Row 2.
+          if (rawData[rowIndex]) {
+            const rowData = [...(rawData[rowIndex] as any[])];
+            while (rowData.length < headers.length) {
+              rowData.push('');
+            }
+            rowData.push(error.error);
+            errorRowsData.push(rowData);
+          } else {
+            // If the error row is somehow beyond the parsed data, manufacture a row
+            const emptyRow = Array(headers.length).fill('');
+            emptyRow.push(error.error);
+            errorRowsData.push(emptyRow);
+          }
+        }
+
+        const newWs = XLSX.utils.aoa_to_sheet(errorRowsData);
+        const newWb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(newWb, newWs, 'Errored Rows');
+        XLSX.writeFile(newWb, `Failed_Imports_${fileName || 'employees'}.xlsx`);
+
+      } catch (error) {
+        console.error('Error creating error list:', error);
+        alert('Failed to generate the error file.');
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white rounded-xl shadow-sm p-8">
@@ -327,11 +382,10 @@ export const ExcelImport: React.FC = () => {
         {/* Import Results */}
         {importResult && (
           <div className="mt-6">
-            <div className={`p-4 rounded-lg ${
-              importResult.success 
-                ? (importResult.summary && importResult.summary.failed > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200') 
+            <div className={`p-4 rounded-lg ${importResult.success
+                ? (importResult.summary && importResult.summary.failed > 0 ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200')
                 : 'bg-red-50 border border-red-200'
-            }`}>
+              }`}>
               <div className="flex items-center mb-3">
                 {importResult.success ? (
                   importResult.summary && importResult.summary.failed > 0 ? (
@@ -342,13 +396,12 @@ export const ExcelImport: React.FC = () => {
                 ) : (
                   <XCircle className="w-6 h-6 text-red-600 mr-2" />
                 )}
-                <h4 className={`font-semibold text-lg ${
-                  importResult.success 
-                    ? (importResult.summary && importResult.summary.failed > 0 ? 'text-amber-800' : 'text-green-800') 
+                <h4 className={`font-semibold text-lg ${importResult.success
+                    ? (importResult.summary && importResult.summary.failed > 0 ? 'text-amber-800' : 'text-green-800')
                     : 'text-red-800'
-                }`}>
-                  {importResult.success 
-                    ? (importResult.summary && importResult.summary.failed > 0 ? 'Imported with Some Errors' : 'Import Completed Successfully') 
+                  }`}>
+                  {importResult.success
+                    ? (importResult.summary && importResult.summary.failed > 0 ? 'Imported with Some Errors' : 'Import Completed Successfully')
                     : 'Import Failed'}
                 </h4>
               </div>
@@ -376,9 +429,18 @@ export const ExcelImport: React.FC = () => {
 
                   {importResult.summary.errors && importResult.summary.errors.length > 0 && (
                     <div className="mt-4">
-                      <p className={`text-sm font-medium mb-2 ${importResult.success ? 'text-amber-700' : 'text-red-700'}`}>
-                        Validation Errors ({importResult.summary.errors.length} rows failed):
-                      </p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className={`text-sm font-medium ${importResult.success ? 'text-amber-700' : 'text-red-700'}`}>
+                          Validation Errors ({importResult.summary.errors.length} rows failed):
+                        </p>
+                        {/* <button 
+                          onClick={downloadErrorsList} 
+                          className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded border border-red-200 transition-colors flex items-center"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download Failed Rows
+                        </button> */}
+                      </div>
                       <div className="max-h-60 overflow-y-auto border rounded-md bg-white/50">
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50/50">
