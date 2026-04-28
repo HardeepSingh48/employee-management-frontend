@@ -320,6 +320,14 @@ export default function IndividualSalaryCalculation() {
                     <span className="font-medium">{salaryService.formatCurrency(salaryData['Basic'])}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span>Leave Wages:</span>
+                    <span className="font-medium">{salaryService.formatCurrency(salaryData['Leave Wages'] || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>National & Festival:</span>
+                    <span className="font-medium">{salaryService.formatCurrency(salaryData['National & Festival'] || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>Special Basic:</span>
                     <span className="font-medium">{salaryService.formatCurrency(salaryData['Special Basic'])}</span>
                   </div>

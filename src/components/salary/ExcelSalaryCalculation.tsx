@@ -299,6 +299,8 @@ export default function ExcelSalaryCalculation() {
                     <TableHead>Skill Level</TableHead>
                     <TableHead>Present Days</TableHead>
                     <TableHead>Basic Salary</TableHead>
+                    <TableHead>Leave Wages</TableHead>
+                    <TableHead>National & Festival</TableHead>
                     <TableHead>Total Earnings</TableHead>
                     <TableHead>Total Deductions</TableHead>
                     <TableHead>Net Salary</TableHead>
@@ -312,6 +314,8 @@ export default function ExcelSalaryCalculation() {
                       <TableCell>{employee['Skill Level']}</TableCell>
                       <TableCell>{employee['Present Days']}</TableCell>
                       <TableCell>{salaryService.formatCurrency(employee['Basic'])}</TableCell>
+                      <TableCell>{salaryService.formatCurrency(employee['Leave Wages'] || 0)}</TableCell>
+                      <TableCell>{salaryService.formatCurrency(employee['National & Festival'] || 0)}</TableCell>
                       <TableCell>{salaryService.formatCurrency(employee['Total Earnings'])}</TableCell>
                       <TableCell>{salaryService.formatCurrency(employee['Total Deductions'])}</TableCell>
                       <TableCell className="font-bold text-green-600">

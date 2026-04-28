@@ -395,6 +395,8 @@ export default function MonthlySalaryCalculation() {
                         <TableHead>Present Days</TableHead>
                         <TableHead>Daily Wage</TableHead>
                         <TableHead>Basic Salary</TableHead>
+                        <TableHead>Leave Wages</TableHead>
+                        <TableHead>National & Festival</TableHead>
                         <TableHead>Total Earnings</TableHead>
                         <TableHead>PF</TableHead>
                         <TableHead>ESIC</TableHead>
@@ -411,6 +413,8 @@ export default function MonthlySalaryCalculation() {
                           <TableCell>{employee['Present Days']}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Daily Wage'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Basic'])}</TableCell>
+                          <TableCell>{salaryService.formatCurrency(employee['Leave Wages'] || 0)}</TableCell>
+                          <TableCell>{salaryService.formatCurrency(employee['National & Festival'] || 0)}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Total Earnings'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['PF'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['ESIC'])}</TableCell>
@@ -471,6 +475,8 @@ export default function MonthlySalaryCalculation() {
                         <TableHead>Present Days</TableHead>
                         <TableHead>Daily Wage</TableHead>
                         <TableHead>Basic Salary</TableHead>
+                        <TableHead>Leave Wages</TableHead>
+                        <TableHead>National & Festival</TableHead>
                         <TableHead>Total Earnings</TableHead>
                         <TableHead>PF</TableHead>
                         <TableHead>ESIC</TableHead>
@@ -488,6 +494,8 @@ export default function MonthlySalaryCalculation() {
                           <TableCell>{employee['Present Days']}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Daily Wage'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Basic'])}</TableCell>
+                          <TableCell>{salaryService.formatCurrency(employee['Leave Wages'] || 0)}</TableCell>
+                          <TableCell>{salaryService.formatCurrency(employee['National & Festival'] || 0)}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['Total Earnings'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['PF'])}</TableCell>
                           <TableCell>{salaryService.formatCurrency(employee['ESIC'])}</TableCell>

@@ -7,6 +7,8 @@ export interface SalaryCalculationData {
   'Present Days': number;
   'Daily Wage': number;
   'Basic': number;
+  'Leave Wages': number;
+  'National & Festival': number;
   'Special Basic': number;
   'DA': number;
   'HRA': number;
