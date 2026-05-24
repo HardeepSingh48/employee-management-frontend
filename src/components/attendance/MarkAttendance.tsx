@@ -222,7 +222,12 @@ export default function MarkAttendance() {
 
       // For Sundays, force overtime status and prevent regular present marking
       const finalAttendanceStatus = isSunday ? 'OFF' : attendanceStatus;
-      const finalOvertimeShifts = isSunday ? Math.max(overtimeShifts, 1) : overtimeShifts;
+      const finalOvertimeShifts =
+        finalAttendanceStatus === 'Absent'
+          ? 0
+          : isSunday
+            ? Math.max(overtimeShifts, 1)
+            : overtimeShifts;
 
       if (isSunday && attendanceStatus === 'Present') {
         toast({
@@ -320,7 +325,11 @@ export default function MarkAttendance() {
     setBulkAttendance(prev =>
       prev.map(record =>
         record.employee_id === employeeId
-          ? { ...record, attendance_status: status }
+          ? {
+              ...record,
+              attendance_status: status,
+              overtime_shifts: status === 'Absent' ? 0 : (record.overtime_shifts ?? 0),
+            }
           : record
       )
     );
@@ -338,7 +347,11 @@ export default function MarkAttendance() {
 
   const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'OFF') => {
     setBulkAttendance(prev =>
-      prev.map(record => ({ ...record, attendance_status: status }))
+      prev.map(record => ({
+        ...record,
+        attendance_status: status,
+        overtime_shifts: status === 'Absent' ? 0 : (record.overtime_shifts ?? 0),
+      }))
     );
   };
 
@@ -477,7 +490,13 @@ export default function MarkAttendance() {
                     <select
                       id="status"
                       value={attendanceStatus}
-                      onChange={(e) => setAttendanceStatus(e.target.value as 'Present' | 'Absent' | 'OFF')}
+                      onChange={(e) => {
+                        const status = e.target.value as 'Present' | 'Absent' | 'OFF';
+                        setAttendanceStatus(status);
+                        if (status === 'Absent') {
+                          setOvertimeShifts(0);
+                        }
+                      }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="Present">Present</option>
@@ -497,8 +516,13 @@ export default function MarkAttendance() {
                       value={overtimeShifts}
                       onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
                       placeholder="0.0"
+                      disabled={attendanceStatus === 'Absent'}
                     />
-                    <p className="text-xs text-gray-500 mt-1">1 shift = 8 hours; 0.5 = 4 hours</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {attendanceStatus === 'Absent'
+                        ? 'Overtime does not apply on absent days'
+                        : '1 shift = 8 hours; 0.5 = 4 hours'}
+                    </p>
                   </div>
 
                   <div>

@@ -271,7 +271,7 @@ export default function FormB() {
               <th rowSpan={3} className="border p-2 text-center">Days Worked</th>
               <th rowSpan={3} className="border p-2 text-center">Overtime</th>
               <th rowSpan={3} className="border p-2 text-center">Total Days</th>
-              <th colSpan={6} className="border p-2 text-center">Gross Earnings</th>
+              <th colSpan={8} className="border p-2 text-center">Gross Earnings</th>
               <th rowSpan={3} className="border p-2 text-center">Total Earnings</th>
               <th colSpan={6} className="border p-2 text-center">Deductions</th>
               <th rowSpan={3} className="border p-2 text-center">Total Deductions</th>
@@ -281,6 +281,8 @@ export default function FormB() {
               <th className="border p-1 text-center">BS</th>
               <th className="border p-1 text-center">DA</th>
               <th className="border p-1 text-center">BS</th>
+              <th className="border p-1 text-center">Leave Wages</th>
+              <th className="border p-1 text-center">Nat. & Fest.</th>
               <th className="border p-1 text-center">DA</th>
               <th className="border p-1 text-center">HRA</th>
               <th className="border p-1 text-center">COV</th>
@@ -297,7 +299,7 @@ export default function FormB() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={23} className="border p-8 text-center">
+                <td colSpan={26} className="border p-8 text-center">
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                     Loading Form B data...
@@ -306,7 +308,7 @@ export default function FormB() {
               </tr>
             ) : formBData.length === 0 ? (
               <tr>
-                <td colSpan={23} className="border p-8 text-center text-gray-500">
+                <td colSpan={26} className="border p-8 text-center text-gray-500">
                   {selectedMonth && selectedYear
                     ? 'No data found for the selected criteria'
                     : 'Please select month and year to view data'
@@ -327,6 +329,8 @@ export default function FormB() {
                     <td className="border p-2 text-center">{row.overtime}</td>
                     <td className="border p-2 text-center">{row.totalDays.toFixed(1)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.bs)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.leaveWages)}</td>
+                    <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.nationalFestival)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.da)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.hra)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.cov)}</td>
@@ -354,6 +358,7 @@ export default function FormB() {
                     <td className="border p-2 text-center">{totals.totalDaysWorked}</td>
                     <td className="border p-2 text-center">{totals.totalOvertime.toFixed(1)}</td>
                     <td className="border p-2 text-center">-</td>
+                    <td className="border p-2 text-right">-</td>
                     <td className="border p-2 text-right">-</td>
                     <td className="border p-2 text-right">-</td>
                     <td className="border p-2 text-right">-</td>
@@ -392,7 +397,7 @@ export default function FormB() {
                   <th rowSpan={3} className="border p-2 text-center">Days Worked</th>
                   <th rowSpan={3} className="border p-2 text-center">Overtime</th>
                   <th rowSpan={3} className="border p-2 text-center">Total Days</th>
-                  <th colSpan={6} className="border p-2 text-center">Gross Earnings</th>
+                  <th colSpan={8} className="border p-2 text-center">Gross Earnings</th>
                   <th rowSpan={3} className="border p-2 text-center">Total Earnings</th>
                   <th colSpan={7} className="border p-2 text-center">Deductions</th>
                   <th rowSpan={3} className="border p-2 text-center">Total Deductions</th>
@@ -402,6 +407,8 @@ export default function FormB() {
                   <th className="border p-1 text-center">BS</th>
                   <th className="border p-1 text-center">DA</th>
                   <th className="border p-1 text-center">BS</th>
+                  <th className="border p-1 text-center">Leave Wages</th>
+                  <th className="border p-1 text-center">Nat. & Fest.</th>
                   <th className="border p-1 text-center">DA</th>
                   <th className="border p-1 text-center">HRA</th>
                   <th className="border p-1 text-center">COV</th>
@@ -419,7 +426,7 @@ export default function FormB() {
               <tbody>
                 {isLoadingSspl ? (
                   <tr>
-                    <td colSpan={24} className="border p-8 text-center">
+                    <td colSpan={27} className="border p-8 text-center">
                       <div className="flex items-center justify-center">
                         <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                         Loading Form B Special Wages data...
@@ -428,7 +435,7 @@ export default function FormB() {
                   </tr>
                 ) : formBDataSspl.length === 0 ? (
                   <tr>
-                    <td colSpan={24} className="border p-8 text-center text-gray-500">
+                    <td colSpan={27} className="border p-8 text-center text-gray-500">
                       {selectedMonth && selectedYear
                         ? 'No data found for the selected criteria'
                         : 'Please select month and year to view data'
@@ -449,6 +456,8 @@ export default function FormB() {
                         <td className="border p-2 text-center">{row.overtime}</td>
                         <td className="border p-2 text-center">{row.totalDays.toFixed(1)}</td>
                         <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.bs)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.leaveWages)}</td>
+                        <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.nationalFestival)}</td>
                         <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.da)}</td>
                         <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.hra)}</td>
                         <td className="border p-2 text-right">{formsService.formatNumber(row.grossEarnings.cov)}</td>
@@ -477,6 +486,7 @@ export default function FormB() {
                         <td className="border p-2 text-center">{totalsSspl.totalDaysWorked}</td>
                         <td className="border p-2 text-center">{totalsSspl.totalOvertime.toFixed(1)}</td>
                         <td className="border p-2 text-center">-</td>
+                        <td className="border p-2 text-right">-</td>
                         <td className="border p-2 text-right">-</td>
                         <td className="border p-2 text-right">-</td>
                         <td className="border p-2 text-right">-</td>

@@ -15,6 +15,8 @@ export interface FormBEmployee {
   totalDays: number;
   grossEarnings: {
     bs: number;
+    leaveWages: number;
+    nationalFestival: number;
     da: number;
     hra: number;
     cov: number;
