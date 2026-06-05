@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeItem, onItemClick, userR
         // Admin1: Full admin access including Sites
         return [
           ...adminItems,
-          { name: 'Sites', icon: Calendar, path: '/sites' },
+          // { name: 'Sites', icon: Calendar, path: '/sites' },
         ];
       case 'admin2':
         // Admin2: Admin access but NO Sites management
