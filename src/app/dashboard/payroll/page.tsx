@@ -28,6 +28,7 @@ import { Logo } from '@/components/layout/Logo';
 import PayrollService, { Employee, Site } from '@/lib/payroll-service';
 import BonusCalculation from '@/components/payroll/BonusCalculation';
 import { salaryService } from '@/lib/salary-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 type SelectionMode = 'single' | 'range' | 'multi';
 
@@ -394,19 +395,14 @@ export default function PayrollPage() {
                       <strong>Site:</strong> {sites[0].site_name || 'Unnamed Site'}
                     </div>
                   ) : (
-                    <Select value={filters.siteId || "all"} onValueChange={(value) => handleFilterChange('siteId', value === "all" ? "" : value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a site" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Sites</SelectItem>
-                        {sites.map(site => (
-                          <SelectItem key={site.site_id} value={site.site_id}>
-                            {site.site_name || 'Unnamed Site'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SiteSearchSelect
+                      sites={sites as any}
+                      value={filters.siteId || 'all'}
+                      onValueChange={(v) => handleFilterChange('siteId', v === 'all' ? '' : v)}
+                      includeAll={true}
+                      allLabel="All Sites"
+                      placeholder="Select a site"
+                    />
                   )}
                 </div>
               )}
@@ -676,19 +672,14 @@ export default function PayrollPage() {
                           <strong>Site:</strong> {sites[0].site_name || 'Unnamed Site'}
                         </div>
                       ) : (
-                        <Select value={filters.siteId || "all"} onValueChange={(value) => handleFilterChange('siteId', value === "all" ? "" : value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a site" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Sites</SelectItem>
-                            {sites.map(site => (
-                              <SelectItem key={site.site_id} value={site.site_id}>
-                                {site.site_name || 'Unnamed Site'}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SiteSearchSelect
+                          sites={sites as any}
+                          value={filters.siteId || 'all'}
+                          onValueChange={(v) => handleFilterChange('siteId', v === 'all' ? '' : v)}
+                          includeAll={true}
+                          allLabel="All Sites"
+                          placeholder="Select a site"
+                        />
                       )}
                     </div>
                   )}

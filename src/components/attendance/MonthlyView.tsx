@@ -14,6 +14,7 @@ import { employeeService } from '@/lib/employee-service';
 import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 import type { MonthlyAttendanceSummary } from '@/types/attendance';
 import type { Employee } from '@/types/employee';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 export default function MonthlyView() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -201,16 +202,14 @@ const getStatusBadge = (status: string) => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="text-sm font-medium mb-2 block">Site Name</label>
-          <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select site" />
-            </SelectTrigger>
-            <SelectContent>
-              {sites.map((s) => (
-                <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SiteSearchSelect
+            sites={sites}
+            value={selectedSiteId || 'all'}
+            onValueChange={(v) => setSelectedSiteId(v === 'all' ? '' : v)}
+            includeAll={true}
+            allLabel="All Sites"
+            placeholder="Select site"
+          />
         </div>
         <div>
           <label className="text-sm font-medium mb-2 block">Employee</label>

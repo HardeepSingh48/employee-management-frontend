@@ -7,6 +7,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formsService, FormBEmployee, FormBTotals } from '@/lib/forms-service';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SearchSelect from '@/components/ui/SearchSelect';
 
 
 
@@ -221,19 +222,20 @@ export default function FormB() {
         </div>
         <div>
           <Label htmlFor="site">Site</Label>
-          <Select value={selectedSite} onValueChange={setSelectedSite}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select site (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sites</SelectItem>
-              {availableSites.filter(site => site && site.trim() !== '').map(site => (
-                <SelectItem key={site} value={site}>
-                  {site}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchSelect
+            options={[
+              { value: 'all', label: 'All Sites' },
+              ...[...availableSites]
+                .filter(site => site && site.trim() !== '')
+                .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                .map(site => ({ value: site, label: site }))
+            ]}
+            value={selectedSite || 'all'}
+            onValueChange={(val) => setSelectedSite(val === 'all' ? '' : val)}
+            placeholder="Select site (optional)"
+            searchPlaceholder="Search site..."
+            sortAlphabetically={false}
+          />
         </div>
         <div className="flex items-end">
           <Button

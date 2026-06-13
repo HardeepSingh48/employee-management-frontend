@@ -12,6 +12,7 @@ import { Loader2, Download, FileText, BarChart3, Calendar, Filter } from 'lucide
 import { attendanceService, type AttendanceRecord } from '@/lib/attendance-service';
 import { sitesService, type Site } from '@/lib/sites-service';
 import * as XLSX from 'xlsx';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 export default function AttendanceReports() {
   // Loading state per report
@@ -284,17 +285,14 @@ export default function AttendanceReports() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Site Name</Label>
-                  <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select site" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sites</SelectItem>
-                      {sites.map((s) => (
-                        <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SiteSearchSelect
+                    sites={sites}
+                    value={selectedSiteId || 'all'}
+                    onValueChange={(v) => setSelectedSiteId(v === 'all' ? '' : v)}
+                    includeAll={true}
+                    allLabel="All Sites"
+                    placeholder="Select site"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Select Month</Label>
@@ -362,17 +360,14 @@ export default function AttendanceReports() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Site Name</Label>
-                  <Select value={dailySiteId} onValueChange={setDailySiteId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select site" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sites</SelectItem>
-                      {sites.map((s) => (
-                        <SelectItem key={s.site_id} value={s.site_id}>{s.site_name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SiteSearchSelect
+                    sites={sites}
+                    value={dailySiteId || 'all'}
+                    onValueChange={(v) => setDailySiteId(v === 'all' ? '' : v)}
+                    includeAll={true}
+                    allLabel="All Sites"
+                    placeholder="Select site"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Select Date</Label>

@@ -36,6 +36,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Edit, Trash2 } from 'lucide-react';
 import { Logo } from '@/components/layout/Logo';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface UserData {
     id: string;
@@ -58,8 +59,10 @@ export default function UsersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<string>('');
+    const [newUserSiteId, setNewUserSiteId] = useState<string>('');
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [editSelectedRole, setEditSelectedRole] = useState<string>('');
+    const [editUserSiteId, setEditUserSiteId] = useState<string>('');
     const { toast } = useToast();
 
     // Check if user is superadmin
@@ -153,6 +156,7 @@ export default function UsersPage() {
             fetchUsers();
             setIsModalOpen(false);
             setSelectedRole(''); // Reset selected role
+            setNewUserSiteId('');
         } catch (error: any) {
             console.error('Error creating user:', error);
             toast({
@@ -167,6 +171,7 @@ export default function UsersPage() {
         setIsModalOpen(open);
         if (!open) {
             setSelectedRole(''); // Reset selected role when modal closes
+            setNewUserSiteId('');
         }
     };
 
@@ -175,12 +180,14 @@ export default function UsersPage() {
         if (!open) {
             setEditingUser(null);
             setEditSelectedRole('');
+            setEditUserSiteId('');
         }
     };
 
     const handleEditUser = (user: UserData) => {
         setEditingUser(user);
         setEditSelectedRole(user.role);
+        setEditUserSiteId(user.site_id || '');
         setIsEditModalOpen(true);
     };
 
@@ -221,6 +228,7 @@ export default function UsersPage() {
             setIsEditModalOpen(false);
             setEditingUser(null);
             setEditSelectedRole('');
+            setEditUserSiteId('');
         } catch (error: any) {
             console.error('Error updating user:', error);
             toast({
@@ -307,18 +315,16 @@ export default function UsersPage() {
                             {selectedRole === 'supervisor' && (
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="site_id" className="text-right">Site</Label>
-                                    <Select name="site_id" required>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select a site" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {sites.map((site) => (
-                                                <SelectItem key={site.site_id} value={site.site_id}>
-                                                    {site.site_name} - {site.state}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="col-span-3">
+                                        <SiteSearchSelect
+                                            sites={sites}
+                                            value={newUserSiteId || 'all'}
+                                            onValueChange={(v) => setNewUserSiteId(v === 'all' ? '' : v)}
+                                            includeAll={false}
+                                            placeholder="Select a site"
+                                        />
+                                        <input type="hidden" name="site_id" value={newUserSiteId} />
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -400,18 +406,16 @@ export default function UsersPage() {
                             {editSelectedRole === 'supervisor' && (
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="edit-site_id" className="text-right">Site</Label>
-                                    <Select name="site_id" defaultValue={editingUser?.site_id || ''} required>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue placeholder="Select a site" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {sites.map((site) => (
-                                                <SelectItem key={site.site_id} value={site.site_id}>
-                                                    {site.site_name} - {site.state}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="col-span-3">
+                                        <SiteSearchSelect
+                                            sites={sites}
+                                            value={editUserSiteId || 'all'}
+                                            onValueChange={(v) => setEditUserSiteId(v === 'all' ? '' : v)}
+                                            includeAll={false}
+                                            placeholder="Select a site"
+                                        />
+                                        <input type="hidden" name="site_id" value={editUserSiteId} />
+                                    </div>
                                 </div>
                             )}
                         </div>

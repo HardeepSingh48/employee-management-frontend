@@ -10,6 +10,7 @@ import { Upload, FileSpreadsheet, Calendar, Users, AlertCircle, CheckCircle, Dow
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { sitesService, type Site } from '@/lib/sites-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface ValidationError {
   file_errors: string[];
@@ -628,19 +629,15 @@ export default function BulkAttendance() {
               {/* Site Selection */}
               <div className="space-y-2">
                 <Label htmlFor="site">Site Name</Label>
-                <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select site" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sites</SelectItem>
-                    {sites.map((siteItem) => (
-                      <SelectItem key={siteItem.site_id} value={siteItem.site_id}>
-                        {siteItem.site_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SiteSearchSelect
+                  id="site"
+                  sites={sites}
+                  value={selectedSiteId}
+                  onValueChange={setSelectedSiteId}
+                  includeAll={true}
+                  allLabel="All Sites"
+                  placeholder="Select site"
+                />
               </div>
 
               {/* Submit Button */}

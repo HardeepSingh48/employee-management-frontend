@@ -16,6 +16,7 @@ import { sitesService, type Site } from '@/lib/sites-service';
 import { employeeService } from '@/lib/employee-service';
 import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 import { Calendar, Clock, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface Employee {
   employee_id: string;
@@ -423,27 +424,20 @@ export default function MarkAttendance() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="site">Site</Label>
-                    <select
+                    <SiteSearchSelect
                       id="site"
-                      value={selectedSiteId}
-                      onChange={(e) => setSelectedSiteId(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">All Sites</option>
-                      {sites
-                        .filter(site => {
-                          if (user?.role === 'supervisor') {
-                            // Supervisors can only see their own site
-                            return site.site_id === (user as any).site_id;
-                          }
-                          return true; // Admins can see all sites
-                        })
-                        .map((site) => (
-                          <option key={site.site_id} value={site.site_id}>
-                            {site.site_name}
-                          </option>
-                        ))}
-                    </select>
+                      sites={sites.filter(site => {
+                        if (user?.role === 'supervisor') {
+                          return site.site_id === (user as any).site_id;
+                        }
+                        return true;
+                      })}
+                      value={selectedSiteId || 'all'}
+                      onValueChange={(v) => setSelectedSiteId(v === 'all' ? '' : v)}
+                      includeAll={true}
+                      allLabel="All Sites"
+                      placeholder="All Sites"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="employee">Employee</Label>
@@ -558,27 +552,20 @@ export default function MarkAttendance() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="bulk-site">Site</Label>
-                      <select
+                      <SiteSearchSelect
                         id="bulk-site"
-                        value={selectedSiteId}
-                        onChange={(e) => setSelectedSiteId(e.target.value)}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">All Sites</option>
-                        {sites
-                          .filter(site => {
-                            if (user?.role === 'supervisor') {
-                              // Supervisors can only see their own site
-                              return site.site_id === (user as any).site_id;
-                            }
-                            return true; // Admins can see all sites
-                          })
-                          .map((site) => (
-                            <option key={site.site_id} value={site.site_id}>
-                              {site.site_name}
-                            </option>
-                          ))}
-                      </select>
+                        sites={sites.filter(site => {
+                          if (user?.role === 'supervisor') {
+                            return site.site_id === (user as any).site_id;
+                          }
+                          return true;
+                        })}
+                        value={selectedSiteId || 'all'}
+                        onValueChange={(v) => setSelectedSiteId(v === 'all' ? '' : v)}
+                        includeAll={true}
+                        allLabel="All Sites"
+                        placeholder="All Sites"
+                      />
                     </div>
                     <div>
                       <Label htmlFor="bulk-date">Date</Label>
