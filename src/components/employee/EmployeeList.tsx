@@ -59,6 +59,7 @@ interface PaginationInfo {
 export default function EmployeeList() {
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EmployeeRow | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -153,6 +154,7 @@ export default function EmployeeList() {
       setError(e?.message || 'Failed to fetch employees');
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -252,7 +254,7 @@ export default function EmployeeList() {
     }
   };
 
-  if (loading) {
+  if (isInitialLoad && loading) {
     return (
       <div className="bg-white shadow-lg rounded-lg p-6">
         <div className="flex justify-center items-center h-32">
@@ -297,9 +299,15 @@ export default function EmployeeList() {
       </div>
 
       <div className="p-4 sm:p-6">
-  {employees.length === 0 ? (
+  {loading && !isInitialLoad && (
+    <div className="flex items-center justify-center py-3 mb-3 bg-blue-50 rounded-lg">
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+      <span className="ml-2 text-sm text-blue-600">Searching...</span>
+    </div>
+  )}
+  {employees.length === 0 && !loading ? (
     <div className="text-center py-8 text-gray-500 text-sm sm:text-base">No employees found.</div>
-  ) : (
+  ) : employees.length === 0 && loading ? null : (
     <>
       {/* Table */}
       <div className="overflow-x-auto -mx-4 sm:mx-0">

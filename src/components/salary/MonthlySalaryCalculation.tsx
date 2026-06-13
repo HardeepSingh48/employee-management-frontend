@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2, Calculator, Download, Calendar } from 'lucide-react';
 import { salaryService, type SalaryCalculationData } from '@/lib/salary-service';
 import { sitesService, type Site } from '@/lib/sites-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 export default function MonthlySalaryCalculation() {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
@@ -153,19 +154,14 @@ export default function MonthlySalaryCalculation() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div className="space-y-2">
               <label className="text-sm font-medium">Site</label>
-              <Select value={selectedSite} onValueChange={setSelectedSite}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Sites" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sites</SelectItem>
-                  {sites.map((site) => (
-                    <SelectItem key={site.site_id} value={site.site_id}>
-                      {site.site_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SiteSearchSelect
+                sites={sites}
+                value={selectedSite}
+                onValueChange={setSelectedSite}
+                includeAll={true}
+                allLabel="All Sites"
+                placeholder="All Sites"
+              />
             </div>
 
             <div className="space-y-2">

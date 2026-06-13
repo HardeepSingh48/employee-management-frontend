@@ -15,7 +15,7 @@ import SalaryReports from '@/components/salary/SalaryReports';
 import ComplianceReports from '@/components/salary/ComplianceReports'; // ✅ new component
 
 export default function SalaryPage() {
-  const [activeTab, setActiveTab] = useState('excel');
+  const [activeTab, setActiveTab] = useState('monthly');
   const [currentDate, setCurrentDate] = useState('');
 
   // Set current date on client side to avoid hydration mismatch

@@ -13,6 +13,7 @@ import { Loader2, Search, RefreshCw, Clock, UserCheck, UserX, AlertCircle, Filte
 import { attendanceService } from '@/lib/attendance-service';
 import { sitesService, type Site } from '@/lib/sites-service';
 import type { Attendance } from '@/types/attendance';
+import SiteSearchSelect from '@/components/ui/SiteSearchSelect';
 
 export default function TodayAttendance() {
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
@@ -240,24 +241,18 @@ export default function TodayAttendance() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           {/* Site Filter */}
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="site-filter" className="text-sm font-medium">Site:</Label>
-            <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Sites" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sites</SelectItem>
-                {sites
-                  .filter(site => site.site_id && site.site_id.trim() !== '')
-                  .map((site) => (
-                    <SelectItem key={site.site_id} value={site.site_id}>
-                      {site.site_name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center space-x-2 w-64">
+            <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+            <Label htmlFor="site-filter" className="text-sm font-medium shrink-0">Site:</Label>
+            <SiteSearchSelect
+              sites={sites}
+              value={selectedSiteId}
+              onValueChange={setSelectedSiteId}
+              includeAll={true}
+              allLabel="All Sites"
+              placeholder="All Sites"
+              className="w-48"
+            />
           </div>
 
           {/* Search */}

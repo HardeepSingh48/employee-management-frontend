@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeSchema, EmployeeFormData } from '@/lib/validations/employee';
 import { BLOOD_GROUPS, DEPARTMENTS, EMPLOYMENT_TYPES, QUALIFICATIONS, SKILL_CATEGORIES } from '@/types/employee';
 import { salaryCodesService, SalaryCode } from '@/lib/salary-codes-service';
+import SearchSelect from '@/components/ui/SearchSelect';
 
 interface ComprehensiveEditModalProps {
   isOpen: boolean;
@@ -93,7 +94,7 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
   }, [isOpen]); // Only depend on isOpen, not on watch or formData
 
   // Form initialization with employee data
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<EmployeeFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, watch, control } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       fullName: employee ? `${employee.first_name} ${employee.last_name}` : '',
@@ -756,20 +757,23 @@ export const ComprehensiveEditModal: React.FC<ComprehensiveEditModalProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Salary Code *</label>
-                      <select
-                        {...register('salaryCode')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={loadingSalaryCodes}
-                      >
-                        <option value="">
-                          {loadingSalaryCodes ? 'Loading salary codes...' : 'Select Salary Code'}
-                        </option>
-                        {salaryCodes.map(code => (
-                          <option key={code.id} value={code.salary_code}>
-                            {code.display_name}
-                          </option>
-                        ))}
-                      </select>
+                      <Controller
+                        control={control}
+                        name="salaryCode"
+                        render={({ field }) => (
+                          <SearchSelect
+                            options={salaryCodes.map(code => ({
+                              value: code.salary_code,
+                              label: code.display_name
+                            }))}
+                            value={field.value || ''}
+                            onValueChange={field.onChange}
+                            placeholder={loadingSalaryCodes ? 'Loading salary codes...' : 'Select Salary Code'}
+                            searchPlaceholder="Search salary code..."
+                            disabled={loadingSalaryCodes}
+                          />
+                        )}
+                      />
                       {errors.salaryCode && <p className="text-red-500 text-xs mt-1">{errors.salaryCode.message}</p>}
                     </div>
 

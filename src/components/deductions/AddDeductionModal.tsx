@@ -11,6 +11,7 @@ import { employeeService } from '@/lib/employee-service';
 import { Employee } from '@/types/employee';
 import { sitesService, type Site } from '@/lib/sites-service';
 import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface AddDeductionModalProps {
   open: boolean;
@@ -144,22 +145,15 @@ export default function AddDeductionModal({ open, onClose, onSubmit }: AddDeduct
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="site">Site</Label>
-            <Select
+            <SiteSearchSelect
+              id="site"
+              sites={sites}
               value={selectedSiteId}
               onValueChange={setSelectedSiteId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Sites" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sites</SelectItem>
-                {sites.map((site) => (
-                  <SelectItem key={site.site_id} value={site.site_id}>
-                    {site.site_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              includeAll={true}
+              allLabel="All Sites"
+              placeholder="All Sites"
+            />
           </div>
 
           <div className="space-y-2">

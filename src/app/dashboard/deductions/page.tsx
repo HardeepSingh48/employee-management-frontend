@@ -16,6 +16,7 @@ import BulkUploadModal from '@/components/deductions/BulkUploadModal';
 import EditDeductionModal from '@/components/deductions/EditDeductionModal';
 import { sitesService, type Site } from '@/lib/sites-service';
 import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 export default function DeductionsPage() {
   const [deductions, setDeductions] = useState<Deduction[]>([]);
@@ -232,19 +233,15 @@ export default function DeductionsPage() {
           <div className="flex items-center space-x-2">
             <div>
               <label className="text-sm font-medium mb-2 block">Site</label>
-              <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Sites" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sites</SelectItem>
-                  {sites.map((site) => (
-                    <SelectItem key={site.site_id} value={site.site_id}>
-                      {site.site_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SiteSearchSelect
+                sites={sites}
+                value={selectedSiteId}
+                onValueChange={setSelectedSiteId}
+                includeAll={true}
+                allLabel="All Sites"
+                placeholder="All Sites"
+                className="w-[200px]"
+              />
             </div>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

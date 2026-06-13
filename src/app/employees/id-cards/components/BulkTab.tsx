@@ -11,6 +11,7 @@ import api from '@/lib/api';
 import { sitesService, type Site } from '@/lib/sites-service';
 import { salaryCodesService, type SalaryCode } from '@/lib/salary-codes-service';
 import { employeeService } from '@/lib/employee-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 type Mode = 'site' | 'custom';
 
@@ -153,18 +154,14 @@ export default function BulkTab() {
         {mode === 'site' && (
           <div className="space-y-2">
             <label className="text-sm font-medium">Site</label>
-            <select
-              value={siteId}
-              onChange={(e) => setSiteId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">All Sites</option>
-              {sites.map((s) => (
-                <option key={s.site_id} value={s.site_id}>
-                  {s.site_name}
-                </option>
-              ))}
-            </select>
+            <SiteSearchSelect
+              sites={sites}
+              value={siteId || 'all'}
+              onValueChange={(v) => setSiteId(v === 'all' ? '' : v)}
+              includeAll={true}
+              allLabel="All Sites"
+              placeholder="All Sites"
+            />
           </div>
         )}
 
@@ -173,18 +170,14 @@ export default function BulkTab() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Filter by Site (Optional)</label>
-                <select
-                  value={siteId}
-                  onChange={(e) => setSiteId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">All Sites</option>
-                  {sites.map((s) => (
-                    <option key={s.site_id} value={s.site_id}>
-                      {s.site_name}
-                    </option>
-                  ))}
-                </select>
+                <SiteSearchSelect
+                  sites={sites}
+                  value={siteId || 'all'}
+                  onValueChange={(v) => setSiteId(v === 'all' ? '' : v)}
+                  includeAll={true}
+                  allLabel="All Sites"
+                  placeholder="All Sites"
+                />
               </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-sm font-medium">Select Employees</label>

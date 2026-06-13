@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PayrollService, { Site, BonusRecord } from '@/lib/payroll-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface BonusCalculationProps {
   sites: Site[];
@@ -163,19 +164,14 @@ export default function BonusCalculation({ sites }: BonusCalculationProps) {
             {/* Site Filter */}
             <div className="space-y-2">
               <Label>Site (Optional)</Label>
-              <Select value={filters.siteId} onValueChange={(value) => setFilters(prev => ({ ...prev, siteId: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Sites" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sites</SelectItem>
-                  {sites.map(site => (
-                    <SelectItem key={site.site_id} value={site.site_id}>
-                      {site.site_name || 'Unnamed Site'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SiteSearchSelect
+                sites={sites as any}
+                value={filters.siteId || 'all'}
+                onValueChange={(v) => setFilters(prev => ({ ...prev, siteId: v === 'all' ? '' : v }))}
+                includeAll={true}
+                allLabel="All Sites"
+                placeholder="All Sites"
+              />
             </div>
 
             {/* Year */}
