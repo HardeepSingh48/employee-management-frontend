@@ -1,18 +1,30 @@
-// src/store/authSlice.ts
+// src/store/auth-slice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import api from '@/lib/api';
+import api, { clearAuthStorage, storeTokens } from '@/lib/api';
+import { isTokenExpired } from '@/lib/jwt';
+import { extractErrorMessage } from '@/lib/apiError';
 
-// Types
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export interface User {
   id: string;
   name: string;
   email?: string;
   username?: string;
-  role: 'admin' | 'admin1' | 'admin2' | 'superadmin' | 'hr' | 'manager' | 'employee' | 'supervisor';
+  role:
+    | 'admin'
+    | 'admin1'
+    | 'admin2'
+    | 'superadmin'
+    | 'hr'
+    | 'manager'
+    | 'employee'
+    | 'supervisor';
   department?: string;
   profileImage?: string;
   permissions: string[];
   site_id?: string;
+  is_temp_password?: boolean;
 }
 
 export interface LoginCredentials {
@@ -38,7 +50,8 @@ export interface AuthState {
   lastLoginTime: string | null;
 }
 
-// Initial state
+// ─── Initial state ────────────────────────────────────────────────────────────
+
 const initialState: AuthState = {
   user: null,
   token: null,
@@ -49,142 +62,168 @@ const initialState: AuthState = {
   lastLoginTime: null,
 };
 
-// Async thunks
+// ─── Response shape helpers ───────────────────────────────────────────────────
+
+interface LoginApiData {
+  user: User;
+  token: string;
+  access_token?: string;
+  refresh_token?: string;
+}
+
+interface MeApiData {
+  user: User;
+  employee: unknown;
+}
+
+// ─── Async thunks ─────────────────────────────────────────────────────────────
+
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/login', credentials);
-      const { user, token } = response.data.data;
+      const response = await api.post<{ success: boolean; data: LoginApiData }>(
+        '/auth/login',
+        credentials,
+      );
+      const { user, token, access_token, refresh_token } = response.data.data;
 
-      // Store token in localStorage
-      localStorage.setItem('token', token);
+      const accessToken = access_token ?? token;
+
+      storeTokens(accessToken, refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('lastLoginTime', new Date().toISOString());
 
-      return { user, token };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Login failed';
-      return rejectWithValue(message);
+      return { user, token: accessToken };
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error, 'Login failed'));
     }
-  }
+  },
 );
 
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData: RegisterData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/register', userData);
-      const { user, token } = response.data.data;
+      const response = await api.post<{ success: boolean; data: LoginApiData }>(
+        '/auth/register',
+        userData,
+      );
+      const { user, token, access_token, refresh_token } = response.data.data;
 
-      // Store token in localStorage
-      localStorage.setItem('token', token);
+      const accessToken = access_token ?? token;
+      storeTokens(accessToken, refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      return { user, token };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Registration failed';
-      return rejectWithValue(message);
+      return { user, token: accessToken };
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error, 'Registration failed'));
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      await api.post('/auth/logout');
-
-      // Clear localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastLoginTime');
-
-      return null;
-    } catch (error: any) {
-      // Even if logout fails on server, clear local storage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastLoginTime');
-
-      const message = error.response?.data?.message || 'Logout failed';
-      return rejectWithValue(message);
+      const refreshToken =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('refresh_token')
+          : null;
+      await api.post('/auth/logout', { refresh_token: refreshToken ?? '' });
+    } catch (error: unknown) {
+      // Always clear local state even if the server call fails
+      return rejectWithValue(extractErrorMessage(error, 'Logout failed'));
+    } finally {
+      clearAuthStorage();
     }
-  }
+  },
 );
 
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/refresh');
-      const { token } = response.data.data;
+      const raw =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('refresh_token')
+          : null;
 
-      localStorage.setItem('token', token);
+      if (!raw) {
+        return rejectWithValue('No refresh token available');
+      }
 
-      return { token };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Token refresh failed';
-      return rejectWithValue(message);
+      const response = await api.post<{
+        success: boolean;
+        data: { access_token: string; token: string };
+      }>('/auth/refresh', { refresh_token: raw });
+
+      const newToken =
+        response.data.data.access_token ?? response.data.data.token;
+      storeTokens(newToken);
+
+      return { token: newToken };
+    } catch (error: unknown) {
+      clearAuthStorage();
+      return rejectWithValue(extractErrorMessage(error, 'Token refresh failed'));
     }
-  }
+  },
 );
 
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/me');
-      const user = response.data.data;
-
+      const response = await api.get<{ success: boolean; data: MeApiData }>(
+        '/auth/me',
+      );
+      // Backend returns { data: { user: {...}, employee: {...} } }
+      const user = response.data.data.user;
       localStorage.setItem('user', JSON.stringify(user));
-
       return { user };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to get user info';
-      return rejectWithValue(message);
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error, 'Failed to get user info'));
     }
-  }
+  },
 );
 
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async (profileData: Partial<User>, { rejectWithValue }) => {
     try {
-      const response = await api.put('/auth/profile', profileData);
+      const response = await api.put<{ success: boolean; data: User }>(
+        '/auth/profile',
+        profileData,
+      );
       const user = response.data.data;
-
       localStorage.setItem('user', JSON.stringify(user));
-
       return { user };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Profile update failed';
-      return rejectWithValue(message);
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error, 'Profile update failed'));
     }
-  }
+  },
 );
 
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
   async (
-    { currentPassword, newPassword }: { currentPassword: string; newPassword: string },
-    { rejectWithValue }
+    {
+      currentPassword,
+      newPassword,
+    }: { currentPassword: string; newPassword: string },
+    { rejectWithValue },
   ) => {
     try {
-      await api.put('/auth/change-password', {
-        currentPassword,
-        newPassword,
-      });
-
+      await api.put('/auth/change-password', { currentPassword, newPassword });
       return { success: true };
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Password change failed';
-      return rejectWithValue(message);
+    } catch (error: unknown) {
+      return rejectWithValue(extractErrorMessage(error, 'Password change failed'));
     }
-  }
+  },
 );
 
-// Auth slice
+// ─── Slice ────────────────────────────────────────────────────────────────────
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -197,27 +236,34 @@ const authSlice = createSlice({
       state.loginAttempts = 0;
     },
 
+    /**
+     * Called once on app startup to restore auth state from localStorage.
+     * Also validates token expiry so expired sessions are rejected immediately.
+     */
     initializeAuth: (state) => {
-      // Initialize auth from localStorage on app startup
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
-        const userString = localStorage.getItem('user');
-        const lastLoginTime = localStorage.getItem('lastLoginTime');
+      if (typeof window === 'undefined') return;
 
-        if (token && userString) {
-          try {
-            const user = JSON.parse(userString);
-            state.user = user;
-            state.token = token;
-            state.isAuthenticated = true;
-            state.lastLoginTime = lastLoginTime;
-          } catch (error) {
-            // If parsing fails, clear invalid data
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('lastLoginTime');
-          }
-        }
+      const token = localStorage.getItem('token');
+      const userString = localStorage.getItem('user');
+      const lastLoginTime = localStorage.getItem('lastLoginTime');
+
+      if (!token || !userString) return;
+
+      // Reject expired tokens without making a network request
+      if (isTokenExpired(token)) {
+        clearAuthStorage();
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userString) as User;
+        state.user = user;
+        state.token = token;
+        state.isAuthenticated = true;
+        state.lastLoginTime = lastLoginTime;
+      } catch {
+        // Corrupted localStorage — clear it
+        clearAuthStorage();
       }
     },
 
@@ -228,16 +274,12 @@ const authSlice = createSlice({
       state.error = null;
       state.loginAttempts = 0;
       state.lastLoginTime = null;
-
-      // Clear localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastLoginTime');
+      clearAuthStorage();
     },
   },
 
   extraReducers: (builder) => {
-    // Login User
+    // loginUser
     builder
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
@@ -261,7 +303,7 @@ const authSlice = createSlice({
         state.loginAttempts += 1;
       });
 
-    // Register User
+    // registerUser
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
@@ -280,7 +322,7 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Logout User
+    // logoutUser
     builder
       .addCase(logoutUser.pending, (state) => {
         state.isLoading = true;
@@ -295,7 +337,7 @@ const authSlice = createSlice({
         state.lastLoginTime = null;
       })
       .addCase(logoutUser.rejected, (state, action) => {
-        // Even if logout fails, clear the state
+        // Clear state regardless — logout always succeeds locally
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
@@ -305,7 +347,7 @@ const authSlice = createSlice({
         state.lastLoginTime = null;
       });
 
-    // Refresh Token
+    // refreshToken
     builder
       .addCase(refreshToken.pending, (state) => {
         state.isLoading = true;
@@ -321,14 +363,9 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.error = action.payload as string;
-
-        // Clear localStorage on refresh failure
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('lastLoginTime');
       });
 
-    // Get Current User
+    // getCurrentUser
     builder
       .addCase(getCurrentUser.pending, (state) => {
         state.isLoading = true;
@@ -343,7 +380,7 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Update Profile
+    // updateProfile
     builder
       .addCase(updateProfile.pending, (state) => {
         state.isLoading = true;
@@ -358,7 +395,7 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // Change Password
+    // changePassword
     builder
       .addCase(changePassword.pending, (state) => {
         state.isLoading = true;
@@ -375,17 +412,28 @@ const authSlice = createSlice({
   },
 });
 
-// Export actions
-export const { clearError, resetLoginAttempts, initializeAuth, clearAuth } = authSlice.actions;
+// ─── Actions ──────────────────────────────────────────────────────────────────
 
-// Export selectors
-export const selectAuth = (state: { auth: AuthState }) => state.auth;
-export const selectUser = (state: { auth: AuthState }) => state.auth.user;
-export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
-export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.isLoading;
-export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
-export const selectUserRole = (state: { auth: AuthState }) => state.auth.user?.role;
-export const selectUserPermissions = (state: { auth: AuthState }) => state.auth.user?.permissions || [];
+export const { clearError, resetLoginAttempts, initializeAuth, clearAuth } =
+  authSlice.actions;
 
-// Export reducer
+// ─── Selectors ────────────────────────────────────────────────────────────────
+
+export const selectAuth = (state: { auth: AuthState }): AuthState => state.auth;
+export const selectUser = (state: { auth: AuthState }): User | null =>
+  state.auth.user;
+export const selectIsAuthenticated = (state: { auth: AuthState }): boolean =>
+  state.auth.isAuthenticated;
+export const selectAuthLoading = (state: { auth: AuthState }): boolean =>
+  state.auth.isLoading;
+export const selectAuthError = (state: { auth: AuthState }): string | null =>
+  state.auth.error;
+export const selectUserRole = (
+  state: { auth: AuthState },
+): User['role'] | undefined => state.auth.user?.role;
+export const selectUserPermissions = (state: { auth: AuthState }): string[] =>
+  state.auth.user?.permissions ?? [];
+
+// ─── Reducer ─────────────────────────────────────────────────────────────────
+
 export default authSlice.reducer;
