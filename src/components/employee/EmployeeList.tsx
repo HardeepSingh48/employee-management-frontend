@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { employeeService } from '@/lib/employee-service';
+import React, { useCallback, useEffect, useState } from 'react';
+import { employeeService, type EmployeeListEmployee } from '@/lib/employee-service';
 import { ComprehensiveEditModal } from '@/components/ui/modals/ComprehensiveEditModal';
-import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Trash2, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { sitesService, type Site } from '@/lib/sites-service';
+import { SiteSearchSelect } from '@/components/ui/SiteSearchSelect';
 
 interface EmployeeRow {
   employee_id: string;
@@ -14,6 +16,7 @@ interface EmployeeRow {
   department_id?: string;
   designation?: string;
   employment_status?: string;
+  site_id?: string;
   hire_date?: string | null;
   // Add all other employee fields that might be returned
   date_of_birth?: string;
@@ -56,6 +59,9 @@ interface PaginationInfo {
   pages: number;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export default function EmployeeList() {
   const [employees, setEmployees] = useState<EmployeeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,17 +72,23 @@ export default function EmployeeList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState('');
+  const [exportLoading, setExportLoading] = useState(false);
 
-  const loadEmployees = async (page: number = 1, search: string = '') => {
+  const loadEmployees = useCallback(async (page: number = 1, search: string = '', siteId: string = '') => {
     try {
       setLoading(true);
 
-      // For now, use the existing employeeService which handles authentication
-      // TODO: Update to use the new paginated endpoint once CORS is resolved
-      const data = await employeeService.getEmployees();
+      const response = await employeeService.listEmployees({
+        page,
+        per_page: 10,
+        search: search.trim() || undefined,
+        site_id: siteId || undefined,
+      });
 
       // Transform the data to match EmployeeRow interface
-      const transformedData: EmployeeRow[] = data.map((emp: any) => ({
+      const transformedData: EmployeeRow[] = response.data.map((emp: EmployeeListEmployee) => ({
         employee_id: emp.employee_id,
         first_name: emp.first_name,
         last_name: emp.last_name,
@@ -85,6 +97,7 @@ export default function EmployeeList() {
         department_id: emp.department_id,
         designation: emp.designation,
         employment_status: emp.employment_status,
+        site_id: emp.site_id,
         hire_date: emp.hire_date,
         // Map all other fields
         date_of_birth: emp.date_of_birth,
@@ -120,56 +133,61 @@ export default function EmployeeList() {
         emergency_contact_phone: emp.emergency_contact_phone
       }));
 
-      // For now, implement client-side pagination and search
-      let filteredData = transformedData;
+      setEmployees(transformedData);
+      setPagination(response.pagination);
+      setError(null);
 
-      if (search.trim()) {
-        const searchLower = search.toLowerCase();
-        filteredData = transformedData.filter(emp =>
-          String(emp.employee_id || '').toLowerCase().includes(searchLower) ||
-          (emp.first_name || '').toLowerCase().includes(searchLower) ||
-          (emp.last_name || '').toLowerCase().includes(searchLower) ||
-          (emp.email || '').toLowerCase().includes(searchLower) ||
-          (emp.phone_number || '').toLowerCase().includes(searchLower) ||
-          (emp.designation || '').toLowerCase().includes(searchLower)
-        );
-      }
-
-      // Implement client-side pagination
-      const totalItems = filteredData.length;
-      const totalPages = Math.ceil(totalItems / 10);
-      const startIndex = (page - 1) * 10;
-      const endIndex = startIndex + 10;
-      const paginatedData = filteredData.slice(startIndex, endIndex);
-
-      setEmployees(paginatedData);
-      setPagination({
-        page,
-        per_page: 10,
-        total: totalItems,
-        pages: totalPages
-      });
-
-    } catch (e: any) {
-      setError(e?.message || 'Failed to fetch employees');
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, 'Failed to fetch employees'));
     } finally {
       setLoading(false);
       setIsInitialLoad(false);
     }
+  }, []);
+
+  const handleExport = async () => {
+    try {
+      setExportLoading(true);
+      const blob = await employeeService.exportEmployeesExcel({
+        search: searchTerm.trim() || undefined,
+        site_id: selectedSiteId || undefined,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `employees${selectedSiteId ? `-${selectedSiteId}` : ''}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, 'Failed to export employees'));
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   useEffect(() => {
-    void loadEmployees(currentPage, searchTerm);
-  }, [currentPage]);
+    const loadSites = async () => {
+      try {
+        const response = await sitesService.getSites(1, 1000);
+        setSites(response.data || []);
+      } catch (e) {
+        console.error('Failed to load sites:', e);
+      }
+    };
+
+    void loadSites();
+  }, []);
 
   useEffect(() => {
+    const delay = searchTerm ? 500 : 0;
     const timeoutId = setTimeout(() => {
-      setCurrentPage(1); // Reset to first page when search changes
-      void loadEmployees(1, searchTerm);
-    }, 500); // Debounce search
+      void loadEmployees(currentPage, searchTerm, selectedSiteId);
+    }, delay);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [currentPage, searchTerm, selectedSiteId, loadEmployees]);
 
   const openEdit = async (row: EmployeeRow) => {
     try {
@@ -191,10 +209,10 @@ export default function EmployeeList() {
 
     try {
       // Convert FormData to regular object for the API call
-      const updateData: any = {};
+      const updateData: Record<string, string> = {};
 
       // Extract all form data entries
-      for (let [key, value] of formData.entries()) {
+      for (const [key, value] of formData.entries()) {
         // Skip file uploads for now - you might want to handle these separately
         if (value instanceof File) {
           continue;
@@ -215,9 +233,9 @@ export default function EmployeeList() {
 
       // Show success message
       alert('Employee updated successfully!');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to update employee', e);
-      alert(`Error updating employee: ${e.message || 'Unknown error'}`);
+      alert(`Error updating employee: ${getErrorMessage(e, 'Unknown error')}`);
     }
   };
 
@@ -242,13 +260,13 @@ export default function EmployeeList() {
         setCurrentPage(currentPage - 1);
       } else {
         // Refresh the current page to get updated data
-        void loadEmployees(currentPage, searchTerm);
+        void loadEmployees(currentPage, searchTerm, selectedSiteId);
       }
 
       alert('Employee deactivated successfully! Their records and deductions have been preserved.');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Failed to delete employee', e);
-      alert(`Error deleting employee: ${e.message || 'Unknown error'}`);
+      alert(`Error deleting employee: ${getErrorMessage(e, 'Unknown error')}`);
     } finally {
       setDeleteLoading(null);
     }
@@ -284,17 +302,40 @@ export default function EmployeeList() {
 
       {/* Search Bar */}
       <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search by employee ID, name, email, phone, or designation..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
+          <div className="w-full lg:w-64">
+            <SiteSearchSelect
+              sites={sites}
+              value={selectedSiteId || 'all'}
+              onValueChange={(value) => {
+                setSelectedSiteId(value === 'all' ? '' : value);
+                setCurrentPage(1);
+              }}
+              placeholder="Filter by site"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exportLoading}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            {exportLoading ? 'Exporting...' : 'Export Excel'}
+          </button>
         </div>
       </div>
 

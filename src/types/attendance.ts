@@ -1,4 +1,4 @@
-export type AttendanceStatus = 'Present' | 'Absent' | 'OFF';
+export type AttendanceStatus = 'Present' | 'Absent' | 'OFF' | 'Reliever';
 
 export interface Attendance {
   attendance_id: string;
@@ -41,6 +41,7 @@ export interface MonthlyAttendanceSummary {
   month: number;
   present_days: number;
   absent_days: number;
+  reliever_days: number;
   total_overtime_hours: number;
   total_overtime_shifts: number;
   working_days: number;

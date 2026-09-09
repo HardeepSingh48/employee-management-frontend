@@ -30,7 +30,7 @@ interface Employee {
 
 interface BulkAttendanceData {
   employee_id: string;
-  attendance_status: 'Present' | 'Absent' | 'OFF';
+  attendance_status: 'Present' | 'Absent' | 'OFF' | 'Reliever';
   attendance_date: string;
   overtime_shifts?: number;
 }
@@ -42,7 +42,7 @@ export default function MarkAttendance() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [attendanceDate, setAttendanceDate] = useState('');
-  const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'OFF'>('Present');
+  const [attendanceStatus, setAttendanceStatus] = useState<'Present' | 'Absent' | 'OFF' | 'Reliever'>('Present');
   const [overtimeShifts, setOvertimeShifts] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [bulkAttendance, setBulkAttendance] = useState<BulkAttendanceData[]>([]);
@@ -110,7 +110,7 @@ export default function MarkAttendance() {
 
         return {
           employee_id: emp.employee_id,
-          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF' | 'Reliever', // Sundays are overtime, not present
           attendance_date: selectedDate,
           overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
         };
@@ -186,7 +186,7 @@ export default function MarkAttendance() {
 
         const bulkData = data.map((emp: Employee) => ({
           employee_id: emp.employee_id,
-          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+          attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF' | 'Reliever', // Sundays are overtime, not present
           attendance_date: selectedDate,
           overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
         }));
@@ -221,14 +221,17 @@ export default function MarkAttendance() {
       const selectedDate = new Date(attendanceDate);
       const isSunday = selectedDate.getDay() === 0; // 0 = Sunday
 
-      // For Sundays, force overtime status and prevent regular present marking
-      const finalAttendanceStatus = isSunday ? 'OFF' : attendanceStatus;
+      // Sunday work is represented as OFF/S in payroll. Absent and Reliever
+      // remain non-working statuses even when the date is a Sunday.
+      const finalAttendanceStatus: 'Present' | 'Absent' | 'OFF' | 'Reliever' = attendanceStatus === 'Reliever'
+        ? 'Reliever'
+        : isSunday && attendanceStatus === 'Present'
+          ? 'OFF'
+          : attendanceStatus;
       const finalOvertimeShifts =
-        finalAttendanceStatus === 'Absent'
-          ? 0
-          : isSunday
-            ? Math.max(overtimeShifts, 1)
-            : overtimeShifts;
+        finalAttendanceStatus === 'OFF'
+          ? (isSunday ? Math.max(overtimeShifts, 1) : overtimeShifts)
+          : 0;
 
       if (isSunday && attendanceStatus === 'Present') {
         toast({
@@ -249,7 +252,7 @@ export default function MarkAttendance() {
 
       toast({
         title: 'Success',
-        description: `Attendance marked successfully${isSunday ? ' (Sunday overtime recorded)' : ''}`,
+        description: `Attendance marked successfully${isSunday && finalAttendanceStatus === 'OFF' ? ' (Sunday overtime recorded)' : ''}`,
       });
 
       // Reset form
@@ -306,7 +309,7 @@ export default function MarkAttendance() {
       const isSunday = new Date(bulkDate).getDay() === 0; // 0 = Sunday
       const resetBulkData = filteredEmployees.map((emp: Employee) => ({
         employee_id: emp.employee_id,
-        attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF', // Sundays are overtime, not present
+        attendance_status: (isSunday ? 'OFF' : 'Present') as 'Present' | 'Absent' | 'OFF' | 'Reliever', // Sundays are overtime, not present
         attendance_date: bulkDate,
         overtime_shifts: isSunday ? 1 : 0 // Auto-set 1 overtime shift for Sundays
       }));
@@ -322,14 +325,14 @@ export default function MarkAttendance() {
     }
   };
 
-  const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'OFF') => {
+  const updateBulkAttendance = (employeeId: string, status: 'Present' | 'Absent' | 'OFF' | 'Reliever') => {
     setBulkAttendance(prev =>
       prev.map(record =>
         record.employee_id === employeeId
           ? {
               ...record,
               attendance_status: status,
-              overtime_shifts: status === 'Absent' ? 0 : (record.overtime_shifts ?? 0),
+              overtime_shifts: status === 'OFF' ? (record.overtime_shifts ?? 0) : 0,
             }
           : record
       )
@@ -346,19 +349,22 @@ export default function MarkAttendance() {
     );
   };
 
-  const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'OFF') => {
+  const setAllBulkAttendance = (status: 'Present' | 'Absent' | 'OFF' | 'Reliever') => {
     setBulkAttendance(prev =>
       prev.map(record => ({
         ...record,
         attendance_status: status,
-        overtime_shifts: status === 'Absent' ? 0 : (record.overtime_shifts ?? 0),
+        overtime_shifts: status === 'OFF' ? (record.overtime_shifts ?? 0) : 0,
       }))
     );
   };
 
   const setAllBulkOvertime = (overtimeShifts: number) => {
     setBulkAttendance(prev =>
-      prev.map(record => ({ ...record, overtime_shifts: overtimeShifts }))
+      prev.map(record => ({
+        ...record,
+        overtime_shifts: record.attendance_status === 'OFF' ? overtimeShifts : 0,
+      }))
     );
   };
 
@@ -367,6 +373,7 @@ export default function MarkAttendance() {
       case 'Present': return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'Absent': return <XCircle className="w-4 h-4 text-red-600" />;
       case 'OFF': return <Clock className="w-4 h-4 text-blue-600" />;
+      case 'Reliever': return <AlertCircle className="w-4 h-4 text-purple-600" />;
       default: return null;
     }
   };
@@ -376,6 +383,7 @@ export default function MarkAttendance() {
       case 'Present': return 'bg-green-100 text-green-800';
       case 'Absent': return 'bg-red-100 text-red-800';
       case 'OFF': return 'bg-blue-100 text-blue-800';
+      case 'Reliever': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -485,17 +493,16 @@ export default function MarkAttendance() {
                       id="status"
                       value={attendanceStatus}
                       onChange={(e) => {
-                        const status = e.target.value as 'Present' | 'Absent' | 'OFF';
+                        const status = e.target.value as 'Present' | 'Absent' | 'OFF' | 'Reliever';
                         setAttendanceStatus(status);
-                        if (status === 'Absent') {
-                          setOvertimeShifts(0);
-                        }
+                        if (status !== 'OFF') setOvertimeShifts(0);
                       }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="Present">Present</option>
                       <option value="Absent">Absent</option>
                       <option value="OFF">OFF</option>
+                      <option value="Reliever">Reliever Duty (R)</option>
                     </select>
                   </div>
 
@@ -510,11 +517,11 @@ export default function MarkAttendance() {
                       value={overtimeShifts}
                       onChange={(e) => setOvertimeShifts(parseFloat(e.target.value) || 0)}
                       placeholder="0.0"
-                      disabled={attendanceStatus === 'Absent'}
+                      disabled={attendanceStatus !== 'OFF'}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      {attendanceStatus === 'Absent'
-                        ? 'Overtime does not apply on absent days'
+                      {attendanceStatus !== 'OFF'
+                        ? 'Overtime applies only to OFF/Sunday work'
                         : '1 shift = 8 hours; 0.5 = 4 hours'}
                     </p>
                   </div>
@@ -626,12 +633,13 @@ export default function MarkAttendance() {
                             <div className="flex space-x-2">
                               <select
                                 value={record.attendance_status}
-                                onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'OFF')}
+                                onChange={(e) => updateBulkAttendance(record.employee_id, e.target.value as 'Present' | 'Absent' | 'OFF' | 'Reliever')}
                                 className="flex h-8 w-32 rounded-md border border-input bg-background px-2 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                               >
                                 <option value="Present">Present</option>
                                 <option value="Absent">Absent</option>
                                 <option value="OFF">OFF</option>
+                                <option value="Reliever">Reliever Duty (R)</option>
                               </select>
                               <Input
                                 type="number"
@@ -641,8 +649,9 @@ export default function MarkAttendance() {
                                 placeholder="OT"
                                 className="w-20"
                                 value={record.overtime_shifts || 0}
-                                onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
-                              />
+                                 onChange={(e) => updateBulkOvertime(record.employee_id, parseFloat(e.target.value) || 0)}
+                                 disabled={record.attendance_status !== 'OFF'}
+                               />
                             </div>
                           </div>
                         );

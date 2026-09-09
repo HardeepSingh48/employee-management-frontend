@@ -208,6 +208,7 @@ export default function FormC() {
             <tr>
               <th className="border p-2 text-center">Sl.No</th>
               <th className="border p-2 text-center">Member Name</th>
+              <th className="border p-2 text-center">UAN Number</th>
               <th className="border p-2 text-center">Gross Wages</th>
               <th className="border p-2 text-center">EPF Wages</th>
               <th className="border p-2 text-center">EPS Wages</th>
@@ -222,7 +223,7 @@ export default function FormC() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={11} className="border p-8 text-center">
+                <td colSpan={12} className="border p-8 text-center">
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                     Loading Form C data...
@@ -231,7 +232,7 @@ export default function FormC() {
               </tr>
             ) : formCData.length === 0 ? (
               <tr>
-                <td colSpan={11} className="border p-8 text-center text-gray-500">
+                <td colSpan={12} className="border p-8 text-center text-gray-500">
                   {selectedMonth && selectedYear
                     ? 'No data found for the selected criteria'
                     : 'Please select month and year to view data'
@@ -244,6 +245,7 @@ export default function FormC() {
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="border p-2 text-center">{row.slNo}</td>
                     <td className="border p-2">{row.memberName}</td>
+                    <td className="border p-2 text-center">{row.uanNumber || '-'}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.grossWages)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.epfWages)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(row.epsWages)}</td>
@@ -259,6 +261,7 @@ export default function FormC() {
                   <tr className="bg-gray-100 font-semibold">
                     <td className="border p-2 text-center">-</td>
                     <td className="border p-2">TOTAL</td>
+                    <td className="border p-2 text-center">-</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(totals.totalGrossWages)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(totals.totalEpfWages)}</td>
                     <td className="border p-2 text-right">{formsService.formatNumber(totals.totalEpsWages)}</td>
