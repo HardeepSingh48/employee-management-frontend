@@ -15,12 +15,13 @@ export interface FormBEmployee {
   totalDays: number;
   grossEarnings: {
     bs: number;
+    ota: number;
+    relieving: number;
     leaveWages: number;
     nationalFestival: number;
     da: number;
     hra: number;
     cov: number;
-    ota: number;
     ae: number;
   };
   totalEarnings: number;
@@ -42,6 +43,7 @@ export interface FormBTotals {
   totalEmployees: number;
   totalDaysWorked: number;
   totalOvertime: number;
+  totalRelieving: number;
   totalEarnings: number;
   totalDeductions: number;
   totalOtherDeduction?: number;
@@ -73,6 +75,7 @@ export interface FormBRequest {
 export interface FormCEmployee {
   slNo: number;
   memberName: string;
+  uanNumber: string;
   grossWages: number;
   epfWages: number;
   epsWages: number;

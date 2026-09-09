@@ -252,7 +252,7 @@ const ValidationErrorDisplay = ({
                   <li>1. Fix the errors listed above in your Excel file</li>
                   <li>2. Verify employee IDs match exactly with system records</li>
                   <li>3. Ensure date columns are in DD/MM/YYYY format</li>
-                  <li>4. Check attendance status values (P, A, L, H, OFF)</li>
+                  <li>4. Check attendance status values (P, A, R, OFF)</li>
                   <li>5. Re-upload the corrected file</li>
                 </ul>
                 <div className="mt-4 flex gap-2">
@@ -733,6 +733,7 @@ export default function BulkAttendance() {
                   <ul className="text-xs text-gray-600 mt-1 space-y-1">
                     <li>• P = Present</li>
                     <li>• A = Absent</li>
+                    <li>• R = Reliever Duty</li>
                     {/* <li>• L = Late</li>
                     <li>• H = Half Day</li> */}
                   </ul>

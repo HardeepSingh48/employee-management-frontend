@@ -14,6 +14,7 @@ export interface SalaryCalculationData {
   'HRA': number;
   'Overtime': number;
   'Overtime Allowance': number;
+  'Reliever Charges'?: number;
   'Others': number;
   'Total Earnings': number;
   'PF': number;

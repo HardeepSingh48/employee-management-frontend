@@ -7,7 +7,7 @@ export interface AttendanceRecord {
   attendance_date: string;
   check_in_time?: string;
   check_out_time?: string;
-  attendance_status: 'Present' | 'Absent' | 'OFF';
+  attendance_status: 'Present' | 'Absent' | 'OFF' | 'Reliever';
   overtime_shifts: number;
   overtime_hours: number;
   late_minutes: number;
@@ -24,7 +24,7 @@ export interface AttendanceRecord {
 export interface AttendanceMarkRequest {
   employee_id: string;
   attendance_date?: string; // Optional, defaults to today
-  attendance_status: 'Present' | 'Absent' | 'OFF';
+  attendance_status: 'Present' | 'Absent' | 'OFF' | 'Reliever';
   check_in_time?: string;
   check_out_time?: string;
   overtime_shifts?: number;
@@ -44,6 +44,7 @@ export interface MonthlyAttendanceSummary {
   month: number;
   present_days: number;
   absent_days: number;
+  reliever_days: number;
   total_overtime_shifts: number;
   total_overtime_hours: number;
   working_days: number;
@@ -53,7 +54,7 @@ export interface MonthlyAttendanceSummary {
 }
 
 export interface AttendanceUpdateRequest {
-  attendance_status?: 'Present' | 'Absent' | 'OFF';
+  attendance_status?: 'Present' | 'Absent' | 'OFF' | 'Reliever';
   check_in_time?: string;
   check_out_time?: string;
   overtime_shifts?: number;
